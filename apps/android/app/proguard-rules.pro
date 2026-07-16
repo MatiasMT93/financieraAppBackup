@@ -1,0 +1,5 @@
+-keep class com.mtbit.cambioapp.data.model.** { *; }
+-keep class io.socket.** { *; }
+-dontwarn io.socket.**
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**

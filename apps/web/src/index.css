@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+/* Bloquea el scroll del body para que el único scrolleable sea el <main> de
+ * cada shell. Sin esto, en mobile el contenido empuja al body fuera del
+ * viewport y al scrollear se esconde/muestra la barra de URL del navegador,
+ * lo que recalcula 100dvh y hace que el header fijo y la navbar inferior
+ * "se muevan" con el scroll. */
+html, body, #root {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-[#EAEAEA] rounded-[14px] p-4;
+  }
+  .btn-primary {
+    @apply px-4 py-3 rounded-[10px] font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply px-4 py-3 rounded-[10px] font-semibold border transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  /* h-screen (100vh) en mobile incluye la barra de URL del navegador, así que
+   * la primera vez que carga la PWA el contenedor queda más alto que el
+   * viewport visible y la navbar de abajo queda fuera de pantalla hasta que
+   * el usuario refresca. dvh se ajusta dinámicamente al viewport real. */
+  .h-viewport {
+    height: 100vh;
+    height: 100dvh;
+  }
+  .min-h-viewport {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}

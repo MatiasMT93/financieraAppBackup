@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "CambioApp",
+    "slug": "cambioapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1D9E75"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cambioapp.cadete",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "CambioApp necesita acceder a tu ubicación en todo momento para que el coordinador pueda verte en el mapa mientras estás en camino.",
+        "NSLocationWhenInUseUsageDescription": "CambioApp usa tu ubicación para mostrarle al coordinador dónde estás.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "package": "com.cambioapp.cadete",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1D9E75"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "CambioApp necesita acceder a tu ubicación en todo momento para que el coordinador pueda verte en el mapa mientras estás en camino.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1D9E75"
+        }
+      ]
+    ],
+    "extra": {}
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781727130977,
+      "tag": "0000_white_living_mummy",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781742077254,
+      "tag": "0001_good_malcolm_colcord",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782174531852,
+      "tag": "0002_cadete_registration",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782176109863,
+      "tag": "0003_add_usuario",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782183729936,
+      "tag": "0004_add_refresh_token_indexes",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fiber</string>
+    <string name="notification_channel_name">Ubicación en tiempo real</string>
+    <string name="notification_title">Fiber activo</string>
+    <string name="notification_text">Compartiendo tu ubicación con el coordinador</string>
+</resources>
