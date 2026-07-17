@@ -1,7 +1,7 @@
 import type { Server as HttpServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
+import { env, corsOrigins } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import type { AuthUser } from '../middleware/auth.js';
 
@@ -9,7 +9,7 @@ let io: SocketServer | null = null;
 
 export function initializeSocket(httpServer: HttpServer): SocketServer {
   io = new SocketServer(httpServer, {
-    cors: { origin: env.CORS_ORIGIN, methods: ['GET', 'POST'] },
+    cors: { origin: corsOrigins, methods: ['GET', 'POST'] },
   });
 
   io.use((socket, next) => {

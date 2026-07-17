@@ -20,3 +20,10 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
+
+// CORS_ORIGIN admite una lista separada por comas (ej: dominio de producción +
+// URLs de preview deploy de colaboradores), ya que cada branch en Cloudflare
+// Pages genera una URL distinta.
+export const corsOrigins = env.CORS_ORIGIN.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
