@@ -1,5 +1,5 @@
 {
-  "name": "financieraAppBackup",
+  "name": "financiera-app-backup",
   "compatibility_date": "2024-09-23",
   "assets": {
     "directory": "./dist",
