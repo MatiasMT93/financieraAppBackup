@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { createServer } from 'http';
-import { env } from './config/env.js';
+import { env, corsOrigins } from './config/env.js';
 import { logger } from './config/logger.js';
 import { checkDbConnection, runMigrations } from './db/connection.js';
 import { repairZombieIncidents } from './modules/operations/repository.js';
@@ -29,7 +29,7 @@ const httpServer = createServer(app);
 app.set('trust proxy', 1);
 
 app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({ origin: corsOrigins, credentials: true }));
 app.use(express.json());
 app.use(requestLogger);
 
