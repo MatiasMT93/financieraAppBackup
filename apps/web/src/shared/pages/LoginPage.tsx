@@ -29,7 +29,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-viewport flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-viewport flex items-center justify-center bg-gray-800 p-4">
       <div className="w-full max-w-sm">
         <div className="card p-8">
           <div className="flex flex-col items-center justify-center gap-3 mb-8">
