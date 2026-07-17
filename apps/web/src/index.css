@@ -22,8 +22,8 @@ html, body, #root {
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #f8f9fa;
-  color: #1a1a1a;
+  background-color: #1a1a1a;
+  color: #f8f9fa;
 }
 
 @layer components {
