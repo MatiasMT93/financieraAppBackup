@@ -16,7 +16,7 @@ import GestionCadetesTab from './tabs/GestionCadetesTab.tsx';
 import './CoordinadorShell.css';
 
 const tabs = [
-  { path: 'ops', label: 'Ops.', Icon: OpsIcon },
+  { path: 'ops', label: 'Operaciones', Icon: OpsIcon },
   { path: 'mapa', label: 'Mapa', Icon: MapIcon },
   { path: 'cadetes', label: 'Cadetes', Icon: UsersIcon },
   { path: 'historial', label: 'Historial', Icon: HistoryIcon },
