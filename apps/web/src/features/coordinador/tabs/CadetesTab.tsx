@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '../../../shared/api/client.ts';
-import StatusBadge from '../../../shared/components/StatusBadge.tsx';
+import CoordBadge from '../components/CoordBadge.tsx';
+import { UsersIcon } from '../components/CoordIcons.tsx';
 import type { User, CadeteStatus } from '@cambioapp/shared-types';
 
 export default function CadetesTab() {
@@ -10,25 +11,28 @@ export default function CadetesTab() {
     refetchInterval: 20_000,
   });
 
-  if (isLoading) return <div className="p-4 text-center text-gray-500">Cargando...</div>;
+  if (isLoading) return <div className="coord-empty-panel coord-empty-panel--compact"><p>Cargando…</p></div>;
 
   return (
-    <div className="p-4 space-y-3">
-      <p className="text-sm text-gray-500">{cadetes.length} cadetes</p>
-      {cadetes.map((c) => (
-        <div key={c.id} className="card flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-coordinador text-white flex items-center justify-center font-bold">
-              {c.nombre[0]}
+    <>
+      <article className="coord-summary-chip">
+        <span className="coord-summary-chip__icon"><UsersIcon /></span>
+        <span className="coord-summary-chip__value">{cadetes.length}</span>
+        <span className="coord-summary-chip__label">cadetes</span>
+      </article>
+
+      <div className="coord-stack-list">
+        {cadetes.map((c) => (
+          <article key={c.id} className="coord-cadet-card">
+            <span className="coord-avatar is-gold">{c.nombre[0]}</span>
+            <div className="coord-cadet-card__copy">
+              <h3>{c.nombre}</h3>
+              <p>Cadete</p>
             </div>
-            <div>
-              <p className="font-medium text-gray-900">{c.nombre}</p>
-              <p className="text-xs text-gray-400">Cadete</p>
-            </div>
-          </div>
-          <StatusBadge status={(c.cadeteStatus ?? 'disponible') as CadeteStatus} />
-        </div>
-      ))}
-    </div>
+            <CoordBadge status={(c.cadeteStatus ?? 'disponible') as CadeteStatus} />
+          </article>
+        ))}
+      </div>
+    </>
   );
 }

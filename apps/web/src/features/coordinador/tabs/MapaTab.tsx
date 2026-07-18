@@ -5,7 +5,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getSocket, connectSocket } from '../../../shared/api/socket.ts';
 import { apiGet } from '../../../shared/api/client.ts';
-import StatusBadge from '../../../shared/components/StatusBadge.tsx';
+import CoordBadge from '../components/CoordBadge.tsx';
 import AnimatedCadetMarkers, { type CadetMarker } from '../components/AnimatedCadetMarkers.tsx';
 import LocateControl from '../components/LocateControl.tsx';
 import type { CadetLocation, CadeteStatus } from '@cambioapp/shared-types';
@@ -20,15 +20,6 @@ const STATUS_COLORS: Record<string, string> = {
   en_destino: '#1e3a8a',
   volviendo: '#3C3489',
   incidencia: '#993C1D',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  disponible: 'Disponible',
-  asignada: 'Asignada',
-  en_camino: 'En camino',
-  en_destino: 'En destino',
-  volviendo: 'Volviendo',
-  incidencia: 'Incidencia',
 };
 
 interface LocationPayload {
@@ -106,7 +97,7 @@ export default function MapaTab() {
           cadeteId: loc.cadeteId,
           nombre: loc.cadete?.nombre ?? '?',
           color: STATUS_COLORS[status] ?? '#6b7280',
-          statusLabel: STATUS_LABELS[status] ?? status,
+          statusLabel: status,
           position,
         }];
       }),
@@ -114,8 +105,8 @@ export default function MapaTab() {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0">
+    <section className="coord-map-card">
+      <div className="coord-map-surface">
         <MapContainer
           ref={mapRef}
           center={BA_CENTER}
@@ -133,38 +124,34 @@ export default function MapaTab() {
         </MapContainer>
       </div>
 
-      <div className="p-3 bg-white border-t border-gray-200 max-h-48 overflow-y-auto">
-        <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Cadetes en el mapa <span className="font-normal normal-case">— tocá uno para centrarlo</span></p>
-        <div className="space-y-1">
-          {locations.length === 0 && <p className="text-sm text-gray-400">Sin cadetes activos</p>}
-          {locations.map((loc) => {
-            const hasGps = loc.latitude != null || livePositions[loc.cadeteId] != null;
-            return (
-              <button
-                key={loc.cadeteId}
-                type="button"
-                onClick={() => hasGps ? focusCadete(loc) : undefined}
-                disabled={!hasGps}
-                className="w-full flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-100 active:bg-gray-200 transition-colors text-left disabled:opacity-60 disabled:cursor-default"
+      <div className="coord-map-list">
+        <h3>Cadetes en el mapa — tocá uno para centrarlo</h3>
+        {locations.length === 0 && <p style={{ color: '#9ba2b0', fontSize: 14 }}>Sin cadetes activos</p>}
+        {locations.map((loc) => {
+          const hasGps = loc.latitude != null || livePositions[loc.cadeteId] != null;
+          return (
+            <button
+              key={loc.cadeteId}
+              type="button"
+              className="coord-map-list__item"
+              onClick={() => hasGps ? focusCadete(loc) : undefined}
+              disabled={!hasGps}
+            >
+              <span
+                className="coord-avatar coord-avatar--small"
+                style={{ background: 'none', borderColor: STATUS_COLORS[loc.cadeteStatus ?? 'disponible'] ?? '#6b7280' }}
               >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold"
-                    style={{ backgroundColor: STATUS_COLORS[loc.cadeteStatus ?? 'disponible'] ?? '#6b7280' }}
-                  >
-                    {loc.cadete?.nombre?.[0] ?? '?'}
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium">{loc.cadete?.nombre}</span>
-                    {!hasGps && <p className="text-xs text-amber-500">Sin GPS</p>}
-                  </div>
-                </div>
-                <StatusBadge status={(loc.cadeteStatus ?? 'disponible') as CadeteStatus} />
-              </button>
-            );
-          })}
-        </div>
+                {loc.cadete?.nombre?.[0] ?? '?'}
+              </span>
+              <span className="coord-map-list__copy">
+                <strong>{loc.cadete?.nombre}</strong>
+                {!hasGps && <small>Sin GPS</small>}
+              </span>
+              <CoordBadge status={(loc.cadeteStatus ?? 'disponible') as CadeteStatus} />
+            </button>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 }

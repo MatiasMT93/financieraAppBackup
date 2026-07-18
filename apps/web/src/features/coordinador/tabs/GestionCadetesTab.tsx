@@ -1,19 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  UserCheck,
-  UserX,
-  ChevronDown,
-  ChevronUp,
-  Phone,
-  MessageCircle,
-  Trash2,
-  Clock,
-  Users,
-} from 'lucide-react';
+import { UserCheck, UserX, Phone, MessageCircle, Trash2, Clock } from 'lucide-react';
 import { apiGet, apiPost, apiDelete } from '../../../shared/api/client.ts';
 import type { User } from '@cambioapp/shared-types';
 import DownloadApkButton from '../components/DownloadApkButton.tsx';
+import { UsersIcon, TrashIcon } from '../components/CoordIcons.tsx';
 
 function ConfirmDeleteDialog({
   cadete,
@@ -60,28 +51,21 @@ function CadeteDetail({ cadete, onDelete }: { cadete: User; onDelete: () => void
   const waNumber = celular.startsWith('0') ? `549${celular.slice(1)}` : `549${celular}`;
 
   return (
-    <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <p className="text-xs text-gray-400">Nombre completo</p>
-          <p className="font-medium text-gray-800">
-            {cadete.nombre} {cadete.apellido}
-          </p>
-        </div>
-        {cadete.celular && (
-          <div>
-            <p className="text-xs text-gray-400">Celular</p>
-            <p className="font-medium text-gray-800">{cadete.celular}</p>
-          </div>
-        )}
+    <div className="coord-user-card__details">
+      <div className="coord-user-card__field">
+        <span>Nombre completo</span>
+        <strong>{cadete.nombre} {cadete.apellido}</strong>
       </div>
+      {cadete.celular && (
+        <div className="coord-user-card__field">
+          <span>Celular</span>
+          <strong>{cadete.celular}</strong>
+        </div>
+      )}
 
       {cadete.celular && (
-        <div className="flex gap-2">
-          <a
-            href={`tel:${cadete.celular}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
-          >
+        <div className="coord-operation-card__contact" style={{ marginBottom: 14 }}>
+          <a href={`tel:${cadete.celular}`} className="coord-contact-link coord-contact-link--call">
             <Phone size={15} />
             Llamar
           </a>
@@ -89,7 +73,7 @@ function CadeteDetail({ cadete, onDelete }: { cadete: User; onDelete: () => void
             href={`https://wa.me/${waNumber}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors"
+            className="coord-contact-link coord-contact-link--wa"
           >
             <MessageCircle size={15} />
             WhatsApp
@@ -97,12 +81,9 @@ function CadeteDetail({ cadete, onDelete }: { cadete: User; onDelete: () => void
         </div>
       )}
 
-      <button
-        onClick={onDelete}
-        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors"
-      >
-        <Trash2 size={15} />
-        Eliminar cadete
+      <button type="button" className="coord-delete-button" onClick={onDelete}>
+        <TrashIcon />
+        <span>Eliminar cadete</span>
       </button>
     </div>
   );
@@ -154,108 +135,82 @@ export default function GestionCadetesTab() {
   }
 
   return (
-    <div className="p-4 space-y-5">
+    <>
       <DownloadApkButton />
 
-      {/* Solicitudes pendientes */}
       {(isLoadingPending || pending.length > 0) && (
         <section>
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={15} className="text-amber-500" />
-            <h3 className="text-sm font-semibold text-gray-700">
-              Solicitudes pendientes
-              {pending.length > 0 && (
-                <span className="ml-2 bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                  {pending.length}
-                </span>
-              )}
-            </h3>
+          <div className="coord-section-title">
+            <Clock size={18} style={{ color: '#f2bc57' }} />
+            Solicitudes pendientes
+            {pending.length > 0 && <span className="coord-pending-badge">{pending.length}</span>}
           </div>
 
-          <div className="space-y-2">
-            {isLoadingPending && (
-              <p className="text-sm text-gray-400 text-center py-2">Cargando...</p>
-            )}
+          <div className="coord-stack-list">
+            {isLoadingPending && <p style={{ color: '#c0c6d0', textAlign: 'center' }}>Cargando…</p>}
             {pending.map((cadete) => (
-              <div key={cadete.id} className="card">
-                <div className="flex items-center justify-between">
+              <article key={cadete.id} className="coord-user-card">
+                <div className="coord-user-card__summary" style={{ cursor: 'default' }}>
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">
-                      {cadete.nombre} {cadete.apellido}
-                    </p>
-                    {cadete.celular && (
-                      <p className="text-xs text-gray-400">{cadete.celular}</p>
-                    )}
+                    <h3>{cadete.nombre} {cadete.apellido}</h3>
+                    {cadete.celular && <p>{cadete.celular}</p>}
                   </div>
-                  <div className="flex gap-2">
+                </div>
+                <div className="coord-user-card__details" style={{ paddingTop: 0 }}>
+                  <div className="coord-approve-row">
                     <button
+                      type="button"
+                      className="coord-approve-button"
                       onClick={() => approve.mutate(cadete.id)}
                       disabled={approve.isPending || reject.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors disabled:opacity-50"
                     >
-                      <UserCheck size={15} />
+                      <UserCheck size={16} />
                       Aceptar
                     </button>
                     <button
+                      type="button"
+                      className="coord-reject-button"
                       onClick={() => reject.mutate(cadete.id)}
                       disabled={approve.isPending || reject.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
                     >
-                      <UserX size={15} />
+                      <UserX size={16} />
                       Rechazar
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </section>
       )}
 
-      {/* Cadetes activos */}
       <section>
-        <div className="flex items-center gap-2 mb-2">
-          <Users size={15} className="text-coordinador" />
-          <h3 className="text-sm font-semibold text-gray-700">Cadetes activos</h3>
+        <div className="coord-section-title">
+          <UsersIcon />
+          Cadetes activos
         </div>
 
-        {isLoading && (
-          <p className="text-sm text-gray-400 text-center py-4">Cargando...</p>
-        )}
-
+        {isLoading && <p style={{ color: '#c0c6d0', textAlign: 'center' }}>Cargando…</p>}
         {!isLoading && cadetes.length === 0 && (
-          <p className="text-center text-gray-400 text-sm py-6">No hay cadetes activos</p>
+          <div className="coord-empty-panel coord-empty-panel--compact">
+            <p>No hay cadetes activos</p>
+          </div>
         )}
 
-        <div className="space-y-2">
+        <div className="coord-stack-list">
           {cadetes.map((cadete) => {
             const expanded = expandedId === cadete.id;
             return (
-              <div key={cadete.id} className="card">
-                <button
-                  className="w-full flex items-center justify-between"
-                  onClick={() => toggleExpand(cadete.id)}
-                >
-                  <div className="text-left">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {cadete.nombre} {cadete.apellido}
-                    </p>
-                    <p className="text-xs text-gray-400">Cadete</p>
+              <article key={cadete.id} className="coord-user-card">
+                <button type="button" className="coord-user-card__summary" onClick={() => toggleExpand(cadete.id)}>
+                  <div>
+                    <h3>{cadete.nombre} {cadete.apellido}</h3>
+                    <p>Cadete</p>
                   </div>
-                  {expanded ? (
-                    <ChevronUp size={18} className="text-gray-400 shrink-0" />
-                  ) : (
-                    <ChevronDown size={18} className="text-gray-400 shrink-0" />
-                  )}
+                  <span className="coord-user-card__chevron">{expanded ? '⌃' : '⌄'}</span>
                 </button>
-
-                {expanded && (
-                  <CadeteDetail
-                    cadete={cadete}
-                    onDelete={() => setDeleteTarget(cadete)}
-                  />
-                )}
-              </div>
+                {expanded && <CadeteDetail cadete={cadete} onDelete={() => setDeleteTarget(cadete)} />}
+              </article>
             );
           })}
         </div>
@@ -269,6 +224,6 @@ export default function GestionCadetesTab() {
           isPending={remove.isPending}
         />
       )}
-    </div>
+    </>
   );
 }

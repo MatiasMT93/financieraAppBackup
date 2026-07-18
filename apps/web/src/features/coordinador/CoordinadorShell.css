@@ -1,0 +1,424 @@
+/* Estilos del shell de Coordinador "Plaza App". Todo queda bajo
+ * .coordinator-shell para no filtrar estilos al resto de la app. */
+
+.coordinator-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(12, 56, 72, 0.28), transparent 24%),
+    radial-gradient(circle at 80% 15%, rgba(18, 44, 86, 0.22), transparent 26%),
+    linear-gradient(180deg, #020812 0%, #03111d 50%, #04111c 100%);
+  color: #eef2f7;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.coordinator-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.38;
+  mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
+}
+
+.coordinator-shell .coordinator-header {
+  position: relative;
+  z-index: 10;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 34px;
+  border-bottom: 1px solid rgba(227, 175, 69, 0.18);
+  background: linear-gradient(180deg, rgba(2, 9, 19, 0.96), rgba(2, 9, 19, 0.88));
+  backdrop-filter: blur(12px);
+}
+
+.coordinator-shell .coordinator-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.coordinator-shell .coordinator-header__name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(30px, 2.4vw, 44px);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.coordinator-shell .coordinator-header__divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.3), transparent);
+}
+
+.coordinator-shell .coordinator-header__title-group h1 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(24px, 2vw, 38px);
+  line-height: 0.95;
+  font-weight: 600;
+}
+
+.coordinator-shell .coordinator-header__title-group p {
+  margin: 4px 0 0;
+  color: #c0c5d0;
+  font-size: 14px;
+}
+
+.coordinator-shell .coord-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(223, 180, 86, 0.6);
+  background: rgba(14, 18, 29, 0.46);
+  color: #f5c96b;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+  cursor: pointer;
+  font: inherit;
+}
+
+.coordinator-shell .coord-back-button svg,
+.coordinator-shell .coord-download-card svg,
+.coordinator-shell .coord-date-input svg {
+  width: 20px;
+  height: 20px;
+}
+
+.coordinator-shell .coordinator-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 28px 20px;
+}
+
+.coordinator-shell .coord-kpis {
+  display: grid;
+  gap: 14px;
+}
+.coordinator-shell .coord-kpis--double { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.coordinator-shell .coord-kpi-card,
+.coordinator-shell .coord-summary-chip,
+.coordinator-shell .coord-map-card,
+.coordinator-shell .coord-cadet-card,
+.coordinator-shell .coord-operation-card,
+.coordinator-shell .coord-date-filter,
+.coordinator-shell .coord-empty-panel,
+.coordinator-shell .coord-download-card,
+.coordinator-shell .coord-user-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(219, 165, 72, 0.34);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(16, 77, 95, 0.22), transparent 22%),
+    linear-gradient(90deg, rgba(14, 27, 38, 0.86), rgba(6, 14, 28, 0.94) 55%, rgba(5, 18, 33, 0.88));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 14px 28px rgba(0,0,0,0.22);
+}
+
+.coordinator-shell .coord-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 108px;
+  padding: 18px 20px;
+}
+
+.coordinator-shell .coord-kpi-card__icon,
+.coordinator-shell .coord-summary-chip__icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 18px;
+  border: 1px solid rgba(92, 203, 201, 0.46);
+  color: #28e0cb;
+  background: linear-gradient(180deg, rgba(5, 27, 37, 0.82), rgba(4, 17, 28, 0.9));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.coordinator-shell .coord-kpi-card__icon svg,
+.coordinator-shell .coordinator-bottom-nav__icon svg,
+.coordinator-shell .coord-operation-card__icon svg,
+.coordinator-shell .coord-summary-chip__icon svg,
+.coordinator-shell .coord-section-title svg { width: 24px; height: 24px; }
+
+.coordinator-shell .coord-kpi-card__content strong {
+  display: block;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(38px, 3.4vw, 54px);
+  line-height: 0.9;
+  color: #f5f6fb;
+}
+.coordinator-shell .coord-kpi-card__content p { margin: 6px 0 0; font-size: 15px; color: #f5f6fb; }
+.coordinator-shell .coord-kpi-card__content small { display: block; margin-top: 4px; color: #c3c8d0; font-size: 12px; }
+.coordinator-shell .coord-kpi-card__content--centered { text-align: center; flex: 1; }
+
+.coordinator-shell .coord-filter-tabs { display: flex; flex-wrap: wrap; gap: 10px; overflow-x: auto; padding-bottom: 2px; }
+.coordinator-shell .coord-filter-tabs button {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 13px;
+  border: 1px solid rgba(119, 133, 152, 0.3);
+  background: rgba(9, 19, 31, 0.6);
+  color: #d7dbe2;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.coordinator-shell .coord-filter-tabs button.is-active {
+  color: #f6fbff;
+  border-color: rgba(37, 214, 199, 0.72);
+  background: linear-gradient(180deg, rgba(15, 184, 193, 0.3), rgba(8, 41, 59, 0.74));
+  box-shadow: inset 0 0 0 1px rgba(25, 225, 206, 0.22), 0 0 18px rgba(12, 184, 175, 0.14);
+}
+
+.coordinator-shell .coord-stack-list { display: flex; flex-direction: column; gap: 12px; }
+
+.coordinator-shell .coord-operation-card { padding: 16px 18px; }
+.coordinator-shell .coord-operation-card__main { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; }
+.coordinator-shell .coord-operation-card__icon {
+  width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center;
+  border: 1px solid rgba(88, 205, 194, 0.4); color: #1fd9c7;
+  background: linear-gradient(180deg, rgba(7, 25, 37, 0.8), rgba(6, 17, 29, 0.92));
+}
+.coordinator-shell .coord-operation-card__icon svg { width: 26px; height: 26px; }
+.coordinator-shell .coord-operation-card__body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.coordinator-shell .coord-operation-card__row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.coordinator-shell .coord-operation-card__row--top h3 { margin: 0 auto 0 0; font-size: 20px; }
+.coordinator-shell .coord-operation-card__age { color: #c6cbd4; font-size: 13px; }
+
+.coordinator-shell .coord-badge {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 30px; padding: 0 13px;
+  border-radius: 12px; border: 1px solid rgba(255,255,255,0.16); font-size: 12px; white-space: nowrap;
+}
+.coordinator-shell .coord-badge.is-pending,
+.coordinator-shell .coord-badge.is-assigned { color: #f3be58; border-color: rgba(232, 176, 64, 0.42); background: rgba(60, 42, 16, 0.38); }
+.coordinator-shell .coord-badge.is-onway { color: #41d8ff; border-color: rgba(35, 198, 244, 0.42); background: rgba(9, 41, 57, 0.34); }
+.coordinator-shell .coord-badge.is-incident { color: #ff8a7a; border-color: rgba(255, 90, 88, 0.45); background: rgba(60, 16, 16, 0.38); }
+.coordinator-shell .coord-badge.is-closed { color: #7be0c4; border-color: rgba(31, 217, 199, 0.4); background: rgba(8, 42, 36, 0.34); }
+.coordinator-shell .coord-badge.is-cancelled { color: #b9bfc9; border-color: rgba(150, 160, 175, 0.4); background: rgba(30, 34, 42, 0.4); }
+.coordinator-shell .coord-badge.is-available { color: #7be0c4; border-color: rgba(31, 217, 199, 0.4); background: rgba(8, 42, 36, 0.34); }
+
+.coordinator-shell .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.coordinator-shell .status-dot--pending,
+.coordinator-shell .status-dot--assigned { background: #f2bc56; }
+.coordinator-shell .status-dot--onWay { background: #2ecfff; }
+.coordinator-shell .status-dot--incident { background: #ff5a58; }
+.coordinator-shell .status-dot--closed,
+.coordinator-shell .status-dot--available { background: #1fd9c7; }
+.coordinator-shell .status-dot--empty { background: #7b8491; }
+
+.coordinator-shell .coord-operation-card__meta,
+.coordinator-shell .coord-operation-card__amount {
+  display: inline-flex; align-items: center; gap: 8px; color: #e8edf5; font-size: 14px;
+}
+.coordinator-shell .coord-operation-card__meta svg,
+.coordinator-shell .coord-operation-card__amount svg { width: 16px; height: 16px; color: #24ddd0; flex: 0 0 auto; }
+.coordinator-shell .coord-operation-card__amount strong { color: #efbc58; }
+
+.coordinator-shell .coord-assign-button {
+  margin-top: 6px; width: fit-content; min-height: 42px; padding: 0 20px; border-radius: 13px;
+  border: 1px solid rgba(39, 218, 201, 0.55);
+  background: linear-gradient(180deg, rgba(16, 155, 179, 0.36), rgba(5, 45, 65, 0.82));
+  color: #f4fbff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.coordinator-shell .coord-assign-button--ghost {
+  border-color: rgba(119, 133, 152, 0.4);
+  background: rgba(9, 19, 31, 0.5);
+  color: #d7dbe2;
+}
+.coordinator-shell .coord-assign-button--danger {
+  border-color: rgba(255, 90, 88, 0.5);
+  background: rgba(42, 9, 16, 0.4);
+  color: #ff8a7a;
+}
+.coordinator-shell .coord-operation-card__contact { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.coordinator-shell .coord-contact-link {
+  flex: 1; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 14px; border-radius: 12px; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.coordinator-shell .coord-contact-link--call { color: #7fc4ff; background: rgba(20, 60, 90, 0.4); border: 1px solid rgba(127, 196, 255, 0.3); }
+.coordinator-shell .coord-contact-link--wa { color: #6fe3a8; background: rgba(15, 55, 40, 0.4); border: 1px solid rgba(111, 227, 168, 0.3); }
+
+.coordinator-shell .coord-map-card { padding: 0; display: flex; flex-direction: column; flex: 1; min-height: 380px; }
+.coordinator-shell .coord-map-surface { position: relative; flex: 1; min-height: 320px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.coordinator-shell .coord-map-surface .leaflet-container { width: 100%; height: 100%; background: #17283c; }
+
+.coordinator-shell .coord-map-list { padding: 14px 16px; max-height: 220px; overflow-y: auto; }
+.coordinator-shell .coord-map-list h3,
+.coordinator-shell .coord-section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; color: #eef2f7; }
+.coordinator-shell .coord-section-title { font-weight: 600; }
+.coordinator-shell .coord-map-list__item {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 4px;
+  border: 0; border-top: 1px solid rgba(255,255,255,0.08); background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left;
+}
+.coordinator-shell .coord-map-list__item:first-of-type { border-top: 0; }
+.coordinator-shell .coord-map-list__item:disabled { opacity: 0.55; cursor: default; }
+.coordinator-shell .coord-map-list__copy { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; flex: 1; min-width: 0; }
+.coordinator-shell .coord-map-list__copy strong { font-size: 14px; }
+.coordinator-shell .coord-map-list__copy small { color: #f5bd58; font-size: 12px; }
+
+.coordinator-shell .coord-summary-chip { display: inline-flex; align-items: center; gap: 16px; min-height: 88px; padding: 18px 20px; width: min(720px, 100%); }
+.coordinator-shell .coord-summary-chip--wide { width: 100%; }
+.coordinator-shell .coord-summary-chip--alert { margin-bottom: 4px; }
+.coordinator-shell .coord-summary-chip__value { font-size: 38px; font-weight: 700; color: #2ee2d3; }
+.coordinator-shell .coord-summary-chip__label { font-size: 15px; }
+.coordinator-shell .coord-summary-chip__label--large { font-size: clamp(20px, 2vw, 32px); }
+.coordinator-shell .coord-summary-chip__icon--warning { color: #f2bc57; border-color: rgba(230, 176, 73, 0.45); }
+
+.coordinator-shell .coord-cadet-card { display: flex; align-items: center; gap: 18px; min-height: 100px; padding: 18px 20px; }
+.coordinator-shell .coord-avatar {
+  width: 60px; height: 60px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center;
+  font-size: 26px; font-weight: 600; color: #dff8ff;
+  background: radial-gradient(circle at 35% 25%, rgba(108, 170, 224, 0.24), rgba(9, 25, 42, 0.94));
+  border: 1px solid rgba(47, 210, 255, 0.62); box-shadow: inset 0 0 12px rgba(41, 190, 255, 0.14);
+}
+.coordinator-shell .coord-avatar.is-gold { background: radial-gradient(circle at 35% 25%, rgba(230, 179, 88, 0.3), rgba(34, 20, 7, 0.9)); border-color: rgba(230, 177, 77, 0.62); }
+.coordinator-shell .coord-avatar--small { width: 40px; height: 40px; font-size: 17px; }
+.coordinator-shell .coord-cadet-card__copy { flex: 1; min-width: 0; }
+.coordinator-shell .coord-cadet-card__copy h3 { margin: 0; font-size: 20px; }
+.coordinator-shell .coord-cadet-card__copy p { margin: 4px 0 0; color: #bcc3cd; font-size: 13px; }
+
+.coordinator-shell .coord-date-filter { padding: 14px 18px; }
+.coordinator-shell .coord-date-filter label { display: block; margin-bottom: 8px; font-size: 14px; }
+.coordinator-shell .coord-date-input {
+  display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px;
+  border-radius: 14px; border: 1px solid rgba(35, 220, 209, 0.52); color: #24ddd0;
+}
+.coordinator-shell .coord-date-input input { flex: 1; background: transparent; border: 0; outline: 0; color: #f4f7fc; font-size: 15px; font-family: inherit; }
+.coordinator-shell .coord-date-input input::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+
+.coordinator-shell .coord-empty-panel { min-height: 240px; display: grid; place-items: center; text-align: center; padding: 32px 20px; }
+.coordinator-shell .coord-empty-panel--compact { min-height: 160px; }
+.coordinator-shell .coord-empty-panel--tall { min-height: 320px; }
+.coordinator-shell .coord-empty-panel__icon { color: #1fd9c7; }
+.coordinator-shell .coord-empty-panel h3 { margin: 16px 0 8px; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(24px, 2.4vw, 34px); font-weight: 600; }
+.coordinator-shell .coord-empty-panel p { margin: 0; max-width: 780px; color: #c0c6d0; font-size: 14px; }
+.coordinator-shell .coord-empty-panel__ornament,
+.coordinator-shell .coord-empty-panel__bar { display: block; width: 90px; height: 2px; margin: 20px auto 0; background: linear-gradient(90deg, transparent, #d9a54b 28%, #d9a54b 72%, transparent); }
+
+.coordinator-shell .coord-download-card {
+  min-height: 64px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+  border-color: rgba(31, 218, 209, 0.42); color: #1fd9c7;
+  background: linear-gradient(90deg, rgba(8, 23, 37, 0.86), rgba(4, 18, 32, 0.94));
+  cursor: pointer; font: inherit; font-size: 16px;
+}
+
+.coordinator-shell .coord-user-card { padding: 0; }
+.coordinator-shell .coord-user-card__summary {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px;
+  border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; font: inherit;
+}
+.coordinator-shell .coord-user-card__summary h3 { margin: 0; font-size: 17px; }
+.coordinator-shell .coord-user-card__summary p { margin: 4px 0 0; color: #bcc3cd; font-size: 13px; }
+.coordinator-shell .coord-user-card__chevron { font-size: 18px; color: #1fd9c7; }
+.coordinator-shell .coord-user-card__details { padding: 0 18px 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+.coordinator-shell .coord-user-card__field { display: flex; flex-direction: column; gap: 6px; padding: 14px 0; }
+.coordinator-shell .coord-user-card__field span { color: #b7bec9; font-size: 12px; }
+.coordinator-shell .coord-user-card__field strong { font-size: 15px; }
+.coordinator-shell .coord-delete-button {
+  width: 100%; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  border-radius: 13px; border: 1px solid rgba(255, 75, 75, 0.65); background: rgba(42, 9, 16, 0.22);
+  color: #ff5a58; cursor: pointer; font: inherit; font-size: 14px;
+}
+
+.coordinator-shell .coord-approve-row { display: flex; gap: 10px; }
+.coordinator-shell .coord-approve-button,
+.coordinator-shell .coord-reject-button {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 12px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.coordinator-shell .coord-approve-button { color: #7be0c4; background: rgba(8, 42, 36, 0.4); border: 1px solid rgba(31, 217, 199, 0.4); }
+.coordinator-shell .coord-reject-button { color: #ff8a7a; background: rgba(42, 9, 16, 0.3); border: 1px solid rgba(255, 90, 88, 0.4); }
+.coordinator-shell .coord-pending-badge { margin-left: 8px; background: rgba(232, 176, 64, 0.2); color: #f3be58; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+
+.coordinator-shell .coordinator-bottom-nav {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 0 20px 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(7, 16, 28, 0.96), rgba(5, 13, 23, 0.96));
+  box-shadow: 0 -12px 30px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+.coordinator-shell .coordinator-bottom-nav a {
+  position: relative;
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  color: #b6bcc8;
+  cursor: pointer;
+  font-size: 11px;
+  text-decoration: none;
+}
+.coordinator-shell .coordinator-bottom-nav a.is-active { color: #1de5d3; }
+.coordinator-shell .coordinator-bottom-nav a.is-active::after {
+  content: ''; position: absolute; left: 50%; bottom: 6px; width: 30px; height: 2px; transform: translateX(-50%);
+  border-radius: 999px; background: #1de5d3; box-shadow: 0 0 12px rgba(18, 216, 204, 0.24);
+}
+.coordinator-shell .coordinator-bottom-nav__icon { display: inline-grid; place-items: center; }
+.coordinator-shell .coordinator-bottom-nav__icon svg { width: 20px; height: 20px; }
+
+@media (max-width: 1180px) {
+  .coordinator-shell .coord-kpis--double { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 920px) {
+  .coordinator-shell .coord-cadet-card,
+  .coordinator-shell .coord-operation-card__main { grid-template-columns: 1fr; display: block; }
+  .coordinator-shell .coord-operation-card__icon { margin-bottom: 12px; }
+  .coordinator-shell .coord-cadet-card { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 720px) {
+  .coordinator-shell .coordinator-header { flex-direction: column; align-items: stretch; gap: 12px; padding: 16px 18px; }
+  .coordinator-shell .coordinator-header__name { font-size: 26px; }
+  .coordinator-shell .coordinator-header__divider { display: none; }
+  .coordinator-shell .coordinator-header__brand { flex-wrap: wrap; }
+  .coordinator-shell .coord-back-button { align-self: flex-end; }
+  .coordinator-shell .coord-summary-chip,
+  .coordinator-shell .coord-summary-chip--wide,
+  .coordinator-shell .coord-summary-chip__label--large { width: 100%; }
+  .coordinator-shell .coord-kpi-card { flex-direction: column; align-items: flex-start; }
+  .coordinator-shell .coord-kpi-card__content--centered { text-align: left; }
+  .coordinator-shell .coordinator-content { padding: 12px 14px 14px; }
+  .coordinator-shell .coordinator-bottom-nav { margin: 0 10px 10px; }
+}
+
+@media (max-width: 560px) {
+  .coordinator-shell .coord-filter-tabs button { flex: 1 1 calc(50% - 5px); padding: 0 12px; }
+  .coordinator-shell .coord-back-button { width: 100%; justify-content: center; }
+}

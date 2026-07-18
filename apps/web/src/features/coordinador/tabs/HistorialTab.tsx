@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '../../../shared/api/client.ts';
-import StatusBadge from '../../../shared/components/StatusBadge.tsx';
+import CoordBadge from '../components/CoordBadge.tsx';
+import { CalendarIcon, PinIcon, SearchDocIcon } from '../components/CoordIcons.tsx';
 import type { Operation } from '@cambioapp/shared-types';
 import { formatDateTime } from '../../../shared/utils/format-time.ts';
 
@@ -13,45 +14,52 @@ export default function HistorialTab() {
   // No filtramos por status: el historial muestra todas las operaciones del
   // día (cerradas, canceladas, e incluso las que siguen en curso). Si filtraba
   // solo por 'cerrada', días con operaciones en curso o canceladas aparecían
-  // vacíos. El StatusBadge ya muestra el estado de cada una.
+  // vacíos. El badge ya muestra el estado de cada una.
   const { data: ops = [], isLoading } = useQuery({
     queryKey: ['operations-historial', date],
     queryFn: () => apiGet<Operation[]>('/operations', { date }),
   });
 
   return (
-    <div className="p-4 space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-      </div>
+    <>
+      <section className="coord-date-filter">
+        <label htmlFor="history-date">Fecha</label>
+        <div className="coord-date-input">
+          <input id="history-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          <CalendarIcon />
+        </div>
+      </section>
 
-      {isLoading && <p className="text-center text-gray-500">Buscando...</p>}
+      {isLoading && <p style={{ textAlign: 'center', color: '#c0c6d0' }}>Buscando…</p>}
 
-      <div className="space-y-2">
+      <div className="coord-stack-list">
         {ops.length === 0 && !isLoading && (
-          <p className="text-center text-gray-400 py-6">Sin operaciones para esta fecha</p>
+          <section className="coord-empty-panel">
+            <div className="coord-empty-panel__icon"><SearchDocIcon /></div>
+            <h3>Sin operaciones para esta fecha</h3>
+            <p>No se encontraron operaciones registradas para el {date}.</p>
+            <span className="coord-empty-panel__ornament" aria-hidden="true" />
+          </section>
         )}
         {ops.map((op) => (
-          <div key={op.id} className="card space-y-1">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-sm">#{op.id.slice(-3).toUpperCase()}</span>
-              <StatusBadge status={op.status} />
+          <article key={op.id} className="coord-operation-card">
+            <div className="coord-operation-card__main" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="coord-operation-card__body">
+                <div className="coord-operation-card__row coord-operation-card__row--top">
+                  <h3>#{op.id.slice(-3).toUpperCase()}</h3>
+                  <CoordBadge status={op.status} />
+                </div>
+                <div className="coord-operation-card__meta"><CalendarIcon />{formatDateTime(op.createdAt)}</div>
+                <div className="coord-operation-card__meta"><PinIcon />{op.direccion}</div>
+                <div className="coord-operation-card__amount">
+                  <span>{op.tipo === 'entrega' ? 'Entregar' : 'Recibir'} {op.moneda} {Number(op.monto).toLocaleString('es-AR')}</span>
+                </div>
+                {op.cadete && <div className="coord-operation-card__meta">Cadete: {op.cadete.nombre}</div>}
+              </div>
             </div>
-            <p className="text-xs text-gray-400">{formatDateTime(op.createdAt)}</p>
-            <p className="text-sm text-gray-600">📍 {op.direccion}</p>
-            <p className="text-sm text-gray-800 font-medium">
-              {op.tipo === 'entrega' ? 'Entregar' : 'Recibir'} {op.moneda} {Number(op.monto).toLocaleString('es-AR')}
-            </p>
-            {op.cadete && <p className="text-xs text-gray-400">Cadete: {op.cadete.nombre}</p>}
-          </div>
+          </article>
         ))}
       </div>
-    </div>
+    </>
   );
 }

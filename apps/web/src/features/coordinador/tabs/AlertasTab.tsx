@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import { apiGet, apiPost } from '../../../shared/api/client.ts';
 import type { Incident } from '@cambioapp/shared-types';
+import { AlertIcon, BellCheckIcon } from '../components/CoordIcons.tsx';
 
 type ResolveAction = 'resume' | 'cancel';
 
@@ -27,66 +28,86 @@ export default function AlertasTab() {
     },
   });
 
-  if (isLoading) return <div className="p-4 text-center text-gray-500">Cargando...</div>;
+  if (isLoading) return <div className="coord-empty-panel coord-empty-panel--compact"><p>Cargando…</p></div>;
 
   const active = data?.active ?? [];
   const resolved = data?.resolved ?? [];
 
   return (
-    <div className="p-4 space-y-4">
-      <section>
-        <h2 className="font-semibold text-gray-700 mb-2 flex items-center gap-1">
-          <AlertTriangle size={16} className="text-red-500" />
-          Activas ({active.length})
-        </h2>
-        {active.length === 0 && <p className="text-sm text-gray-400">Sin incidencias activas</p>}
-        {active.map((inc) => (
-          <div key={inc.id} className="card border-l-4 border-red-400 space-y-2 mb-2">
-            <div className="flex justify-between items-start">
-              <p className="text-sm font-medium text-gray-900">{inc.cadete?.nombre}</p>
-              <span className="text-xs text-gray-400">
-                {new Date(inc.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600">{inc.descripcion}</p>
-            <p className="text-xs text-gray-400">📍 {inc.operation?.direccion}</p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <button
-                onClick={() => resolve.mutate({ id: inc.id, action: 'resume' })}
-                disabled={resolve.isPending}
-                className="btn-primary text-sm bg-coordinador flex items-center gap-1"
-              >
-                <CheckCircle size={14} />
-                Resolver
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm('¿Cancelar la operación? El cadete quedará liberado y la operación no se cobrará.')) {
-                    resolve.mutate({ id: inc.id, action: 'cancel' });
-                  }
-                }}
-                disabled={resolve.isPending}
-                className="text-sm px-3 py-1.5 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-1 disabled:opacity-50"
-              >
-                <XCircle size={14} />
-                Cancelar operación
-              </button>
-            </div>
-          </div>
-        ))}
-      </section>
+    <>
+      <article className="coord-summary-chip coord-summary-chip--wide coord-summary-chip--alert">
+        <span className="coord-summary-chip__icon coord-summary-chip__icon--warning"><AlertIcon /></span>
+        <span className="coord-summary-chip__label coord-summary-chip__label--large">Activas ({active.length})</span>
+      </article>
+
+      {active.length === 0 ? (
+        <section className="coord-empty-panel coord-empty-panel--tall">
+          <div className="coord-empty-panel__icon"><BellCheckIcon /></div>
+          <h3>Sin incidencias activas</h3>
+          <span className="coord-empty-panel__bar" aria-hidden="true" />
+        </section>
+      ) : (
+        <div className="coord-stack-list">
+          {active.map((inc) => (
+            <article key={inc.id} className="coord-operation-card">
+              <div className="coord-operation-card__main" style={{ gridTemplateColumns: '1fr' }}>
+                <div className="coord-operation-card__body">
+                  <div className="coord-operation-card__row coord-operation-card__row--top">
+                    <h3 style={{ fontSize: 20 }}>{inc.cadete?.nombre}</h3>
+                    <span className="coord-operation-card__age">
+                      {new Date(inc.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, color: '#e8edf5', fontSize: 14 }}>{inc.descripcion}</p>
+                  <div className="coord-operation-card__meta">📍 {inc.operation?.direccion}</div>
+                  <div className="coord-operation-card__contact">
+                    <button
+                      type="button"
+                      className="coord-assign-button"
+                      onClick={() => resolve.mutate({ id: inc.id, action: 'resume' })}
+                      disabled={resolve.isPending}
+                    >
+                      <CheckCircle size={16} />
+                      Resolver
+                    </button>
+                    <button
+                      type="button"
+                      className="coord-assign-button coord-assign-button--danger"
+                      onClick={() => {
+                        if (confirm('¿Cancelar la operación? El cadete quedará liberado y la operación no se cobrará.')) {
+                          resolve.mutate({ id: inc.id, action: 'cancel' });
+                        }
+                      }}
+                      disabled={resolve.isPending}
+                    >
+                      <XCircle size={16} />
+                      Cancelar operación
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
 
       {resolved.length > 0 && (
         <section>
-          <h2 className="font-semibold text-gray-500 mb-2 text-sm">Resueltas ({resolved.length})</h2>
-          {resolved.map((inc) => (
-            <div key={inc.id} className="card opacity-60 space-y-1 mb-2">
-              <p className="text-sm font-medium">{inc.cadete?.nombre}</p>
-              <p className="text-xs text-gray-500">{inc.descripcion}</p>
-            </div>
-          ))}
+          <div className="coord-section-title">Resueltas ({resolved.length})</div>
+          <div className="coord-stack-list">
+            {resolved.map((inc) => (
+              <article key={inc.id} className="coord-operation-card" style={{ opacity: 0.6 }}>
+                <div className="coord-operation-card__main" style={{ gridTemplateColumns: '1fr' }}>
+                  <div className="coord-operation-card__body">
+                    <h3 style={{ fontSize: 16, margin: 0 }}>{inc.cadete?.nombre}</h3>
+                    <p style={{ margin: 0, color: '#bcc3cd', fontSize: 13 }}>{inc.descripcion}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
       )}
-    </div>
+    </>
   );
 }

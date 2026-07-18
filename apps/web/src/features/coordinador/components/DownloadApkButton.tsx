@@ -33,8 +33,9 @@ export default function DownloadApkButton() {
     <>
       <div className="relative" ref={menuRef}>
         <button
+          type="button"
           onClick={() => setMenuOpen((o) => !o)}
-          className="btn-secondary w-full border-coordinador text-coordinador flex items-center justify-center gap-2"
+          className="coord-download-card"
         >
           <Download size={18} />
           Descargar APK para cadete

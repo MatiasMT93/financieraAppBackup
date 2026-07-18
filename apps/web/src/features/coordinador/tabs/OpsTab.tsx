@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Phone, MessageCircle, UserCheck, AlertTriangle, Repeat } from 'lucide-react';
 import { apiGet } from '../../../shared/api/client.ts';
-import StatusBadge from '../../../shared/components/StatusBadge.tsx';
 import type { Operation } from '@cambioapp/shared-types';
 import AssignModal from '../components/AssignModal.tsx';
+import CoordBadge from '../components/CoordBadge.tsx';
+import { OpsIcon, PulseIcon, MoneyIcon, CalendarIcon, PinIcon, TrendPlaceholder } from '../components/CoordIcons.tsx';
 import { formatRelativeTime, formatDateTime } from '../../../shared/utils/format-time.ts';
 
 const FILTERS = [
@@ -51,47 +52,52 @@ export default function OpsTab() {
   const enCurso = todayOps.filter((op) => !['cerrada', 'cancelada', 'pendiente'].includes(op.status)).length;
   const volumenARS = todayOps.filter((op) => op.moneda === 'ARS').reduce((sum, op) => sum + Number(op.monto), 0);
 
-  if (isLoading) return <div className="p-4 text-center text-gray-500">Cargando operaciones...</div>;
+  if (isLoading) return <div className="coord-empty-panel coord-empty-panel--compact"><p>Cargando operaciones…</p></div>;
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Metricas del dia */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="card text-center">
-          <p className="text-3xl font-bold text-coordinador">{todayOps.length}</p>
-          <p className="text-xs text-gray-500 mt-1">Hoy</p>
-          <p className="text-xs text-gray-400">{cerradas} cerradas · {enCurso} en curso</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-2xl font-bold text-gray-800">
-            ${(volumenARS / 1_000_000).toFixed(1)}M
-          </p>
-          <p className="text-xs text-gray-500 mt-1">Volumen ARS</p>
-          <p className="text-xs text-gray-400">hoy · solo pesos</p>
-        </div>
+    <>
+      <div className="coord-kpis coord-kpis--double">
+        <article className="coord-kpi-card">
+          <span className="coord-kpi-card__icon"><PulseIcon /></span>
+          <div className="coord-kpi-card__content coord-kpi-card__content--centered">
+            <strong>{todayOps.length}</strong>
+            <p>Hoy</p>
+            <small>{cerradas} cerradas · {enCurso} en curso</small>
+          </div>
+        </article>
+
+        <article className="coord-kpi-card">
+          <span className="coord-kpi-card__icon"><MoneyIcon /></span>
+          <div className="coord-kpi-card__content coord-kpi-card__content--centered">
+            <strong>${(volumenARS / 1_000_000).toFixed(1)}M</strong>
+            <p>Volumen ARS</p>
+            <small>hoy · solo pesos</small>
+          </div>
+        </article>
       </div>
 
-      {/* Filtros */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="coord-filter-tabs" role="tablist" aria-label="Filtros de operaciones">
         {FILTERS.map((f) => (
           <button
             key={f.value}
+            type="button"
+            role="tab"
+            aria-selected={filter === f.value}
+            className={filter === f.value ? 'is-active' : ''}
             onClick={() => setFilter(f.value)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === f.value
-                ? 'bg-coordinador text-white'
-                : 'bg-white border border-gray-200 text-gray-600'
-            }`}
           >
             {f.label}
           </button>
         ))}
       </div>
 
-      {/* Cards */}
-      <div className="space-y-3">
+      <div className="coord-stack-list">
         {ops.length === 0 && (
-          <p className="text-center text-gray-400 py-8">No hay operaciones</p>
+          <div className="coord-empty-panel coord-empty-panel--compact">
+            <TrendPlaceholder />
+            <h3>Sin operaciones</h3>
+            <p>No hay operaciones registradas para este filtro.</p>
+          </div>
         )}
         {ops.map((op) => (
           <OperationCard
@@ -113,7 +119,7 @@ export default function OpsTab() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -127,89 +133,75 @@ function OperationCard({
   onViewIncident: () => void;
 }) {
   return (
-    <div className="card space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="font-semibold text-gray-900">#{op.id.slice(-3).toUpperCase()}</span>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400" title={formatDateTime(op.createdAt)}>
-            {formatRelativeTime(op.createdAt)}
-          </span>
-          <StatusBadge status={op.status} />
-        </div>
-      </div>
-
-      <p className="text-xs text-gray-400">{formatDateTime(op.createdAt)}</p>
-
-      {op.cadete && (
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-coordinador text-white flex items-center justify-center text-xs font-bold">
-            {op.cadete.nombre[0]}
+    <article className="coord-operation-card">
+      <div className="coord-operation-card__main">
+        <span className="coord-operation-card__icon"><OpsIcon /></span>
+        <div className="coord-operation-card__body">
+          <div className="coord-operation-card__row coord-operation-card__row--top">
+            <h3>#{op.id.slice(-3).toUpperCase()}</h3>
+            <span className="coord-operation-card__age" title={formatDateTime(op.createdAt)}>{formatRelativeTime(op.createdAt)}</span>
+            <CoordBadge status={op.status} />
           </div>
-          <span className="text-sm text-gray-600">{op.cadete.nombre}</span>
+
+          <div className="coord-operation-card__meta"><CalendarIcon />{formatDateTime(op.createdAt)}</div>
+          {op.cadete && <div className="coord-operation-card__meta"><UsersIconInline />{op.cadete.nombre}</div>}
+          <div className="coord-operation-card__meta"><PinIcon />{op.direccion}</div>
+          <div className="coord-operation-card__amount"><MoneyIcon /><span>{formatMonto(op)}</span></div>
+
+          <div className="coord-operation-card__contact">
+            {op.status === 'pendiente' && (
+              <button type="button" className="coord-assign-button" onClick={onAssign}>
+                <UserCheck size={16} />
+                Asignar cadete
+              </button>
+            )}
+            {op.status === 'incidencia' && (
+              <button type="button" className="coord-assign-button coord-assign-button--danger" onClick={onViewIncident}>
+                <AlertTriangle size={16} />
+                Ver incidencia
+              </button>
+            )}
+            {op.status === 'asignada' && (
+              <button type="button" className="coord-assign-button coord-assign-button--ghost" onClick={onAssign}>
+                <Repeat size={16} />
+                Reasignar
+              </button>
+            )}
+          </div>
+
+          {op.cadete?.celular && (
+            <div className="coord-operation-card__contact">
+              <a href={`tel:${op.cadete.celular}`} className="coord-contact-link coord-contact-link--call">
+                <Phone size={15} />
+                Llamar
+              </a>
+              <a
+                href={`https://wa.me/${
+                  (() => {
+                    const n = op.cadete.celular.replace(/\D/g, '');
+                    return n.startsWith('0') ? `549${n.slice(1)}` : `549${n}`;
+                  })()
+                }`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="coord-contact-link coord-contact-link--wa"
+              >
+                <MessageCircle size={15} />
+                WhatsApp
+              </a>
+            </div>
+          )}
         </div>
-      )}
-
-      <div className="text-sm text-gray-600 flex items-start gap-1">
-        <span>📍</span>
-        <span>{op.direccion}</span>
       </div>
-      <div className="text-sm font-medium text-gray-800">{formatMonto(op)}</div>
+    </article>
+  );
+}
 
-      <div className="flex gap-2 pt-1 flex-wrap">
-        {op.status === 'pendiente' && (
-          <button
-            onClick={onAssign}
-            className="btn-primary text-sm bg-coordinador flex items-center gap-1"
-          >
-            <UserCheck size={14} />
-            Asignar cadete
-          </button>
-        )}
-        {op.status === 'incidencia' && (
-          <button
-            onClick={onViewIncident}
-            className="btn-secondary text-sm border-red-200 text-red-600 flex items-center gap-1"
-          >
-            <AlertTriangle size={14} />
-            Ver incidencia
-          </button>
-        )}
-        {op.status === 'asignada' && (
-          <button
-            onClick={onAssign}
-            className="btn-secondary text-sm border-gray-200 text-gray-600 flex items-center gap-1 ml-auto"
-          >
-            <Repeat size={14} />
-            Reasignar
-          </button>
-        )}
-      </div>
-
-      {op.cadete?.celular && (
-        <div className="flex gap-2 pt-1">
-          <a
-            href={`tel:${op.cadete.celular}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
-          >
-            <Phone size={15} />
-            Llamar
-          </a>
-          <a
-            href={`https://wa.me/${
-              (() => {
-                const n = op.cadete.celular.replace(/\D/g, '');
-                return n.startsWith('0') ? `549${n.slice(1)}` : `549${n}`;
-              })()
-            }`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors"
-          >
-            <MessageCircle size={15} />
-            WhatsApp
-          </a>
-        </div>
-      )}
-    </div>
+function UsersIconInline() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="12" cy="11" r="4.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4.5 25c1.5-4 4.4-6 7.5-6s6 2 7.5 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }
