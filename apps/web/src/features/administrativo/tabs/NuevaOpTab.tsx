@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPost } from '../../../shared/api/client.ts';
 import {
-  SearchIcon, PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
+  PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
   PinIcon, UserIcon, PhoneIcon, ChevronDownIcon, BoxIllustration,
 } from '../components/AdminIcons.tsx';
 
@@ -63,13 +63,6 @@ export default function NuevaOpTab() {
 
   return (
     <>
-      <div className="admin-toolbar">
-        <div className="admin-searchbar">
-          <SearchIcon />
-          <input placeholder="Buscar operaciones..." disabled />
-        </div>
-      </div>
-
       <section className="admin-page-header admin-page-header--new">
         <span className="admin-page-header__icon"><PlusIcon /></span>
         <div>
