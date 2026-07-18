@@ -19,7 +19,7 @@ function ConfirmDeleteDialog({
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="card w-full max-w-sm">
+      <div className="card w-full max-w-sm" style={{ color: '#111827' }}>
         <h2 className="font-semibold text-gray-900 mb-2">Eliminar cadete</h2>
         <p className="text-sm text-gray-600 mb-6">
           ¿Estás seguro que querés eliminar a{' '}

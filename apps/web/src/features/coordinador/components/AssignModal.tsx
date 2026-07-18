@@ -38,7 +38,7 @@ export default function AssignModal({ operation, onClose, onAssigned }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="card w-full max-w-md">
+      <div className="card w-full max-w-md" style={{ color: '#111827' }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-900">
             {isAssigned ? 'Reasignar cadete' : 'Asignar cadete'}

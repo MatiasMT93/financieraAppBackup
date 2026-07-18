@@ -42,7 +42,7 @@ export default function DownloadApkButton() {
         </button>
 
         {menuOpen && (
-          <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden">
+          <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden" style={{ color: '#111827' }}>
             <button
               onClick={() => { setShowQr(true); setMenuOpen(false); }}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -65,7 +65,7 @@ export default function DownloadApkButton() {
       {/* Modal QR */}
       {showQr && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="card w-full max-w-xs text-center">
+          <div className="card w-full max-w-xs text-center" style={{ color: '#111827' }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-gray-900">Escanear para descargar</h2>
               <button onClick={() => setShowQr(false)}>

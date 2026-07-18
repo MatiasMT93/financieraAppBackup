@@ -95,7 +95,8 @@
 
 .coordinator-shell .coord-back-button svg,
 .coordinator-shell .coord-download-card svg,
-.coordinator-shell .coord-date-input svg {
+.coordinator-shell .coord-date-input svg,
+.coordinator-shell .coord-delete-button svg {
   width: 20px;
   height: 20px;
 }
