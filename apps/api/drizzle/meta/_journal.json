@@ -36,6 +36,13 @@
       "when": 1782183729936,
       "tag": "0004_add_refresh_token_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784399599993,
+      "tag": "0005_colorful_warbird",
+      "breakpoints": true
     }
   ]
 }
