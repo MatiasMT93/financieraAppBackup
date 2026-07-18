@@ -297,10 +297,13 @@
 .admin-shell .admin-input-shell--with-suffix .admin-suffix { min-width: 48px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid rgba(92, 108, 129, 0.42); color: #eef2f7; font-size: 12px; }
 .admin-shell .admin-form-actions { grid-template-columns: 1fr 1fr; }
 
-.admin-shell .admin-preview-card { display: flex; flex-direction: column; }
+.admin-shell .admin-preview-card {
+  display: flex; flex-direction: column;
+  position: sticky; top: 14px; align-self: start;
+}
 .admin-shell .admin-preview-card__illustration { display: grid; place-items: center; padding: 4px 0 0; color: #1fe0d2; }
-.admin-shell .admin-preview-card__illustration svg { width: 120px; height: auto; }
-.admin-shell .admin-preview-card > p { margin: 6px auto 14px; max-width: 280px; text-align: center; color: #d0d6df; font-size: 13px; }
+.admin-shell .admin-preview-card__illustration svg { width: 92px; height: auto; }
+.admin-shell .admin-preview-card > p { margin: 6px auto 12px; max-width: 280px; text-align: center; color: #d0d6df; font-size: 13px; }
 .admin-shell .admin-preview-list { margin-top: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
 .admin-shell .admin-preview-list div { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 46px; padding: 0 14px; border-top: 1px solid rgba(255,255,255,0.08); }
 .admin-shell .admin-preview-list div:first-child { border-top: 0; }
