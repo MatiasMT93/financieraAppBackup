@@ -254,6 +254,8 @@ export default function NuevaOpTab() {
             )}
             <div><span><PinIcon />Dirección</span><strong>{form.direccion || '—'}</strong></div>
             <div><span><UserIcon />Contacto</span><strong>{form.contacto || '—'}</strong></div>
+            <div><span><PhoneIcon />Teléfono</span><strong>{form.telefono || '—'}</strong></div>
+            <div><span><ClipboardIcon />Notas</span><strong>{form.notas || '—'}</strong></div>
           </div>
         </aside>
       </section>

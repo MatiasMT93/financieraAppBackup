@@ -293,7 +293,7 @@
 .admin-shell .admin-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .admin-shell .admin-field > span { color: #eef2f7; font-size: 13px; }
 .admin-shell .admin-input-shell {
-  display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 14px;
+  display: flex; align-items: center; gap: 10px; height: 46px; min-height: 46px; padding: 0 14px;
   border-radius: 12px; border: 1px solid rgba(99, 116, 139, 0.32); background: rgba(4, 15, 30, 0.68); color: #1fe0d2;
 }
 .admin-shell .admin-input-shell input,
@@ -304,9 +304,22 @@
   background: #0a1826;
   color: #eef2f7;
 }
-.admin-shell .admin-input-shell--textarea { align-items: flex-start; padding-top: 12px; min-height: 84px; }
+.admin-shell .admin-input-shell--textarea { align-items: flex-start; padding-top: 12px; height: 84px; min-height: 84px; }
 .admin-shell .admin-input-shell--with-suffix .admin-suffix { min-width: 48px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid rgba(92, 108, 129, 0.42); color: #eef2f7; font-size: 12px; }
 .admin-shell .admin-form-actions { grid-template-columns: 1fr 1fr; }
+
+/* Sin height explícita en .admin-input-shell, el height:100% de arriba no
+ * resuelve en todos los contextos (funciona si el field está dentro de un
+ * grid de 2 columnas, pero no si es un field suelto): el input queda con su
+ * alto intrínseco y el texto aparece pegado arriba en vez de centrado. */
+.admin-shell input[type="number"] {
+  -moz-appearance: textfield;
+}
+.admin-shell input[type="number"]::-webkit-outer-spin-button,
+.admin-shell input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
 .admin-shell .admin-preview-card {
   display: flex; flex-direction: column;
