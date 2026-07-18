@@ -48,7 +48,7 @@ export async function listOperations(filters: {
 
 export async function createOperation(data: {
   tipo: 'entrega' | 'retiro';
-  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL';
+  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto: number;
   direccion: string;
   contacto: string;
@@ -62,7 +62,7 @@ export async function createOperation(data: {
 
 export async function updateOperation(id: string, data: Partial<{
   tipo: 'entrega' | 'retiro';
-  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL';
+  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto: number;
   direccion: string;
   contacto: string;

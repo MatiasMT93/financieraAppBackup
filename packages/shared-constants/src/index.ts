@@ -43,6 +43,7 @@ export const CURRENCY = {
   USD: 'USD',
   EUR: 'EUR',
   BRL: 'BRL',
+  USDT: 'USDT',
 } as const;
 
 export type Currency = (typeof CURRENCY)[keyof typeof CURRENCY];

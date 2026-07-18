@@ -3,11 +3,11 @@ import { apiGet } from '../../../shared/api/client.ts';
 import type { CashInStreet } from '@cambioapp/shared-types';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
-  ARS: '$', USD: 'U$', EUR: '€', BRL: 'R$',
+  ARS: '$', USD: 'U$', EUR: '€', BRL: 'R$', USDT: '₮',
 };
 
 const CURRENCY_FLAGS: Record<string, string> = {
-  ARS: '🇦🇷', USD: '🇺🇸', EUR: '🇪🇺', BRL: '🇧🇷',
+  ARS: '🇦🇷', USD: '🇺🇸', EUR: '🇪🇺', BRL: '🇧🇷', USDT: '🟢',
 };
 
 export default function CajaTab() {

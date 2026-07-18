@@ -23,6 +23,7 @@ router.get('/summary', async (req, res) => {
     USD: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
     EUR: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
     BRL: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
+    USDT: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
   };
 
   for (const op of ops) {
@@ -61,6 +62,7 @@ router.get('/cash-in-street', async (_req, res) => {
     USD: { total: 0, operationCount: 0 },
     EUR: { total: 0, operationCount: 0 },
     BRL: { total: 0, operationCount: 0 },
+    USDT: { total: 0, operationCount: 0 },
   };
 
   for (const op of ops) {

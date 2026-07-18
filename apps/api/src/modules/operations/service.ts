@@ -24,7 +24,7 @@ export async function getOperation(id: string) {
 export async function createOperation(
   data: {
     tipo: 'entrega' | 'retiro';
-    moneda: 'ARS' | 'USD' | 'EUR' | 'BRL';
+    moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
     monto: number;
     direccion: string;
     contacto: string;
