@@ -323,8 +323,13 @@
 
 .admin-shell .admin-preview-card {
   display: flex; flex-direction: column;
-  align-self: start;
+  align-self: stretch;
+  min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(31, 217, 199, 0.5) rgba(4, 15, 26, 0.4);
 }
+.admin-shell .admin-preview-card::-webkit-scrollbar { width: 8px; height: 8px; }
+.admin-shell .admin-preview-card::-webkit-scrollbar-track { background: rgba(4, 15, 26, 0.4); border-radius: 10px; }
+.admin-shell .admin-preview-card::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(31, 217, 199, 0.55), rgba(223, 180, 86, 0.35)); border-radius: 10px; border: 1px solid rgba(4, 15, 26, 0.4); }
 .admin-shell .admin-preview-card__illustration { display: grid; place-items: center; padding: 4px 0 0; color: #1fe0d2; }
 .admin-shell .admin-preview-card__illustration svg { width: 92px; height: auto; }
 .admin-shell .admin-preview-card > p { margin: 6px auto 12px; max-width: 280px; text-align: center; color: #d0d6df; font-size: 13px; }

@@ -19,21 +19,27 @@ export async function listOperations(filters: {
   date?: string;
 }) {
   const conditions = [];
-  if (filters.status) {
-    const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
-    if (statuses.length === 1) {
-      conditions.push(eq(operations.status, statuses[0]));
-    } else if (statuses.length > 1) {
-      conditions.push(inArray(operations.status, statuses));
-    }
+  const statuses = filters.status
+    ? Array.isArray(filters.status) ? filters.status : [filters.status]
+    : [];
+  if (statuses.length === 1) {
+    conditions.push(eq(operations.status, statuses[0]));
+  } else if (statuses.length > 1) {
+    conditions.push(inArray(operations.status, statuses));
   }
   if (filters.cadeteId) conditions.push(eq(operations.cadeteId, filters.cadeteId));
   if (filters.date) {
     // Interpret date in Buenos Aires timezone (UTC-3, no DST)
     const start = new Date(`${filters.date}T00:00:00-03:00`);
     const end = new Date(`${filters.date}T23:59:59.999-03:00`);
-    conditions.push(gte(operations.createdAt, start));
-    conditions.push(lte(operations.createdAt, end));
+    // Para "cerradas" el día relevante es cuándo se cerraron, no cuándo se
+    // crearon: una operación creada ayer y cerrada hoy debe aparecer en el
+    // filtro de cerradas de hoy (antes quedaba afuera al mirar createdAt).
+    const dateColumn = statuses.length === 1 && statuses[0] === 'cerrada'
+      ? operations.updatedAt
+      : operations.createdAt;
+    conditions.push(gte(dateColumn, start));
+    conditions.push(lte(dateColumn, end));
   }
 
   return db.query.operations.findMany({
