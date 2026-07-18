@@ -61,7 +61,17 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 14px 22px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 217, 199, 0.5) rgba(4, 15, 26, 0.4);
 }
+.admin-shell .admin-content::-webkit-scrollbar { width: 10px; height: 10px; }
+.admin-shell .admin-content::-webkit-scrollbar-track { background: rgba(4, 15, 26, 0.4); border-radius: 10px; }
+.admin-shell .admin-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(31, 217, 199, 0.55), rgba(223, 180, 86, 0.35));
+  border-radius: 10px;
+  border: 2px solid rgba(4, 15, 26, 0.4);
+}
+.admin-shell .admin-content::-webkit-scrollbar-thumb:hover { background: rgba(31, 217, 199, 0.78); }
 
 .admin-shell .admin-toolbar { margin-bottom: 12px; }
 .admin-shell .admin-searchbar {
@@ -264,6 +274,10 @@
 .admin-shell .admin-input-shell select,
 .admin-shell .admin-input-shell textarea { flex: 1; border: 0; outline: 0; background: transparent; color: #eef2f7; font: inherit; font-size: 14px; resize: none; }
 .admin-shell .admin-input-shell select { appearance: none; }
+.admin-shell .admin-input-shell select option {
+  background: #0a1826;
+  color: #eef2f7;
+}
 .admin-shell .admin-input-shell--textarea { align-items: flex-start; padding-top: 12px; min-height: 84px; }
 .admin-shell .admin-input-shell--with-suffix .admin-suffix { min-width: 48px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid rgba(92, 108, 129, 0.42); color: #eef2f7; font-size: 12px; }
 .admin-shell .admin-form-actions { grid-template-columns: 1fr 1fr; }

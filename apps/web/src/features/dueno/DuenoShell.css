@@ -139,7 +139,17 @@
   padding: clamp(18px, 2.5vh, 25px) clamp(24px, 2.3vw, 38px) clamp(22px, 2.8vh, 28px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 193, 175, 0.5) rgba(3, 15, 26, 0.4);
 }
+.dashboard-shell .dashboard-content::-webkit-scrollbar { width: 10px; height: 10px; }
+.dashboard-shell .dashboard-content::-webkit-scrollbar-track { background: rgba(3, 15, 26, 0.4); border-radius: 10px; }
+.dashboard-shell .dashboard-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(21, 193, 175, 0.55), rgba(226, 179, 82, 0.35));
+  border-radius: 10px;
+  border: 2px solid rgba(3, 15, 26, 0.4);
+}
+.dashboard-shell .dashboard-content::-webkit-scrollbar-thumb:hover { background: rgba(21, 193, 175, 0.78); }
 
 .dashboard-shell .section-heading {
   display: flex;
