@@ -56,7 +56,7 @@ export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
           <span className="coordinator-header__name">CambioApp</span>
           <span className="coordinator-header__divider" aria-hidden="true" />
           <div className="coordinator-header__title-group">
-            <h1>{currentTab?.label ?? 'Ops.'}</h1>
+            <h1>{currentTab?.label ?? 'Operaciones'}</h1>
             <p>{todayLabel}</p>
           </div>
         </div>

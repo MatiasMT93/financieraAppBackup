@@ -58,7 +58,7 @@ export default function AdministrativoShell({ onBack }: { onBack?: () => void })
       <nav className="admin-bottom-nav" aria-label="Pestañas de administrador">
         <NavLink to="ops" className={({ isActive }) => (isActive ? 'is-active' : '')}>
           <ClipboardIcon />
-          <span>Ops.</span>
+          <span>Operaciones</span>
         </NavLink>
         <NavLink to="nueva" className={({ isActive }) => (isActive ? 'is-active' : '')}>
           <PlusIcon />
