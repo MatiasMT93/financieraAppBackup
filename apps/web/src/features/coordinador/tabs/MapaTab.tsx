@@ -8,10 +8,12 @@ import { apiGet } from '../../../shared/api/client.ts';
 import CoordBadge from '../components/CoordBadge.tsx';
 import AnimatedCadetMarkers, { type CadetMarker } from '../components/AnimatedCadetMarkers.tsx';
 import LocateControl from '../components/LocateControl.tsx';
+import { UsersIcon, SearchIcon, FilterIcon, CenterIcon, CloseIcon, PinIcon } from '../components/CoordIcons.tsx';
 import type { CadetLocation, CadeteStatus } from '@cambioapp/shared-types';
 
 // Buenos Aires center
 const BA_CENTER: [number, number] = [-34.6037, -58.3816];
+const BA_ZOOM = 13;
 
 const STATUS_COLORS: Record<string, string> = {
   disponible: '#0F6E56',
@@ -21,6 +23,20 @@ const STATUS_COLORS: Record<string, string> = {
   volviendo: '#3C3489',
   incidencia: '#993C1D',
 };
+
+type Group = 'onWay' | 'asignada' | 'disponible' | 'incidencia' | 'sinConexion';
+
+const GROUP_LABELS: Record<Group, string> = {
+  onWay: 'En camino',
+  asignada: 'Asignado',
+  disponible: 'Disponible',
+  incidencia: 'Incidencia',
+  sinConexion: 'Sin conexión',
+};
+
+const GROUP_ORDER: Group[] = ['onWay', 'asignada', 'disponible', 'incidencia', 'sinConexion'];
+
+const timeFormatter = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit' });
 
 interface LocationPayload {
   cadeteId: string;
@@ -52,11 +68,34 @@ export default function MapaTab() {
   // Instancia del mapa, para poder centrarlo al tocar un cadete de la lista
   const mapRef = useRef<LeafletMap | null>(null);
 
+  const [panel, setPanel] = useState<'cadetes' | 'filtros'>('cadetes');
+  const [query, setQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<Group | 'todos'>('todos');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const posOf = (loc: CadetLocation): [number, number] | null =>
+    livePositions[loc.cadeteId] ??
+    (loc.latitude != null && loc.longitude != null ? [loc.latitude, loc.longitude] : null);
+
   const focusCadete = (loc: CadetLocation) => {
-    const pos = livePositions[loc.cadeteId] ??
-      (loc.latitude != null && loc.longitude != null ? [loc.latitude, loc.longitude] as [number, number] : null);
+    const pos = posOf(loc);
     if (pos) mapRef.current?.flyTo(pos, 16, { duration: 0.8 });
+    setSelectedId(loc.cadeteId);
   };
+
+  const centerMap = () => {
+    mapRef.current?.flyTo(BA_CENTER, BA_ZOOM, { duration: 0.8 });
+    setSelectedId(null);
+  };
+
+  function groupOf(loc: CadetLocation): Group {
+    if (!posOf(loc)) return 'sinConexion';
+    const status = loc.cadeteStatus ?? 'disponible';
+    if (status === 'en_camino' || status === 'en_destino' || status === 'volviendo') return 'onWay';
+    if (status === 'asignada') return 'asignada';
+    if (status === 'incidencia') return 'incidencia';
+    return 'disponible';
+  }
 
   // Escuchar posiciones en vivo por socket y guardarlas en estado local
   useEffect(() => {
@@ -104,54 +143,162 @@ export default function MapaTab() {
     [locations, livePositions],
   );
 
+  const grouped = useMemo(() => {
+    const byGroup: Record<Group, CadetLocation[]> = {
+      onWay: [], asignada: [], disponible: [], incidencia: [], sinConexion: [],
+    };
+    const q = query.trim().toLowerCase();
+    for (const loc of locations) {
+      if (q && !(loc.cadete?.nombre ?? '').toLowerCase().includes(q)) continue;
+      byGroup[groupOf(loc)].push(loc);
+    }
+    return byGroup;
+  }, [locations, query, livePositions]);
+
+  const counts = useMemo(() => {
+    const c: Record<Group, number> = { onWay: 0, asignada: 0, disponible: 0, incidencia: 0, sinConexion: 0 };
+    for (const loc of locations) c[groupOf(loc)] += 1;
+    return c;
+  }, [locations, livePositions]);
+
+  const selectedLoc = locations.find((l) => l.cadeteId === selectedId) ?? null;
+
+  const visibleGroups = GROUP_ORDER.filter((g) => activeFilter === 'todos' || activeFilter === g);
+
   return (
-    <section className="coord-map-card">
-      <div className="coord-map-surface">
-        <MapContainer
-          ref={mapRef}
-          center={BA_CENTER}
-          zoom={13}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            subdomains="abcd"
-            maxZoom={20}
-          />
-          <AnimatedCadetMarkers cadets={cadets} />
-          <LocateControl />
-        </MapContainer>
+    <>
+      <div className="coord-map-kpis">
+        <article className="coord-map-kpi">
+          <span className="coord-map-kpi__icon"><UsersIcon /></span>
+          <div><strong>{counts.onWay}</strong><small>En camino</small></div>
+        </article>
+        <article className="coord-map-kpi is-gold">
+          <span className="coord-map-kpi__icon"><UsersIcon /></span>
+          <div><strong>{counts.asignada}</strong><small>Asignado</small></div>
+        </article>
+        <article className="coord-map-kpi">
+          <span className="coord-map-kpi__icon"><UsersIcon /></span>
+          <div><strong>{counts.disponible}</strong><small>Disponibles</small></div>
+        </article>
+        <article className="coord-map-kpi is-red">
+          <span className="coord-map-kpi__icon"><UsersIcon /></span>
+          <div><strong>{counts.sinConexion}</strong><small>Sin conexión</small></div>
+        </article>
       </div>
 
-      <div className="coord-map-list">
-        <h3>Cadetes en el mapa — tocá uno para centrarlo</h3>
-        {locations.length === 0 && <p style={{ color: '#9ba2b0', fontSize: 14 }}>Sin cadetes activos</p>}
-        {locations.map((loc) => {
-          const hasGps = loc.latitude != null || livePositions[loc.cadeteId] != null;
-          return (
-            <button
-              key={loc.cadeteId}
-              type="button"
-              className="coord-map-list__item"
-              onClick={() => hasGps ? focusCadete(loc) : undefined}
-              disabled={!hasGps}
-            >
-              <span
-                className="coord-avatar coord-avatar--small"
-                style={{ background: 'none', borderColor: STATUS_COLORS[loc.cadeteStatus ?? 'disponible'] ?? '#6b7280' }}
-              >
-                {loc.cadete?.nombre?.[0] ?? '?'}
-              </span>
-              <span className="coord-map-list__copy">
-                <strong>{loc.cadete?.nombre}</strong>
-                {!hasGps && <small>Sin GPS</small>}
-              </span>
-              <CoordBadge status={(loc.cadeteStatus ?? 'disponible') as CadeteStatus} />
+      <section className="coord-map-card">
+        <aside className="coord-map-sidebar">
+          <div className="coord-map-tabs">
+            <button type="button" className={panel === 'cadetes' ? 'is-active' : ''} onClick={() => setPanel('cadetes')}>
+              <UsersIcon />Cadetes
             </button>
-          );
-        })}
-      </div>
-    </section>
+            <button type="button" className={panel === 'filtros' ? 'is-active' : ''} onClick={() => setPanel('filtros')}>
+              <FilterIcon />Filtros
+            </button>
+          </div>
+
+          {panel === 'cadetes' ? (
+            <div className="coord-map-sidebar__scroll">
+              <label className="coord-map-search">
+                <SearchIcon />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar cadete..." />
+              </label>
+
+              {locations.length === 0 && <p className="coord-map-empty">Sin cadetes activos</p>}
+
+              {visibleGroups.map((g) => {
+                const items = grouped[g];
+                if (items.length === 0) return null;
+                return (
+                  <div key={g}>
+                    <h3 className={`coord-map-group-title coord-map-group-title--${g}`}>
+                      {GROUP_LABELS[g]} ({items.length})
+                    </h3>
+                    {items.map((loc) => {
+                      const hasGps = posOf(loc) != null;
+                      return (
+                        <button
+                          key={loc.cadeteId}
+                          type="button"
+                          className={`coord-map-list__item ${selectedId === loc.cadeteId ? 'is-selected' : ''}`}
+                          onClick={() => (hasGps ? focusCadete(loc) : undefined)}
+                          disabled={!hasGps}
+                        >
+                          <span
+                            className="coord-avatar coord-avatar--small"
+                            style={{ background: 'none', borderColor: STATUS_COLORS[loc.cadeteStatus ?? 'disponible'] ?? '#6b7280' }}
+                          >
+                            {loc.cadete?.nombre?.[0] ?? '?'}
+                          </span>
+                          <span className="coord-map-list__copy">
+                            <strong>{loc.cadete?.nombre}</strong>
+                            {!hasGps && <small>Sin GPS</small>}
+                          </span>
+                          <CoordBadge status={(loc.cadeteStatus ?? 'disponible') as CadeteStatus} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="coord-map-filters">
+              <button type="button" className={activeFilter === 'todos' ? 'is-active' : ''} onClick={() => setActiveFilter('todos')}>
+                Todos
+              </button>
+              {GROUP_ORDER.map((g) => (
+                <button key={g} type="button" className={activeFilter === g ? 'is-active' : ''} onClick={() => { setActiveFilter(g); setPanel('cadetes'); }}>
+                  {GROUP_LABELS[g]} ({counts[g]})
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button type="button" className="coord-center-btn" onClick={centerMap}>
+            <CenterIcon />Centrar mapa
+          </button>
+        </aside>
+
+        <div className="coord-map-surface">
+          <MapContainer
+            ref={mapRef}
+            center={BA_CENTER}
+            zoom={BA_ZOOM}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+              maxZoom={20}
+            />
+            <AnimatedCadetMarkers cadets={cadets} />
+            <LocateControl />
+          </MapContainer>
+
+          {selectedLoc && (
+            <article className="coord-map-person-card">
+              <span className="coord-avatar">{selectedLoc.cadete?.nombre?.[0] ?? '?'}</span>
+              <div className="coord-map-person-card__body">
+                <strong>{selectedLoc.cadete?.nombre ?? 'Cadete'}</strong>
+                <CoordBadge status={(selectedLoc.cadeteStatus ?? 'disponible') as CadeteStatus} />
+              </div>
+              <div>
+                <span>Última actualización</span>
+                <strong>{selectedLoc.updatedAt ? timeFormatter.format(new Date(selectedLoc.updatedAt)) : '—'}</strong>
+              </div>
+              <div>
+                <span><PinIcon />Precisión GPS</span>
+                <strong>{selectedLoc.accuracy != null ? `± ${Math.round(selectedLoc.accuracy)} m` : '—'}</strong>
+              </div>
+              <button type="button" className="coord-map-person-card__close" onClick={() => setSelectedId(null)} aria-label="Cerrar">
+                <CloseIcon />
+              </button>
+            </article>
+          )}
+        </div>
+      </section>
+    </>
   );
 }
