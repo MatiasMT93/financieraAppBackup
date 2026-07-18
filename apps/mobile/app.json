@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Plaza App",
+    "name": "CambioApp",
     "slug": "cambioapp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,8 +15,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.cambioapp.cadete",
       "infoPlist": {
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Plaza App necesita acceder a tu ubicación en todo momento para que el coordinador pueda verte en el mapa mientras estás en camino.",
-        "NSLocationWhenInUseUsageDescription": "Plaza App usa tu ubicación para mostrarle al coordinador dónde estás.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "CambioApp necesita acceder a tu ubicación en todo momento para que el coordinador pueda verte en el mapa mientras estás en camino.",
+        "NSLocationWhenInUseUsageDescription": "CambioApp usa tu ubicación para mostrarle al coordinador dónde estás.",
         "UIBackgroundModes": ["location", "fetch", "remote-notification"]
       }
     },
@@ -40,7 +40,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Plaza App necesita acceder a tu ubicación en todo momento para que el coordinador pueda verte en el mapa mientras estás en camino.",
+          "locationAlwaysAndWhenInUsePermission": "CambioApp necesita acceder a tu ubicación en todo momento para que el coordinador pueda verte en el mapa mientras estás en camino.",
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }

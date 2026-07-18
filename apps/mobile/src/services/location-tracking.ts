@@ -62,7 +62,7 @@ export async function startLocationTracking(): Promise<void> {
     timeInterval: LOCATION_INTERVAL_MS,
     distanceInterval: 10,
     foregroundService: {
-      notificationTitle: 'Plaza App',
+      notificationTitle: 'CambioApp',
       notificationBody: 'Compartiendo ubicación con el coordinador',
       notificationColor: '#1D9E75',
     },
