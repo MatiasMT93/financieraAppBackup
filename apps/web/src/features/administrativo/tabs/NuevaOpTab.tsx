@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPost } from '../../../shared/api/client.ts';
 
 const TIPOS = ['Entrega', 'Retiro'];
-const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL'];
+const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'];
 
 interface FormState {
   tipo: string;

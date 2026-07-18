@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createOperationSchema = z.object({
   tipo: z.enum(['entrega', 'retiro']),
-  moneda: z.enum(['ARS', 'USD', 'EUR', 'BRL']),
+  moneda: z.enum(['ARS', 'USD', 'EUR', 'BRL', 'USDT']),
   monto: z.number().positive(),
   direccion: z.string().min(5),
   contacto: z.string().min(2),

@@ -15,7 +15,7 @@ const FILTERS = [
 ];
 
 const TIPOS = ['entrega', 'retiro'] as const;
-const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL'] as const;
+const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'] as const;
 
 interface EditForm {
   tipo: string;

@@ -21,7 +21,7 @@ const FILTERS = [
 
 function formatMonto(op: Operation) {
   const sign = op.tipo === 'entrega' ? 'Entregar' : 'Recibir';
-  const symbol = op.moneda === 'ARS' ? '$' : op.moneda === 'USD' ? 'U$' : op.moneda === 'EUR' ? '€' : 'R$';
+  const symbol = op.moneda === 'ARS' ? '$' : op.moneda === 'USD' ? 'U$' : op.moneda === 'EUR' ? '€' : op.moneda === 'BRL' ? 'R$' : '₮';
   return `${sign} ${symbol} ${Number(op.monto).toLocaleString('es-AR')} ${op.moneda}`;
 }
 

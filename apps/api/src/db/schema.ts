@@ -15,7 +15,7 @@ import { relations } from 'drizzle-orm';
 
 export const roleEnum = pgEnum('role', ['cadete', 'coordinador', 'administrativo', 'dueno']);
 export const operationTypeEnum = pgEnum('operation_type', ['entrega', 'retiro']);
-export const currencyEnum = pgEnum('currency', ['ARS', 'USD', 'EUR', 'BRL']);
+export const currencyEnum = pgEnum('currency', ['ARS', 'USD', 'EUR', 'BRL', 'USDT']);
 export const operationStatusEnum = pgEnum('operation_status', [
   'pendiente',
   'asignada',
