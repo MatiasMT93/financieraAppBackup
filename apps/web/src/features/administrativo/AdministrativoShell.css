@@ -116,29 +116,16 @@
 
 .admin-shell .admin-ops-count { flex: 0 0 auto; margin-bottom: 10px; color: #e6ebf2; font-size: 14px; }
 
-.admin-shell .admin-ops-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(340px, 0.9fr);
-  gap: 16px;
-  align-items: stretch;
-  flex: 1;
-  min-height: 0;
-}
-
+.admin-shell .admin-ops-layout,
 .admin-shell .admin-new-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(340px, 0.9fr);
   gap: 16px;
   align-items: start;
 }
+.admin-shell .admin-ops-layout { flex: 1; min-height: 0; }
 
-.admin-shell .admin-ops-list {
-  display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto;
-  scrollbar-width: thin; scrollbar-color: rgba(31, 217, 199, 0.5) rgba(4, 15, 26, 0.4);
-}
-.admin-shell .admin-ops-list::-webkit-scrollbar { width: 8px; height: 8px; }
-.admin-shell .admin-ops-list::-webkit-scrollbar-track { background: rgba(4, 15, 26, 0.4); border-radius: 10px; }
-.admin-shell .admin-ops-list::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(31, 217, 199, 0.55), rgba(223, 180, 86, 0.35)); border-radius: 10px; border: 1px solid rgba(4, 15, 26, 0.4); }
+.admin-shell .admin-ops-list { display: flex; flex-direction: column; gap: 10px; }
 
 .admin-shell .admin-operation-item,
 .admin-shell .admin-detail-card,
@@ -209,6 +196,7 @@
 .admin-shell .admin-preview-card { padding: 16px 16px 14px; }
 .admin-shell .admin-detail-card {
   padding: 14px 16px 12px;
+  align-self: stretch;
   min-height: 0; overflow-y: auto;
   scrollbar-width: thin; scrollbar-color: rgba(31, 217, 199, 0.5) rgba(4, 15, 26, 0.4);
 }
