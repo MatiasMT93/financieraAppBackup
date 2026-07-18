@@ -111,7 +111,7 @@ export default function LoginPage() {
         <div className="hero-content">
           <header className="brand-lockup">
             <BrandMark size={102} />
-            <span>CambioApp</span>
+            <span>Plaza App</span>
           </header>
 
           <div className="hero-copy">
@@ -149,7 +149,7 @@ export default function LoginPage() {
 
           <header className="login-header">
             <BrandMark size={62} className="login-brand-mark" />
-            <p className="login-brand-name">CambioApp</p>
+            <p className="login-brand-name">Plaza App</p>
             <h1 id="login-title">Iniciar sesión</h1>
             <span className="title-ornament" aria-hidden="true" />
             <p className="login-subtitle">Accedé al panel de control</p>
@@ -221,7 +221,7 @@ export default function LoginPage() {
 
           <footer className="secure-note">
             <span className="secure-note__icon"><ShieldCheck /></span>
-            <p>Tu información está protegida con <br />encriptación de nivel bancario.</p>
+            <p>Tu información está protegida mediante encriptación.</p>
           </footer>
         </div>
       </section>
