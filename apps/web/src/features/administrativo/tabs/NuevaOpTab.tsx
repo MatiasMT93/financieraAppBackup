@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPost } from '../../../shared/api/client.ts';
+import {
+  SearchIcon, PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
+  PinIcon, UserIcon, PhoneIcon, ChevronDownIcon, BoxIllustration,
+} from '../components/AdminIcons.tsx';
 
 const TIPOS = ['Entrega', 'Retiro'];
 const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'];
@@ -57,77 +61,127 @@ export default function NuevaOpTab() {
     form.direccion.length >= 5 &&
     form.contacto.length >= 2;
 
-  const fields: Array<{ field: keyof FormState; label: string; type: string; placeholder: string }> = [
-    { field: 'monto', label: 'Monto', type: 'number', placeholder: '0' },
-    { field: 'direccion', label: 'Dirección', type: 'text', placeholder: 'Calle y número' },
-    { field: 'contacto', label: 'Contacto', type: 'text', placeholder: 'Nombre de la persona' },
-    { field: 'telefono', label: 'Teléfono (opcional)', type: 'tel', placeholder: '+54 11 ...' },
-    { field: 'notas', label: 'Notas (opcional)', type: 'text', placeholder: 'Piso, referencia, etc.' },
-  ];
-
   return (
-    <div>
-      <div className="bg-white px-4 pt-5 pb-4 shadow-sm mb-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-administrativo">Nueva operación</h1>
-        <p className="text-sm text-gray-500 mt-1">Completá los datos para cargar</p>
-      </div>
-
-      <div className="px-4 pt-4 pb-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
-            <select
-              value={form.tipo}
-              onChange={(e) => set('tipo', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            >
-              {TIPOS.map((t) => <option key={t} value={t.toLowerCase()}>{t}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Moneda</label>
-            <select
-              value={form.moneda}
-              onChange={(e) => set('moneda', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            >
-              {MONEDAS.map((m) => <option key={m}>{m}</option>)}
-            </select>
-          </div>
+    <>
+      <div className="admin-toolbar">
+        <div className="admin-searchbar">
+          <SearchIcon />
+          <input placeholder="Buscar operaciones..." disabled />
         </div>
-
-        {fields.map(({ field, label, type, placeholder }) => (
-          <div key={field}>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-            <input
-              type={type}
-              value={form[field]}
-              onChange={(e) => set(field, e.target.value)}
-              placeholder={placeholder}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-administrativo"
-            />
-          </div>
-        ))}
-
-        <button
-          onClick={() => mutation.mutate()}
-          disabled={!isValid || mutation.isPending}
-          className="btn-primary w-full bg-administrativo"
-        >
-          {mutation.isPending ? 'Cargando...' : 'Cargar operación'}
-        </button>
-
-        {mutation.isError && (
-          <p className="text-sm text-red-600 text-center">Error al cargar la operación. Intentá de nuevo.</p>
-        )}
-
-        <button
-          onClick={() => navigate('../ops')}
-          className="btn-secondary w-full border-gray-300 text-gray-600"
-        >
-          Cancelar
-        </button>
       </div>
-    </div>
+
+      <section className="admin-page-header admin-page-header--new">
+        <span className="admin-page-header__icon"><PlusIcon /></span>
+        <div>
+          <h1>Nueva operación</h1>
+          <p>Completá los datos para cargar</p>
+        </div>
+      </section>
+
+      <section className="admin-new-layout">
+        <form
+          className="admin-form-card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (isValid) mutation.mutate();
+          }}
+        >
+          <div className="admin-form-card__title"><ClipboardIcon />Datos de la operación</div>
+
+          <div className="admin-form-grid admin-form-grid--two">
+            <label className="admin-field">
+              <span>Tipo</span>
+              <div className="admin-input-shell">
+                <TruckIcon />
+                <select value={form.tipo} onChange={(e) => set('tipo', e.target.value)}>
+                  {TIPOS.map((t) => <option key={t} value={t.toLowerCase()}>{t}</option>)}
+                </select>
+                <ChevronDownIcon />
+              </div>
+            </label>
+
+            <label className="admin-field">
+              <span>Moneda</span>
+              <div className="admin-input-shell">
+                <CurrencyIcon />
+                <select value={form.moneda} onChange={(e) => set('moneda', e.target.value)}>
+                  {MONEDAS.map((m) => <option key={m}>{m}</option>)}
+                </select>
+                <ChevronDownIcon />
+              </div>
+            </label>
+          </div>
+
+          <label className="admin-field">
+            <span>Monto</span>
+            <div className="admin-input-shell admin-input-shell--with-suffix">
+              <CurrencyIcon />
+              <input type="number" value={form.monto} onChange={(e) => set('monto', e.target.value)} placeholder="0" />
+              <span className="admin-suffix">{form.moneda}</span>
+            </div>
+          </label>
+
+          <label className="admin-field">
+            <span>Dirección</span>
+            <div className="admin-input-shell">
+              <PinIcon />
+              <input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Calle y número" />
+            </div>
+          </label>
+
+          <div className="admin-form-grid admin-form-grid--two">
+            <label className="admin-field">
+              <span>Contacto</span>
+              <div className="admin-input-shell">
+                <UserIcon />
+                <input value={form.contacto} onChange={(e) => set('contacto', e.target.value)} placeholder="Nombre de la persona" />
+              </div>
+            </label>
+
+            <label className="admin-field">
+              <span>Teléfono (opcional)</span>
+              <div className="admin-input-shell">
+                <PhoneIcon />
+                <input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} placeholder="+54 11 ..." />
+              </div>
+            </label>
+          </div>
+
+          <label className="admin-field">
+            <span>Notas (opcional)</span>
+            <div className="admin-input-shell admin-input-shell--textarea">
+              <ClipboardIcon />
+              <textarea value={form.notas} onChange={(e) => set('notas', e.target.value)} rows={3} placeholder="Piso, referencia, etc." />
+            </div>
+          </label>
+
+          {mutation.isError && (
+            <p style={{ color: '#ff8a7a', fontSize: 13, textAlign: 'center', marginBottom: 8 }}>
+              Error al cargar la operación. Intentá de nuevo.
+            </p>
+          )}
+
+          <div className="admin-form-actions">
+            <button type="button" className="admin-cancel-button" onClick={() => navigate('../ops')}>Cancelar</button>
+            <button type="submit" className="admin-primary-button" disabled={!isValid || mutation.isPending}>
+              <PlusIcon />{mutation.isPending ? 'Cargando…' : 'Cargar operación'}
+            </button>
+          </div>
+        </form>
+
+        <aside className="admin-preview-card">
+          <div className="admin-preview-card__title"><EyeIcon />Vista previa</div>
+          <div className="admin-preview-card__illustration"><BoxIllustration /></div>
+          <p>Revisá los datos antes de cargar la operación.</p>
+          <div className="admin-preview-list">
+            <div><span><TruckIcon />Tipo</span><strong>{form.tipo === 'entrega' ? 'Entrega' : 'Retiro'}</strong></div>
+            <div><span><CurrencyIcon />Moneda</span><strong>{form.moneda}</strong></div>
+            <div><span><CurrencyIcon />Monto</span><strong>{form.monto || '—'}</strong></div>
+            <div><span><PinIcon />Dirección</span><strong>{form.direccion || '—'}</strong></div>
+            <div><span><UserIcon />Contacto</span><strong>{form.contacto || '—'}</strong></div>
+          </div>
+        </aside>
+      </section>
+    </>
   );
 }
