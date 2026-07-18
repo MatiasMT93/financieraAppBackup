@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiPost } from '../../../shared/api/client.ts';
+import { apiGet, apiPost } from '../../../shared/api/client.ts';
 
 const TIPOS = ['Entrega', 'Retiro'];
 const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL'];
@@ -16,6 +16,14 @@ interface FormState {
   notas: string;
 }
 
+interface ContactSuggestion {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  direccion: string;
+  direccionNormalizada: string;
+}
+
 export default function NuevaOpTab() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -24,11 +32,16 @@ export default function NuevaOpTab() {
     tipo: 'entrega',
     moneda: 'ARS',
     monto: '',
-    direccion: '',
     contacto: '',
+    direccion: '',
     telefono: '',
     notas: '',
   });
+
+  // Estados para el autocomplete
+  const [suggestions, setSuggestions] = useState<ContactSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -51,6 +64,49 @@ export default function NuevaOpTab() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  // Función para buscar sugerencias de contactos
+  const fetchSuggestions = useCallback(async (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      setIsLoadingSuggestions(true);
+      const data = await apiGet<ContactSuggestion[]>('/contacts/suggest', { query: trimmed });
+      setSuggestions(data || []);
+      setShowSuggestions(data.length > 0);
+    } catch (error) {
+      console.error('Error fetching contact suggestions:', error);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }, []);
+
+  // Debounce al escribir en el campo contacto
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSuggestions(form.contacto);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [form.contacto, fetchSuggestions]);
+
+  // Al seleccionar una sugerencia, auto-completar contacto y teléfono
+  const handleSelectSuggestion = (contact: ContactSuggestion) => {
+    setForm((prev) => ({
+      ...prev,
+      direccion: contact.direccion,
+      contacto: contact.nombre,
+      telefono: contact.telefono || '',
+    }));
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
   const isValid =
     form.monto !== '' &&
     parseFloat(form.monto) > 0 &&
@@ -59,8 +115,8 @@ export default function NuevaOpTab() {
 
   const fields: Array<{ field: keyof FormState; label: string; type: string; placeholder: string }> = [
     { field: 'monto', label: 'Monto', type: 'number', placeholder: '0' },
-    { field: 'direccion', label: 'Dirección', type: 'text', placeholder: 'Calle y número' },
     { field: 'contacto', label: 'Contacto', type: 'text', placeholder: 'Nombre de la persona' },
+    { field: 'direccion', label: 'Dirección', type: 'text', placeholder: 'Calle y número' },
     { field: 'telefono', label: 'Teléfono (opcional)', type: 'tel', placeholder: '+54 11 ...' },
     { field: 'notas', label: 'Notas (opcional)', type: 'text', placeholder: 'Piso, referencia, etc.' },
   ];
@@ -97,7 +153,7 @@ export default function NuevaOpTab() {
         </div>
 
         {fields.map(({ field, label, type, placeholder }) => (
-          <div key={field}>
+          <div key={field} className={field === 'direccion' || field === 'contacto' ? 'relative' : ''}>
             <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
             <input
               type={type}
@@ -106,6 +162,25 @@ export default function NuevaOpTab() {
               placeholder={placeholder}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-administrativo"
             />
+            {field === 'contacto' && showSuggestions && suggestions.length > 0 && (
+              <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {suggestions.map((contact) => (
+                  <li
+                    key={contact.id}
+                    onClick={() => handleSelectSuggestion(contact)}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
+                  >
+                    <span className="font-medium">{contact.nombre}</span>
+                    <span className="text-xs text-gray-500">
+                      {contact.direccion} {contact.telefono && `- ${contact.telefono}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {field === 'contacto' && isLoadingSuggestions && (
+              <div className="text-xs text-gray-400 mt-1">Buscando...</div>
+            )}
           </div>
         ))}
 

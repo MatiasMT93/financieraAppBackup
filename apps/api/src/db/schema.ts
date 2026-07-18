@@ -9,6 +9,8 @@ import {
   pgEnum,
   bigserial,
   real,
+  integer,
+  primaryKey,
   index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -34,6 +36,58 @@ export const cadeteStatusEnum = pgEnum('cadete_status', [
   'volviendo',
   'incidencia',
 ]);
+export const contacts = pgTable(
+  'contacts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    nombre: varchar('nombre', { length: 200 }).notNull(),
+    telefono: varchar('telefono', { length: 50 }),
+    direccion: text('direccion').notNull(),
+    // versión normalizada (sin tildes, minúsculas, espacios colapsados) para
+    // poder matchear direcciones aunque el admin las tipee distinto cada vez
+    direccionNormalizada: text('direccion_normalizada').notNull().default(''),
+    usosCount: integer('usos_count').notNull().default(1),
+    email: varchar('email', { length: 100 }),
+    notas: text('notas'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    contacts_direccion_norm_idx: index('contacts_direccion_norm_idx').on(t.direccionNormalizada),
+  }),
+);
+
+export const operationContacts = pgTable(
+  'operation_contacts',
+  {
+    operationId: uuid('operation_id')
+      .notNull()
+      .references(() => operations.id, { onDelete: 'cascade' }),
+    contactId: uuid('contact_id')
+      .notNull()
+      .references(() => contacts.id, { onDelete: 'cascade' }),
+  },
+  (t) => ({
+    pk: primaryKey(t.operationId, t.contactId),
+  }),
+);
+
+// ─── Relaciones para contactos ────────────────────────────────────────────────
+
+export const contactsRelations = relations(contacts, ({ many }) => ({
+  operationContacts: many(operationContacts),
+}));
+
+export const operationContactsRelations = relations(operationContacts, ({ one }) => ({
+  operation: one(operations, {
+    fields: [operationContacts.operationId],
+    references: [operations.id],
+  }),
+  contact: one(contacts, {
+    fields: [operationContacts.contactId],
+    references: [contacts.id],
+  }),
+}));
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -192,6 +246,7 @@ export const operationsRelations = relations(operations, ({ one, many }) => ({
   statusHistory: many(operationStatusHistory),
   incidents: many(incidents, { relationName: 'incident_operation' }),
   amountCorrections: many(amountCorrections),
+  operationContacts: many(operationContacts), // <--- NUEVA RELACIÓN
 }));
 
 export const operationStatusHistoryRelations = relations(operationStatusHistory, ({ one }) => ({
