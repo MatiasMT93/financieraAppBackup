@@ -396,7 +396,6 @@
 .coordinator-shell .coord-summary-chip__label--large { font-size: clamp(20px, 2vw, 32px); }
 .coordinator-shell .coord-summary-chip__icon--warning { color: #f2bc57; border-color: rgba(230, 176, 73, 0.45); }
 
-.coordinator-shell .coord-cadet-card { display: flex; align-items: center; gap: 18px; min-height: 100px; padding: 18px 20px; }
 .coordinator-shell .coord-avatar {
   width: 60px; height: 60px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center;
   font-size: 26px; font-weight: 600; color: #dff8ff;
@@ -405,18 +404,165 @@
 }
 .coordinator-shell .coord-avatar.is-gold { background: radial-gradient(circle at 35% 25%, rgba(230, 179, 88, 0.3), rgba(34, 20, 7, 0.9)); border-color: rgba(230, 177, 77, 0.62); }
 .coordinator-shell .coord-avatar--small { width: 40px; height: 40px; font-size: 17px; }
-.coordinator-shell .coord-cadet-card__copy { flex: 1; min-width: 0; }
-.coordinator-shell .coord-cadet-card__copy h3 { margin: 0; font-size: 20px; }
-.coordinator-shell .coord-cadet-card__copy p { margin: 4px 0 0; color: #bcc3cd; font-size: 13px; }
 
-.coordinator-shell .coord-date-filter { padding: 14px 18px; }
-.coordinator-shell .coord-date-filter label { display: block; margin-bottom: 8px; font-size: 14px; }
-.coordinator-shell .coord-date-input {
-  display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px;
-  border-radius: 14px; border: 1px solid rgba(35, 220, 209, 0.52); color: #24ddd0;
+.coordinator-shell .coord-datepicker { position: relative; }
+.coordinator-shell .coord-datepicker__trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+  min-height: 48px; padding: 0 16px; margin-top: 8px;
+  border-radius: 14px; border: 1px solid rgba(35, 220, 209, 0.52); background: transparent;
+  color: #f4f7fc; font: inherit; font-size: 15px; cursor: pointer;
 }
-.coordinator-shell .coord-date-input input { flex: 1; background: transparent; border: 0; outline: 0; color: #f4f7fc; font-size: 15px; font-family: inherit; }
-.coordinator-shell .coord-date-input input::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+.coordinator-shell .coord-datepicker__trigger svg { width: 18px; height: 18px; color: #24ddd0; flex: 0 0 auto; }
+.coordinator-shell .coord-datepicker__popover {
+  position: absolute; z-index: 20; top: calc(100% + 8px); left: 0; width: 300px;
+  padding: 16px; border-radius: 16px; border: 1px solid rgba(219, 165, 72, 0.34);
+  background: linear-gradient(180deg, rgba(11, 22, 35, 0.98), rgba(5, 13, 24, 0.99));
+  box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+}
+.coordinator-shell .coord-datepicker__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.coordinator-shell .coord-datepicker__month { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; }
+.coordinator-shell .coord-datepicker__nav { display: flex; gap: 6px; }
+.coordinator-shell .coord-datepicker__nav button {
+  width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px;
+  border: 1px solid rgba(119, 133, 152, 0.3); background: rgba(9, 19, 31, 0.6); color: #d7dbe2; cursor: pointer;
+}
+.coordinator-shell .coord-datepicker__weekdays { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 4px; }
+.coordinator-shell .coord-datepicker__weekdays span { text-align: center; font-size: 11px; color: #8f9cad; }
+.coordinator-shell .coord-datepicker__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.coordinator-shell .coord-datepicker__grid button {
+  width: 100%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 9px;
+  border: 0; background: transparent; color: #e9eef5; font-size: 13px; cursor: pointer; font: inherit;
+}
+.coordinator-shell .coord-datepicker__grid button:hover { background: rgba(31, 217, 199, 0.14); }
+.coordinator-shell .coord-datepicker__grid button.is-outside { color: #5a6472; }
+.coordinator-shell .coord-datepicker__grid button.is-today { color: #1fd9c7; font-weight: 600; }
+.coordinator-shell .coord-datepicker__grid button.is-selected {
+  background: linear-gradient(180deg, rgba(15, 184, 193, 0.5), rgba(8, 41, 59, 0.9));
+  color: #f6fbff; font-weight: 600;
+}
+.coordinator-shell .coord-datepicker__footer { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+.coordinator-shell .coord-datepicker__footer button { border: 0; background: transparent; color: #1fd9c7; font: inherit; font-size: 13px; cursor: pointer; }
+
+.coordinator-shell .coord-history-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr); gap: 16px; align-items: start; }
+.coordinator-shell .coord-history-list,
+.coordinator-shell .coord-history-detail {
+  position: relative; overflow: hidden; border: 1px solid rgba(219, 165, 72, 0.34); border-radius: 20px;
+  background: radial-gradient(circle at 82% 20%, rgba(16, 77, 95, 0.22), transparent 22%),
+    linear-gradient(90deg, rgba(14, 27, 38, 0.86), rgba(6, 14, 28, 0.94) 55%, rgba(5, 18, 33, 0.88));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 14px 28px rgba(0,0,0,0.22);
+}
+.coordinator-shell .coord-history-list { padding: 16px; }
+.coordinator-shell .coord-date-box { display: block; font-size: 14px; margin-bottom: 14px; }
+.coordinator-shell .coord-history-search { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.coordinator-shell .coord-history-search label {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px;
+  border: 1px solid rgba(111, 129, 150, 0.3); border-radius: 12px; color: #aab4c1;
+}
+.coordinator-shell .coord-history-search label svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.coordinator-shell .coord-history-search input { flex: 1; border: 0; outline: 0; background: transparent; color: #e9eef5; font: inherit; font-size: 13px; }
+.coordinator-shell .coord-history-search > div { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.coordinator-shell .coord-history-search > div button {
+  min-height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(119, 133, 152, 0.3);
+  background: rgba(9, 19, 31, 0.6); color: #d7dbe2; cursor: pointer; font: inherit; font-size: 12px; white-space: nowrap;
+}
+.coordinator-shell .coord-history-search > div button.is-active { border-color: rgba(37, 214, 199, 0.72); color: #fff; background: rgba(11, 146, 152, 0.28); }
+.coordinator-shell .coord-history-rows h3 { margin: 4px 4px 8px; color: #9faab8; font-size: 13px; font-weight: 500; }
+.coordinator-shell .coord-history-rows { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow-y: auto; }
+.coordinator-shell .coord-history-rows button {
+  display: grid; grid-template-columns: 10px 40px 1fr 1fr auto auto; gap: 10px; align-items: center;
+  min-height: 60px; padding: 8px 12px; border: 1px solid rgba(111, 129, 150, 0.18); border-left: 3px solid transparent;
+  border-radius: 12px; background: rgba(6, 18, 31, 0.62); color: #eaf0f5; text-align: left; cursor: pointer; font: inherit;
+}
+.coordinator-shell .coord-history-rows button.is-selected { border-color: rgba(31, 217, 199, 0.6); border-left-color: #1fd9c7; background: rgba(7, 67, 76, 0.3); }
+.coordinator-shell .coord-history-rows button > span:not(.coord-history-dot):not(.coord-history-icon) { display: flex; flex-direction: column; gap: 3px; }
+.coordinator-shell .coord-history-rows button small { color: #aeb7c3; font-size: 11px; }
+.coordinator-shell .coord-history-rows button strong { font-size: 13px; }
+.coordinator-shell .coord-history-dot { width: 8px; height: 8px; border-radius: 50%; background: #6f7e91; }
+.coordinator-shell .coord-history-dot.gold { background: #efb84d; }
+.coordinator-shell .coord-history-dot.blue { background: #4299ed; }
+.coordinator-shell .coord-history-dot.green { background: #59de70; }
+.coordinator-shell .coord-history-dot.red { background: #ff5757; }
+.coordinator-shell .coord-history-icon {
+  display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid rgba(31, 217, 199, 0.4);
+  border-radius: 10px; color: #1fd9c7;
+}
+.coordinator-shell .coord-history-icon svg { width: 18px; height: 18px; }
+.coordinator-shell .coord-history-icon--lg { width: 56px; height: 56px; }
+.coordinator-shell .coord-history-icon--lg svg { width: 26px; height: 26px; }
+
+.coordinator-shell .coord-history-detail { padding: 18px; }
+.coordinator-shell .coord-history-detail__head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.coordinator-shell .coord-history-detail__head h2 { margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; }
+.coordinator-shell .coord-history-detail__head p { margin: 4px 0 0; color: #bcc3cd; font-size: 13px; }
+.coordinator-shell .coord-history-detail__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 0; }
+.coordinator-shell .coord-history-detail__grid > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.coordinator-shell .coord-history-detail__grid span { color: #aeb7c3; font-size: 12px; }
+.coordinator-shell .coord-history-detail__grid strong { font-size: 14px; word-break: break-word; }
+.coordinator-shell .coord-history-detail__grid small { display: inline-flex; align-items: center; gap: 5px; color: #52c9d7; font-size: 12px; }
+.coordinator-shell .coord-history-detail__grid a { display: inline-flex; align-items: center; gap: 5px; color: #1fd9c7; font-size: 12px; text-decoration: none; margin-top: 2px; }
+.coordinator-shell .coord-history-detail__grid a svg { width: 13px; height: 13px; }
+.coordinator-shell .coord-history-note { padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+.coordinator-shell .coord-history-note span { color: #aeb7c3; font-size: 12px; }
+.coordinator-shell .coord-history-note p { margin: 6px 0 0; padding: 12px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(6, 17, 30, 0.5); font-size: 13px; }
+
+.coordinator-shell .coord-split-page { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(0, 1.05fr); gap: 16px; align-items: start; }
+.coordinator-shell .coord-list-panel,
+.coordinator-shell .coord-detail-panel {
+  position: relative; overflow: hidden; border: 1px solid rgba(219, 165, 72, 0.34); border-radius: 20px;
+  background: radial-gradient(circle at 82% 20%, rgba(16, 77, 95, 0.22), transparent 22%),
+    linear-gradient(90deg, rgba(14, 27, 38, 0.86), rgba(6, 14, 28, 0.94) 55%, rgba(5, 18, 33, 0.88));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 14px 28px rgba(0,0,0,0.22);
+}
+.coordinator-shell .coord-list-panel { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.coordinator-shell .coord-list-panel h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; padding: 0 4px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15px; }
+.coordinator-shell .coord-list-panel h3 svg { width: 20px; height: 20px; color: #1fd9c7; }
+.coordinator-shell .coord-list-panel button {
+  width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  min-height: 66px; padding: 10px 12px; border: 1px solid rgba(111, 129, 150, 0.22); border-radius: 14px;
+  background: rgba(8, 21, 34, 0.55); color: #edf2f7; text-align: left; cursor: pointer; font: inherit;
+}
+.coordinator-shell .coord-list-panel button.is-selected { border-color: #18d3c3; background: linear-gradient(90deg, rgba(6, 70, 78, 0.33), rgba(4, 18, 31, 0.72)); }
+.coordinator-shell .coord-list-panel button > span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.coordinator-shell .coord-list-panel button strong { font-size: 14px; }
+.coordinator-shell .coord-list-panel button small { color: #aeb8c5; font-size: 12px; }
+
+.coordinator-shell .coord-detail-panel { padding: 20px; }
+.coordinator-shell .coord-cadet-hero { display: flex; align-items: center; gap: 16px; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; }
+.coordinator-shell .coord-cadet-hero > div:not(.coord-badge) { flex: 1; min-width: 0; }
+.coordinator-shell .coord-cadet-hero h2 { margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; }
+.coordinator-shell .coord-cadet-hero p { margin: 3px 0 0; color: #c1c8d0; font-size: 13px; }
+
+.coordinator-shell .coord-contact-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px 0; margin-bottom: 14px; border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08); }
+.coordinator-shell .coord-contact-strip > div { display: flex; align-items: flex-start; gap: 10px; padding: 0 14px; border-left: 1px solid rgba(255,255,255,0.12); min-width: 0; }
+.coordinator-shell .coord-contact-strip > div:first-child { border-left: 0; padding-left: 0; }
+.coordinator-shell .coord-contact-strip svg { width: 18px; height: 18px; color: #1fd9c7; flex: 0 0 auto; margin-top: 2px; }
+.coordinator-shell .coord-contact-strip span { display: flex; flex-direction: column; gap: 4px; color: #aeb7c3; font-size: 12px; min-width: 0; }
+.coordinator-shell .coord-contact-strip strong { color: #eaf0f5; font-weight: 500; font-size: 13px; word-break: break-word; }
+
+.coordinator-shell .coord-route-box { border: 1px solid rgba(111, 129, 150, 0.25); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+.coordinator-shell .coord-route-box > div { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; }
+.coordinator-shell .coord-route-box > div:first-child { border-top: 0; }
+.coordinator-shell .coord-route-box > div > svg { width: 18px; height: 18px; color: #1fd9c7; flex: 0 0 auto; }
+.coordinator-shell .coord-route-box span { flex: 1; display: flex; flex-direction: column; gap: 4px; color: #aeb7c3; font-size: 12px; min-width: 0; }
+.coordinator-shell .coord-route-box strong { color: #eaf0f5; font-weight: 500; font-size: 13px; word-break: break-word; }
+.coordinator-shell .coord-route-box a { min-height: 34px; padding: 0 12px; border: 1px solid rgba(31, 208, 195, 0.45); border-radius: 9px; background: transparent; color: #22daca; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; }
+
+.coordinator-shell .coord-quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.coordinator-shell .coord-quick-actions a,
+.coordinator-shell .coord-quick-actions button {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 12px;
+  border: 1px solid rgba(49, 154, 224, 0.38); border-radius: 12px; background: rgba(7, 28, 50, 0.35); color: #6ab5ff;
+  text-decoration: none; cursor: pointer; font: inherit; font-size: 13px;
+}
+.coordinator-shell .coord-quick-actions a:first-child { border-color: #16cdbc; color: #16ddcd; }
+.coordinator-shell .coord-quick-actions button.gold { border-color: #e2a93f; color: #efb748; }
+.coordinator-shell .coord-quick-actions__empty { grid-column: 1 / -1; color: #8f9cad; font-size: 13px; padding: 10px 0; }
+
+.coordinator-shell .coord-user-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.coordinator-shell .coord-user-info-grid > div { display: flex; gap: 12px; min-height: 66px; padding: 12px; border: 1px solid rgba(111, 129, 150, 0.22); border-radius: 12px; }
+.coordinator-shell .coord-user-info-grid > div > svg { width: 20px; height: 20px; color: #1fd9c7; flex: 0 0 auto; }
+.coordinator-shell .coord-user-info-grid span { display: flex; flex-direction: column; gap: 5px; color: #aeb7c3; font-size: 12px; min-width: 0; }
+.coordinator-shell .coord-user-info-grid strong { color: #edf2f7; font-weight: 500; font-size: 13px; word-break: break-word; }
 
 .coordinator-shell .coord-empty-panel { min-height: 240px; display: grid; place-items: center; text-align: center; padding: 32px 20px; }
 .coordinator-shell .coord-empty-panel--compact { min-height: 160px; }
@@ -498,13 +644,16 @@
 
 @media (max-width: 1180px) {
   .coordinator-shell .coord-kpis--double { grid-template-columns: 1fr; }
+  .coordinator-shell .coord-history-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 920px) {
-  .coordinator-shell .coord-cadet-card,
   .coordinator-shell .coord-operation-card__main { grid-template-columns: 1fr; display: block; }
   .coordinator-shell .coord-operation-card__icon { margin-bottom: 12px; }
-  .coordinator-shell .coord-cadet-card { flex-direction: column; align-items: flex-start; }
+  .coordinator-shell .coord-split-page { grid-template-columns: 1fr; }
+  .coordinator-shell .coord-contact-strip { grid-template-columns: 1fr; gap: 10px; }
+  .coordinator-shell .coord-contact-strip > div { border-left: 0; padding-left: 0; }
+  .coordinator-shell .coord-user-info-grid { grid-template-columns: 1fr; }
   .coordinator-shell .coord-map-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .coordinator-shell .coord-map-card { grid-template-columns: 1fr; grid-template-rows: minmax(220px, 40vh) minmax(320px, 1fr); }
   .coordinator-shell .coord-map-sidebar { border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
@@ -531,4 +680,13 @@
 @media (max-width: 560px) {
   .coordinator-shell .coord-filter-tabs button { flex: 1 1 calc(50% - 5px); padding: 0 12px; }
   .coordinator-shell .coord-back-button { width: 100%; justify-content: center; }
+  .coordinator-shell .coord-history-rows button {
+    grid-template-columns: 10px 32px 1fr auto; grid-template-areas: 'dot icon id badge' 'dot icon amount amount' 'dot icon date date';
+    row-gap: 4px; align-items: start; padding: 10px;
+  }
+  .coordinator-shell .coord-history-rows button > span:nth-child(3) { grid-area: id; }
+  .coordinator-shell .coord-history-rows button > span:nth-child(4) { grid-area: amount; }
+  .coordinator-shell .coord-history-rows button > span:nth-child(5) { grid-area: date; color: #aeb7c3; font-size: 12px; }
+  .coordinator-shell .coord-history-rows button > .coord-badge { grid-area: badge; }
+  .coordinator-shell .coord-history-detail__grid { grid-template-columns: 1fr; }
 }

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UserCheck, UserX, Phone, MessageCircle, Trash2, Clock } from 'lucide-react';
+import { UserCheck, UserX, Phone, MessageCircle, Clock, Pencil } from 'lucide-react';
 import { apiGet, apiPost, apiDelete } from '../../../shared/api/client.ts';
 import type { User } from '@cambioapp/shared-types';
 import DownloadApkButton from '../components/DownloadApkButton.tsx';
-import { UsersIcon, TrashIcon } from '../components/CoordIcons.tsx';
+import EditCadeteModal from '../components/EditCadeteModal.tsx';
+import { UsersIcon, CalendarIcon, TrashIcon } from '../components/CoordIcons.tsx';
 
 function ConfirmDeleteDialog({
   cadete,
@@ -34,7 +35,7 @@ function ConfirmDeleteDialog({
             disabled={isPending}
             className="btn-primary flex-1 bg-red-600 hover:bg-red-700 flex items-center justify-center gap-1"
           >
-            <Trash2 size={15} />
+            <TrashIcon />
             {isPending ? 'Eliminando...' : 'Eliminar'}
           </button>
           <button onClick={onCancel} className="btn-secondary border-gray-300 text-gray-600 px-4">
@@ -46,53 +47,16 @@ function ConfirmDeleteDialog({
   );
 }
 
-function CadeteDetail({ cadete, onDelete }: { cadete: User; onDelete: () => void }) {
-  const celular = cadete.celular?.replace(/\D/g, '') ?? '';
-  const waNumber = celular.startsWith('0') ? `549${celular.slice(1)}` : `549${celular}`;
-
-  return (
-    <div className="coord-user-card__details">
-      <div className="coord-user-card__field">
-        <span>Nombre completo</span>
-        <strong>{cadete.nombre} {cadete.apellido}</strong>
-      </div>
-      {cadete.celular && (
-        <div className="coord-user-card__field">
-          <span>Celular</span>
-          <strong>{cadete.celular}</strong>
-        </div>
-      )}
-
-      {cadete.celular && (
-        <div className="coord-operation-card__contact" style={{ marginBottom: 14 }}>
-          <a href={`tel:${cadete.celular}`} className="coord-contact-link coord-contact-link--call">
-            <Phone size={15} />
-            Llamar
-          </a>
-          <a
-            href={`https://wa.me/${waNumber}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="coord-contact-link coord-contact-link--wa"
-          >
-            <MessageCircle size={15} />
-            WhatsApp
-          </a>
-        </div>
-      )}
-
-      <button type="button" className="coord-delete-button" onClick={onDelete}>
-        <TrashIcon />
-        <span>Eliminar cadete</span>
-      </button>
-    </div>
-  );
+function waLink(celular: string) {
+  const n = celular.replace(/\D/g, '');
+  return `https://wa.me/${n.startsWith('0') ? `549${n.slice(1)}` : `549${n}`}`;
 }
 
 export default function GestionCadetesTab() {
   const qc = useQueryClient();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [editTarget, setEditTarget] = useState<User | null>(null);
 
   const { data: cadetes = [], isLoading } = useQuery({
     queryKey: ['cadetes-gestion'],
@@ -126,13 +90,11 @@ export default function GestionCadetesTab() {
       qc.invalidateQueries({ queryKey: ['cadetes-gestion'] });
       qc.invalidateQueries({ queryKey: ['cadetes'] });
       setDeleteTarget(null);
-      setExpandedId(null);
+      setSelectedId(null);
     },
   });
 
-  function toggleExpand(id: string) {
-    setExpandedId((prev) => (prev === id ? null : id));
-  }
+  const selected = cadetes.find((c) => c.id === selectedId) ?? cadetes[0] ?? null;
 
   return (
     <>
@@ -184,37 +146,85 @@ export default function GestionCadetesTab() {
         </section>
       )}
 
-      <section>
-        <div className="coord-section-title">
-          <UsersIcon />
-          Cadetes activos
+      <div className="coord-section-title"><UsersIcon />Cadetes activos</div>
+
+      {isLoading && <p style={{ color: '#c0c6d0', textAlign: 'center' }}>Cargando…</p>}
+      {!isLoading && cadetes.length === 0 && (
+        <div className="coord-empty-panel coord-empty-panel--compact">
+          <p>No hay cadetes activos</p>
         </div>
+      )}
 
-        {isLoading && <p style={{ color: '#c0c6d0', textAlign: 'center' }}>Cargando…</p>}
-        {!isLoading && cadetes.length === 0 && (
-          <div className="coord-empty-panel coord-empty-panel--compact">
-            <p>No hay cadetes activos</p>
-          </div>
-        )}
+      {!isLoading && cadetes.length > 0 && (
+        <div className="coord-split-page">
+          <aside className="coord-list-panel">
+            <h3><UsersIcon />{cadetes.length} cadetes</h3>
+            {cadetes.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={selected?.id === c.id ? 'is-selected' : ''}
+                onClick={() => setSelectedId(c.id)}
+              >
+                <span className="coord-avatar coord-avatar--small">{c.nombre[0]}{c.apellido?.[0] ?? ''}</span>
+                <span><strong>{c.nombre} {c.apellido}</strong><small>Cadete</small></span>
+              </button>
+            ))}
+          </aside>
 
-        <div className="coord-stack-list">
-          {cadetes.map((cadete) => {
-            const expanded = expandedId === cadete.id;
-            return (
-              <article key={cadete.id} className="coord-user-card">
-                <button type="button" className="coord-user-card__summary" onClick={() => toggleExpand(cadete.id)}>
-                  <div>
-                    <h3>{cadete.nombre} {cadete.apellido}</h3>
-                    <p>Cadete</p>
-                  </div>
-                  <span className="coord-user-card__chevron">{expanded ? '⌃' : '⌄'}</span>
+          {selected && (
+            <section className="coord-detail-panel">
+              <div className="coord-cadet-hero">
+                <span className="coord-avatar">{selected.nombre[0]}{selected.apellido?.[0] ?? ''}</span>
+                <div>
+                  <h2>{selected.nombre} {selected.apellido}</h2>
+                  <p>Cadete</p>
+                </div>
+                <button type="button" className="coord-assign-button coord-assign-button--ghost" onClick={() => setEditTarget(selected)}>
+                  <Pencil size={16} />Editar
                 </button>
-                {expanded && <CadeteDetail cadete={cadete} onDelete={() => setDeleteTarget(cadete)} />}
-              </article>
-            );
-          })}
+              </div>
+
+              <div className="coord-user-info-grid">
+                <div>
+                  <UsersIcon />
+                  <span>Nombre completo<strong>{selected.nombre} {selected.apellido}</strong></span>
+                </div>
+                <div>
+                  <Phone size={20} />
+                  <span>Teléfono (opcional)<strong>{selected.celular ?? '—'}</strong></span>
+                </div>
+                <div>
+                  <CalendarIcon />
+                  <span>Fecha de alta<strong>{new Date(selected.createdAt).toLocaleDateString('es-AR')}</strong></span>
+                </div>
+              </div>
+
+              {selected.celular && (
+                <div className="coord-operation-card__contact" style={{ margin: '16px 0' }}>
+                  <a href={`tel:${selected.celular}`} className="coord-contact-link coord-contact-link--call">
+                    <Phone size={15} />
+                    Llamar
+                  </a>
+                  <a href={waLink(selected.celular)} target="_blank" rel="noopener noreferrer" className="coord-contact-link coord-contact-link--wa">
+                    <MessageCircle size={15} />
+                    WhatsApp
+                  </a>
+                </div>
+              )}
+
+              <button type="button" className="coord-delete-button" onClick={() => setDeleteTarget(selected)}>
+                <TrashIcon />
+                <span>Eliminar cadete</span>
+              </button>
+            </section>
+          )}
         </div>
-      </section>
+      )}
+
+      {editTarget && (
+        <EditCadeteModal cadete={editTarget} onClose={() => setEditTarget(null)} />
+      )}
 
       {deleteTarget && (
         <ConfirmDeleteDialog
