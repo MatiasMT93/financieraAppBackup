@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Download, QrCode, Link, X, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { DownloadIcon } from './CoordIcons.tsx';
 
 const APK_URL =
   'https://github.com/MatiasMT93/cambioapp-releases/releases/latest/download/CambioApp.apk';
@@ -31,35 +32,51 @@ export default function DownloadApkButton() {
 
   return (
     <>
-      <div className="relative" ref={menuRef}>
-        <button
-          type="button"
-          onClick={() => setMenuOpen((o) => !o)}
-          className="coord-download-card"
-        >
-          <Download size={18} />
-          Descargar APK para cadete
-        </button>
+      <div className="coord-download-banner">
+        <span className="coord-download-banner__icon">
+          <DownloadIcon />
+        </span>
+        <div className="coord-download-banner__copy">
+          <h2>Descargar APK para cadete</h2>
+          <p>Instalá la app de CambioApp en el dispositivo del cadete.</p>
+        </div>
 
-        {menuOpen && (
-          <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden" style={{ color: '#111827' }}>
-            <button
-              onClick={() => { setShowQr(true); setMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            className="coord-download-banner__button"
+          >
+            <Download size={18} />
+            Descargar APK
+          </button>
+
+          {menuOpen && (
+            <div
+              className="absolute top-full mt-1 right-0 left-auto w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden"
+              style={{ color: '#111827' }}
             >
-              <QrCode size={18} className="text-coordinador" />
-              Mostrar QR
-            </button>
-            <div className="border-t border-gray-100" />
-            <button
-              onClick={copyLink}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <Link size={18} className="text-coordinador" />
-              Compartir link de descarga
-            </button>
-          </div>
-        )}
+              <button
+                onClick={() => {
+                  setShowQr(true);
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <QrCode size={18} className="text-coordinador" />
+                Mostrar QR
+              </button>
+              <div className="border-t border-gray-100" />
+              <button
+                onClick={copyLink}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Link size={18} className="text-coordinador" />
+                Compartir link de descarga
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal QR */}

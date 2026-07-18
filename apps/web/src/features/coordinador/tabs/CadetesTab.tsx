@@ -42,19 +42,21 @@ export default function CadetesTab() {
     <div className="coord-split-page">
       <aside className="coord-list-panel">
         <h3><UsersIcon />{cadetes.length} cadetes</h3>
-        {cadetes.length === 0 && <p className="coord-map-empty">No hay cadetes activos</p>}
-        {cadetes.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            className={selected?.id === c.id ? 'is-selected' : ''}
-            onClick={() => setSelectedId(c.id)}
-          >
-            <span className="coord-avatar coord-avatar--small is-gold">{c.nombre[0]}</span>
-            <span><strong>{c.nombre}</strong><small>Cadete</small></span>
-            <CoordBadge status={(c.cadeteStatus ?? 'disponible') as CadeteStatus} />
-          </button>
-        ))}
+        <div className="coord-list-panel__scroll">
+          {cadetes.length === 0 && <p className="coord-map-empty">No hay cadetes activos</p>}
+          {cadetes.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={selected?.id === c.id ? 'is-selected' : ''}
+              onClick={() => setSelectedId(c.id)}
+            >
+              <span className="coord-avatar coord-avatar--small is-gold">{c.nombre[0]}</span>
+              <span><strong>{c.nombre}</strong><small>Cadete</small></span>
+              <CoordBadge status={(c.cadeteStatus ?? 'disponible') as CadeteStatus} />
+            </button>
+          ))}
+        </div>
       </aside>
 
       {selected && (

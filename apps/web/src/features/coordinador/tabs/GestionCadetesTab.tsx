@@ -159,17 +159,19 @@ export default function GestionCadetesTab() {
         <div className="coord-split-page">
           <aside className="coord-list-panel">
             <h3><UsersIcon />{cadetes.length} cadetes</h3>
-            {cadetes.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={selected?.id === c.id ? 'is-selected' : ''}
-                onClick={() => setSelectedId(c.id)}
-              >
-                <span className="coord-avatar coord-avatar--small">{c.nombre[0]}{c.apellido?.[0] ?? ''}</span>
-                <span><strong>{c.nombre} {c.apellido}</strong><small>Cadete</small></span>
-              </button>
-            ))}
+            <div className="coord-list-panel__scroll">
+              {cadetes.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={selected?.id === c.id ? 'is-selected' : ''}
+                  onClick={() => setSelectedId(c.id)}
+                >
+                  <span className="coord-avatar coord-avatar--small">{c.nombre[0]}{c.apellido?.[0] ?? ''}</span>
+                  <span><strong>{c.nombre} {c.apellido}</strong><small>Cadete</small></span>
+                </button>
+              ))}
+            </div>
           </aside>
 
           {selected && (

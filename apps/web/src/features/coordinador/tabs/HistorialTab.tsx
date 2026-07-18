@@ -10,10 +10,12 @@ import { formatDateTime } from '../../../shared/utils/format-time.ts';
 
 const FILTERS = [
   { label: 'Todas', value: '' },
-  { label: 'Entregas', value: 'entrega' },
-  { label: 'Recepciones', value: 'retiro' },
-  { label: 'En camino', value: 'en_camino,en_destino,volviendo' },
+  { label: 'Pendientes', value: 'pendiente' },
+  { label: 'Asignadas', value: 'asignada' },
+  { label: 'En curso', value: 'en_camino,en_destino,volviendo' },
+  { label: 'Cerradas', value: 'cerrada' },
   { label: 'Canceladas', value: 'cancelada' },
+  { label: 'Incidencias', value: 'incidencia' },
 ];
 
 function currencySymbol(moneda: string) {
@@ -39,11 +41,7 @@ export default function HistorialTab() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return ops.filter((op) => {
-      if (filter) {
-        const statuses = filter.split(',');
-        const matchesTipoOrStatus = filter === 'entrega' || filter === 'retiro' ? op.tipo === filter : statuses.includes(op.status);
-        if (!matchesTipoOrStatus) return false;
-      }
+      if (filter && !filter.split(',').includes(op.status)) return false;
       if (!q) return true;
       return (
         op.id.toLowerCase().includes(q) ||
@@ -99,7 +97,6 @@ export default function HistorialTab() {
               className={selected?.id === op.id ? 'is-selected' : ''}
               onClick={() => setSelectedId(op.id)}
             >
-              <span className={`coord-history-dot ${op.status === 'cerrada' ? 'green' : op.status === 'cancelada' ? 'red' : op.status === 'pendiente' ? 'gold' : 'blue'}`} />
               <span className="coord-history-icon"><CalendarIcon /></span>
               <span><strong>#{op.id.slice(-3).toUpperCase()}</strong><small>{op.tipo === 'entrega' ? 'Entrega' : 'Retiro'}</small></span>
               <span><strong>{currencySymbol(op.moneda)} {Number(op.monto).toLocaleString('es-AR')}</strong><small>{op.moneda}</small></span>
