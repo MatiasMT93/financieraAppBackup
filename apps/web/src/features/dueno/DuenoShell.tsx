@@ -154,7 +154,7 @@ export default function DuenoShell() {
         </div>
         <div className="dashboard-brand">
           <BrandMark size={72} />
-          <span>CambioApp</span>
+          <span>Plaza App</span>
           <span className="dashboard-brand__divider" aria-hidden="true" />
           <time dateTime={new Date().toISOString().slice(0, 10)}>{dateLabel}</time>
         </div>

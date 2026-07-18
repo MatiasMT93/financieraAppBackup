@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'CambioApp',
-        short_name: 'CambioApp',
+        name: 'Plaza App',
+        short_name: 'Plaza App',
         description: 'Sistema logístico para financieras de cambio',
         theme_color: '#185FA5',
         background_color: '#ffffff',
