@@ -67,15 +67,6 @@ function LogoutIcon() {
   );
 }
 
-function RefreshIcon({ spinning }: { spinning: boolean }) {
-  return (
-    <svg className={spinning ? 'is-spinning' : ''} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="M8 12a9 9 0 0 1 15-5.2M24 20a9 9 0 0 1-15 5.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M23 5v7h-7M9 27v-7h7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function TrendIcon() {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -139,7 +130,7 @@ export default function DuenoShell() {
     weekday: 'long', day: '2-digit', month: 'long',
   }).format(new Date()).replace(/^./, (letter) => letter.toLowerCase());
 
-  const { data, isLoading, isFetching, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['owner-summary', period],
     queryFn: () => apiGet<OwnerSummary>(`/owner/summary?period=${period}`),
     refetchInterval: 60_000,
@@ -168,16 +159,6 @@ export default function DuenoShell() {
           <time dateTime={new Date().toISOString().slice(0, 10)}>{dateLabel}</time>
         </div>
         <div className="dashboard-actions">
-          <button
-            className="icon-button"
-            type="button"
-            onClick={() => refetch()}
-            aria-label="Actualizar"
-            title="Actualizar"
-            disabled={isFetching}
-          >
-            <RefreshIcon spinning={isFetching} />
-          </button>
           <button className="icon-button" type="button" onClick={handleLogout} aria-label="Cerrar sesión" title="Cerrar sesión">
             <LogoutIcon />
           </button>
