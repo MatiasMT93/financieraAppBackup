@@ -121,9 +121,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(340px, 0.9fr);
   gap: 16px;
-  align-items: start;
+  flex: 1;
+  min-height: 0;
 }
-.admin-shell .admin-ops-layout { flex: 1; min-height: 0; }
+.admin-shell .admin-ops-layout { align-items: start; }
+.admin-shell .admin-new-layout { align-items: stretch; }
 
 .admin-shell .admin-ops-list { display: flex; flex-direction: column; gap: 10px; }
 
@@ -203,6 +205,15 @@
 .admin-shell .admin-detail-card::-webkit-scrollbar { width: 8px; height: 8px; }
 .admin-shell .admin-detail-card::-webkit-scrollbar-track { background: rgba(4, 15, 26, 0.4); border-radius: 10px; }
 .admin-shell .admin-detail-card::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(31, 217, 199, 0.55), rgba(223, 180, 86, 0.35)); border-radius: 10px; border: 1px solid rgba(4, 15, 26, 0.4); }
+
+.admin-shell .admin-form-card {
+  align-self: stretch;
+  min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(31, 217, 199, 0.5) rgba(4, 15, 26, 0.4);
+}
+.admin-shell .admin-form-card::-webkit-scrollbar { width: 8px; height: 8px; }
+.admin-shell .admin-form-card::-webkit-scrollbar-track { background: rgba(4, 15, 26, 0.4); border-radius: 10px; }
+.admin-shell .admin-form-card::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(31, 217, 199, 0.55), rgba(223, 180, 86, 0.35)); border-radius: 10px; border: 1px solid rgba(4, 15, 26, 0.4); }
 
 .admin-shell .admin-detail-card__header-row { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; }
 .admin-shell .admin-detail-card__title-row { display: flex; align-items: center; gap: 12px; }
@@ -287,8 +298,8 @@
 }
 .admin-shell .admin-input-shell input,
 .admin-shell .admin-input-shell select,
-.admin-shell .admin-input-shell textarea { flex: 1; border: 0; outline: 0; background: transparent; color: #eef2f7; font: inherit; font-size: 14px; resize: none; }
-.admin-shell .admin-input-shell select { appearance: none; }
+.admin-shell .admin-input-shell textarea { flex: 1; align-self: stretch; height: 100%; border: 0; outline: 0; background: transparent; color: #eef2f7; font: inherit; font-size: 14px; resize: none; }
+.admin-shell .admin-input-shell select { appearance: none; cursor: pointer; }
 .admin-shell .admin-input-shell select option {
   background: #0a1826;
   color: #eef2f7;
@@ -299,7 +310,7 @@
 
 .admin-shell .admin-preview-card {
   display: flex; flex-direction: column;
-  position: sticky; top: 14px; align-self: start;
+  align-self: start;
 }
 .admin-shell .admin-preview-card__illustration { display: grid; place-items: center; padding: 4px 0 0; color: #1fe0d2; }
 .admin-shell .admin-preview-card__illustration svg { width: 92px; height: auto; }

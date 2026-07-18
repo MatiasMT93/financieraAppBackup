@@ -43,6 +43,13 @@
       "when": 1784341420622,
       "tag": "0005_charming_mariko_yashida",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784407006433,
+      "tag": "0006_add_entrega_retiro",
+      "breakpoints": true
     }
   ]
 }

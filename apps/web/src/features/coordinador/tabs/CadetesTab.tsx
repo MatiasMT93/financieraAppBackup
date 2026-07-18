@@ -99,7 +99,7 @@ export default function CadetesTab() {
                 </div>
                 <div>
                   <PulseIcon />
-                  <span>Operación<strong>#{activeOp.id.slice(-3).toUpperCase()} · {activeOp.tipo === 'entrega' ? 'Entrega' : 'Retiro'}</strong></span>
+                  <span>Operación<strong>#{activeOp.id.slice(-3).toUpperCase()} · {activeOp.tipo === 'entrega' ? 'Entrega' : activeOp.tipo === 'retiro' ? 'Retiro' : 'Entrega y Retiro'}</strong></span>
                 </div>
                 {activeOp.notas && (
                   <div>

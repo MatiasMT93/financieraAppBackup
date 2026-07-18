@@ -47,23 +47,34 @@ export async function listOperations(filters: {
 }
 
 export async function createOperation(data: {
-  tipo: 'entrega' | 'retiro';
+  tipo: 'entrega' | 'retiro' | 'entrega_retiro';
   moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto: number;
+  moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
+  monto2?: number;
   direccion: string;
   contacto: string;
   telefono?: string;
   notas?: string;
   administrativoId: string;
 }) {
-  const [op] = await db.insert(operations).values({ ...data, monto: String(data.monto) }).returning();
+  const [op] = await db
+    .insert(operations)
+    .values({
+      ...data,
+      monto: String(data.monto),
+      monto2: data.monto2 !== undefined ? String(data.monto2) : undefined,
+    })
+    .returning();
   return op;
 }
 
 export async function updateOperation(id: string, data: Partial<{
-  tipo: 'entrega' | 'retiro';
+  tipo: 'entrega' | 'retiro' | 'entrega_retiro';
   moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto: number;
+  moneda2: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
+  monto2: number;
   direccion: string;
   contacto: string;
   telefono: string;
@@ -71,6 +82,13 @@ export async function updateOperation(id: string, data: Partial<{
 }>) {
   const values: Record<string, unknown> = { ...data, updatedAt: new Date() };
   if (data.monto !== undefined) values.monto = String(data.monto);
+  if (data.monto2 !== undefined) values.monto2 = String(data.monto2);
+  // Si vuelve a un tipo simple, limpiamos el segundo monto para no dejar
+  // datos viejos huérfanos en la operación.
+  if (data.tipo && data.tipo !== 'entrega_retiro') {
+    values.monto2 = null;
+    values.moneda2 = null;
+  }
   const [op] = await db.update(operations).set(values).where(eq(operations.id, id)).returning();
   return op;
 }

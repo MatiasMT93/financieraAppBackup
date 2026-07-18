@@ -20,10 +20,20 @@ const FILTERS = [
   { label: 'Incidencias', value: 'incidencia' },
 ];
 
+function currencySymbol(moneda: string) {
+  return moneda === 'ARS' ? '$' : moneda === 'USD' ? 'U$' : moneda === 'EUR' ? '€' : moneda === 'BRL' ? 'R$' : '₮';
+}
+
 function formatMonto(op: Operation) {
+  if (op.tipo === 'entrega_retiro') {
+    const entrega = `${currencySymbol(op.moneda)} ${Number(op.monto).toLocaleString('es-AR')} ${op.moneda}`;
+    const retiro = op.monto2 != null && op.moneda2
+      ? `${currencySymbol(op.moneda2)} ${Number(op.monto2).toLocaleString('es-AR')} ${op.moneda2}`
+      : '—';
+    return `Entregar ${entrega} · Recibir ${retiro}`;
+  }
   const sign = op.tipo === 'entrega' ? 'Entregar' : 'Recibir';
-  const symbol = op.moneda === 'ARS' ? '$' : op.moneda === 'USD' ? 'U$' : op.moneda === 'EUR' ? '€' : op.moneda === 'BRL' ? 'R$' : '₮';
-  return `${sign} ${symbol} ${Number(op.monto).toLocaleString('es-AR')} ${op.moneda}`;
+  return `${sign} ${currencySymbol(op.moneda)} ${Number(op.monto).toLocaleString('es-AR')} ${op.moneda}`;
 }
 
 export default function OpsTab() {

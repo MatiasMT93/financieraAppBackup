@@ -14,7 +14,7 @@ import {
 import { relations } from 'drizzle-orm';
 
 export const roleEnum = pgEnum('role', ['cadete', 'coordinador', 'administrativo', 'dueno']);
-export const operationTypeEnum = pgEnum('operation_type', ['entrega', 'retiro']);
+export const operationTypeEnum = pgEnum('operation_type', ['entrega', 'retiro', 'entrega_retiro']);
 export const currencyEnum = pgEnum('currency', ['ARS', 'USD', 'EUR', 'BRL', 'USDT']);
 export const operationStatusEnum = pgEnum('operation_status', [
   'pendiente',
@@ -57,6 +57,10 @@ export const operations = pgTable(
     tipo: operationTypeEnum('tipo').notNull(),
     moneda: currencyEnum('moneda').notNull(),
     monto: numeric('monto', { precision: 15, scale: 2 }).notNull(),
+    // Solo se usan cuando tipo = 'entrega_retiro': `monto`/`moneda` pasan a
+    // representar el monto a entregar, y estas dos el monto a retirar.
+    moneda2: currencyEnum('moneda2'),
+    monto2: numeric('monto2', { precision: 15, scale: 2 }),
     direccion: text('direccion').notNull(),
     contacto: varchar('contacto', { length: 200 }).notNull(),
     telefono: varchar('telefono', { length: 50 }),

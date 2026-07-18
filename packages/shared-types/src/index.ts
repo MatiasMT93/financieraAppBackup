@@ -20,6 +20,10 @@ export interface Operation {
   tipo: OperationType;
   moneda: Currency;
   monto: number;
+  /** Solo presente cuando tipo === 'entrega_retiro': moneda del monto a retirar. */
+  moneda2: Currency | null;
+  /** Solo presente cuando tipo === 'entrega_retiro': monto a retirar (el campo `monto` de arriba pasa a representar el monto a entregar). */
+  monto2: number | null;
   direccion: string;
   contacto: string;
   telefono: string | null;

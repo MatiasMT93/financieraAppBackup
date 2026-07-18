@@ -16,8 +16,16 @@ const FILTERS = [
   { label: 'Cerradas', value: 'cerrada', dot: 'green' as const },
 ];
 
-const TIPOS = ['entrega', 'retiro'] as const;
+const TIPOS: Array<{ value: string; label: string }> = [
+  { value: 'entrega', label: 'Entrega' },
+  { value: 'retiro', label: 'Retiro' },
+  { value: 'entrega_retiro', label: 'Entrega y Retiro' },
+];
 const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'] as const;
+
+function tipoLabel(tipo: string) {
+  return TIPOS.find((t) => t.value === tipo)?.label ?? tipo;
+}
 
 const STATUS_META: Record<OperationStatus, { label: string; badge: string; dot: string }> = {
   pendiente: { label: 'Pendiente', badge: 'is-pending', dot: 'gold' },
@@ -35,15 +43,25 @@ function AdminStatusBadge({ status }: { status: OperationStatus }) {
   return <span className={`admin-status-badge ${meta.badge}`}>{meta.label}</span>;
 }
 
+function currencySymbol(moneda: string) {
+  return moneda === 'ARS' ? '$' : moneda === 'USD' ? 'U$' : moneda === 'EUR' ? '€' : moneda === 'BRL' ? 'R$' : '₮';
+}
+
 function formatMonto(op: Operation) {
-  const sym = op.moneda === 'ARS' ? '$' : op.moneda === 'USD' ? 'U$' : op.moneda === 'EUR' ? '€' : op.moneda === 'BRL' ? 'R$' : '₮';
-  return `${sym} ${Number(op.monto).toLocaleString('es-AR')}`;
+  return `${currencySymbol(op.moneda)} ${Number(op.monto).toLocaleString('es-AR')}`;
+}
+
+function formatMonto2(op: Operation) {
+  if (op.monto2 == null || !op.moneda2) return '—';
+  return `${currencySymbol(op.moneda2)} ${Number(op.monto2).toLocaleString('es-AR')}`;
 }
 
 interface EditForm {
   tipo: string;
   moneda: string;
   monto: string;
+  moneda2: string;
+  monto2: string;
   direccion: string;
   contacto: string;
   telefono: string;
@@ -55,11 +73,15 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
     tipo: op.tipo,
     moneda: op.moneda,
     monto: String(op.monto),
+    moneda2: op.moneda2 ?? 'ARS',
+    monto2: op.monto2 != null ? String(op.monto2) : '',
     direccion: op.direccion,
     contacto: op.contacto,
     telefono: op.telefono ?? '',
     notas: op.notas ?? '',
   });
+
+  const isCombined = form.tipo === 'entrega_retiro';
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -67,6 +89,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
         tipo: form.tipo,
         moneda: form.moneda,
         monto: parseFloat(form.monto),
+        ...(isCombined ? { moneda2: form.moneda2, monto2: parseFloat(form.monto2) } : {}),
         direccion: form.direccion,
         contacto: form.contacto,
         telefono: form.telefono || undefined,
@@ -79,7 +102,11 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  const isValid = parseFloat(form.monto) > 0 && form.direccion.length >= 3 && form.contacto.length >= 2;
+  const isValid =
+    parseFloat(form.monto) > 0 &&
+    (!isCombined || (form.monto2 !== '' && parseFloat(form.monto2) > 0)) &&
+    form.direccion.length >= 3 &&
+    form.contacto.length >= 2;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
@@ -90,7 +117,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
         </div>
 
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className={isCombined ? '' : 'grid grid-cols-2 gap-3'}>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
               <select
@@ -98,23 +125,81 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
                 onChange={(e) => set('tipo', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
-                {TIPOS.map((t) => <option key={t} value={t}>{t === 'entrega' ? 'Entrega' : 'Retiro'}</option>)}
+                {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Moneda</label>
-              <select
-                value={form.moneda}
-                onChange={(e) => set('moneda', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                {MONEDAS.map((m) => <option key={m}>{m}</option>)}
-              </select>
-            </div>
+            {!isCombined && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Moneda</label>
+                <select
+                  value={form.moneda}
+                  onChange={(e) => set('moneda', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  {MONEDAS.map((m) => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
+          {isCombined ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Monto de entrega</label>
+                  <input
+                    type="number"
+                    value={form.monto}
+                    onChange={(e) => set('monto', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-administrativo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Moneda de entrega</label>
+                  <select
+                    value={form.moneda}
+                    onChange={(e) => set('moneda', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    {MONEDAS.map((m) => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Monto de retiro</label>
+                  <input
+                    type="number"
+                    value={form.monto2}
+                    onChange={(e) => set('monto2', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-administrativo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Moneda de retiro</label>
+                  <select
+                    value={form.moneda2}
+                    onChange={(e) => set('moneda2', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    {MONEDAS.map((m) => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Monto</label>
+              <input
+                type="number"
+                value={form.monto}
+                onChange={(e) => set('monto', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-administrativo"
+              />
+            </div>
+          )}
+
           {([
-            { field: 'monto', label: 'Monto', type: 'number' },
             { field: 'direccion', label: 'Dirección', type: 'text' },
             { field: 'contacto', label: 'Contacto', type: 'text' },
             { field: 'telefono', label: 'Teléfono (opcional)', type: 'tel' },
@@ -257,11 +342,11 @@ export default function OpsAdminTab() {
                     </span>
                     <span className="admin-operation-item__kind">
                       <span className={`admin-mini-dot is-${meta.dot}`} />
-                      {op.tipo === 'entrega' ? 'Entrega' : 'Retiro'}
+                      {tipoLabel(op.tipo)}
                     </span>
                     <span className="admin-operation-item__amount">
                       <strong>{formatMonto(op)}</strong>
-                      <small>{op.moneda}</small>
+                      <small>{op.tipo === 'entrega_retiro' && op.monto2 != null && op.moneda2 ? `+ ${formatMonto2(op)}` : op.moneda}</small>
                     </span>
                     <span className="admin-operation-item__address">
                       <strong>{op.direccion}</strong>
@@ -341,9 +426,18 @@ function OperationDetail({
 
       <div className="admin-detail-grid">
         <div className="admin-detail-col">
-          <div className="admin-detail-field"><TruckIcon /><div><span>Tipo</span><strong>{op.tipo === 'entrega' ? 'Entrega' : 'Retiro'}</strong></div></div>
-          <div className="admin-detail-field"><CurrencyIcon /><div><span>Monto</span><strong>{formatMonto(op)}</strong></div></div>
-          <div className="admin-detail-field"><CurrencyIcon /><div><span>Moneda</span><strong>{op.moneda}</strong></div></div>
+          <div className="admin-detail-field"><TruckIcon /><div><span>Tipo</span><strong>{tipoLabel(op.tipo)}</strong></div></div>
+          {op.tipo === 'entrega_retiro' ? (
+            <>
+              <div className="admin-detail-field"><CurrencyIcon /><div><span>Monto de entrega</span><strong>{formatMonto(op)}</strong></div></div>
+              <div className="admin-detail-field"><CurrencyIcon /><div><span>Monto de retiro</span><strong>{formatMonto2(op)}</strong></div></div>
+            </>
+          ) : (
+            <>
+              <div className="admin-detail-field"><CurrencyIcon /><div><span>Monto</span><strong>{formatMonto(op)}</strong></div></div>
+              <div className="admin-detail-field"><CurrencyIcon /><div><span>Moneda</span><strong>{op.moneda}</strong></div></div>
+            </>
+          )}
           <div className="admin-detail-field"><PinIcon /><div><span>Dirección</span><strong>{op.direccion}</strong></div></div>
         </div>
         <div className="admin-detail-col admin-detail-col--divider">

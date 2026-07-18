@@ -34,6 +34,7 @@ export type CadeteStatus = (typeof CADETE_STATUS)[keyof typeof CADETE_STATUS];
 export const OPERATION_TYPE = {
   ENTREGA: 'entrega',
   RETIRO: 'retiro',
+  ENTREGA_RETIRO: 'entrega_retiro',
 } as const;
 
 export type OperationType = (typeof OPERATION_TYPE)[keyof typeof OPERATION_TYPE];

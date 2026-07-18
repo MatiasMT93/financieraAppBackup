@@ -22,6 +22,10 @@ function currencySymbol(moneda: string) {
   return moneda === 'ARS' ? '$' : moneda === 'USD' ? 'U$' : moneda === 'EUR' ? '€' : moneda === 'BRL' ? 'R$' : '₮';
 }
 
+function tipoLabel(tipo: string) {
+  return tipo === 'entrega' ? 'Entrega' : tipo === 'retiro' ? 'Retiro' : 'Entrega y Retiro';
+}
+
 export default function HistorialTab() {
   const [date, setDate] = useState(
     new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }),
@@ -98,8 +102,19 @@ export default function HistorialTab() {
               onClick={() => setSelectedId(op.id)}
             >
               <span className="coord-history-icon"><CalendarIcon /></span>
-              <span><strong>#{op.id.slice(-3).toUpperCase()}</strong><small>{op.tipo === 'entrega' ? 'Entrega' : 'Retiro'}</small></span>
-              <span><strong>{currencySymbol(op.moneda)} {Number(op.monto).toLocaleString('es-AR')}</strong><small>{op.moneda}</small></span>
+              <span><strong>#{op.id.slice(-3).toUpperCase()}</strong><small>{tipoLabel(op.tipo)}</small></span>
+              {op.tipo === 'entrega_retiro' ? (
+                <span>
+                  <strong>{currencySymbol(op.moneda)} {Number(op.monto).toLocaleString('es-AR')}</strong>
+                  <small>
+                    {op.monto2 != null && op.moneda2
+                      ? `+ ${currencySymbol(op.moneda2)} ${Number(op.monto2).toLocaleString('es-AR')} ${op.moneda2}`
+                      : op.moneda}
+                  </small>
+                </span>
+              ) : (
+                <span><strong>{currencySymbol(op.moneda)} {Number(op.monto).toLocaleString('es-AR')}</strong><small>{op.moneda}</small></span>
+              )}
               <span>{formatDateTime(op.createdAt)}</span>
               <CoordBadge status={op.status} />
             </button>
@@ -114,14 +129,30 @@ export default function HistorialTab() {
               <span className="coord-history-icon coord-history-icon--lg"><CalendarIcon /></span>
               <div>
                 <h2>#{selected.id.slice(-3).toUpperCase()}</h2>
-                <p>{selected.tipo === 'entrega' ? 'Entrega' : 'Retiro'}</p>
+                <p>{tipoLabel(selected.tipo)}</p>
               </div>
               <CoordBadge status={selected.status} />
             </div>
 
             <div className="coord-history-detail__grid">
-              <div><span>Monto</span><strong>{currencySymbol(selected.moneda)} {Number(selected.monto).toLocaleString('es-AR')}</strong></div>
-              <div><span>Moneda</span><strong>{selected.moneda}</strong></div>
+              {selected.tipo === 'entrega_retiro' ? (
+                <>
+                  <div><span>Monto de entrega</span><strong>{currencySymbol(selected.moneda)} {Number(selected.monto).toLocaleString('es-AR')} {selected.moneda}</strong></div>
+                  <div>
+                    <span>Monto de retiro</span>
+                    <strong>
+                      {selected.monto2 != null && selected.moneda2
+                        ? `${currencySymbol(selected.moneda2)} ${Number(selected.monto2).toLocaleString('es-AR')} ${selected.moneda2}`
+                        : '—'}
+                    </strong>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div><span>Monto</span><strong>{currencySymbol(selected.moneda)} {Number(selected.monto).toLocaleString('es-AR')}</strong></div>
+                  <div><span>Moneda</span><strong>{selected.moneda}</strong></div>
+                </>
+              )}
               <div><span>Fecha y hora</span><strong>{formatDateTime(selected.createdAt)}</strong></div>
               <div>
                 <span>Contacto</span>
