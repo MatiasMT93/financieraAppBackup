@@ -328,7 +328,7 @@ export default function NuevaOpTab() {
             )}
           </div>
 
-          {!isVentanilla && (
+          {!isVentanilla && (!selectedClient || !selectedClient.direccion) && (
             <label className="admin-field">
               <span>Dirección</span>
               <div className="admin-input-shell">
@@ -338,23 +338,25 @@ export default function NuevaOpTab() {
             </label>
           )}
 
-          <div className="admin-form-grid admin-form-grid--two">
-            <label className="admin-field">
-              <span>Contacto</span>
-              <div className="admin-input-shell">
-                <UserIcon />
-                <input value={form.contacto} onChange={(e) => set('contacto', e.target.value)} placeholder="Nombre de la persona" />
-              </div>
-            </label>
+          {!selectedClient && (
+            <div className="admin-form-grid admin-form-grid--two">
+              <label className="admin-field">
+                <span>Contacto</span>
+                <div className="admin-input-shell">
+                  <UserIcon />
+                  <input value={form.contacto} onChange={(e) => set('contacto', e.target.value)} placeholder="Nombre de la persona" />
+                </div>
+              </label>
 
-            <label className="admin-field">
-              <span>Teléfono (opcional)</span>
-              <div className="admin-input-shell">
-                <PhoneIcon />
-                <input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} placeholder="+54 11 ..." />
-              </div>
-            </label>
-          </div>
+              <label className="admin-field">
+                <span>Teléfono (opcional)</span>
+                <div className="admin-input-shell">
+                  <PhoneIcon />
+                  <input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} placeholder="+54 11 ..." />
+                </div>
+              </label>
+            </div>
+          )}
 
           <label className="admin-field">
             <span>Notas (opcional)</span>

@@ -419,6 +419,8 @@
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .admin-shell .admin-clients-table__body { flex: 1; }
+.admin-shell .admin-clients-table__head > span:nth-child(n+2):nth-last-child(n+2),
+.admin-shell .admin-clients-table__row > span:nth-child(n+2):nth-last-child(n+2) { text-align: center; }
 .admin-shell .admin-clients-table__row { border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #eef2f7; }
 .admin-shell .admin-clients-table__row:last-child { border-bottom: 0; }
 .admin-shell .admin-clients-table__name { display: flex; align-items: center; gap: 10px; font-weight: 600; }
@@ -515,6 +517,7 @@
     gap: 4px; padding: 14px 16px;
   }
   .admin-shell .admin-clients-table__actions { justify-self: start; margin-top: 6px; }
+  .admin-shell .admin-clients-table__row > span { text-align: left; }
 }
 
 @media (max-width: 560px) {

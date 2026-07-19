@@ -1,6 +1,6 @@
 import { db } from '../../db/connection.js';
 import { clients, operations } from '../../db/schema.js';
-import { and, desc, eq, gte, ilike, isNotNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, ilike, isNotNull, max, or, sql } from 'drizzle-orm';
 
 export interface ClientInput {
   nombre: string;
@@ -24,7 +24,12 @@ export async function listClients(query?: string) {
       createdAt: clients.createdAt,
       updatedAt: clients.updatedAt,
       operationsCount: sql<number>`count(${operations.id})::int`,
-      lastOperationAt: sql<string | null>`max(${operations.createdAt})`,
+      // Usamos el helper max() de drizzle (no sql`` crudo) para que el valor
+      // pase por el mapeo de la columna y quede forzado a UTC (+0000) al
+      // convertirlo a Date; si no, el parser default de `pg` para timestamp
+      // sin timezone usa la hora local del proceso del servidor y el dato
+      // llega desfasado (ej. "dentro de 3 horas" en vez de "hace 3 horas").
+      lastOperationAt: max(operations.createdAt),
     })
     .from(clients)
     .leftJoin(operations, eq(operations.clientId, clients.id))
