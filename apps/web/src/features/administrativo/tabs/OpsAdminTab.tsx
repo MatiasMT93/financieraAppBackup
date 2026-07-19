@@ -456,15 +456,6 @@ function OperationDetail({
         </div>
       )}
 
-      <div className="admin-recent-block">
-        <span>Actividad</span>
-        <div className="admin-recent-item">
-          <span>{new Date(op.createdAt).toLocaleDateString('es-AR')}</span>
-          <strong>Operación creada</strong>
-          <em />
-        </div>
-      </div>
-
       <div className="admin-detail-actions">
         {canEdit && (
           <button type="button" className="admin-secondary-button" onClick={onEdit}>
