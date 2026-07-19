@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Check } from 'lucide-react';
 import { apiGet, apiPost } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import type { Operation, User } from '@cambioapp/shared-types';
 import { useState } from 'react';
 
@@ -21,7 +22,7 @@ export default function AssignModal({ operation, onClose, onAssigned }: Props) {
     queryFn: () => apiGet<User[]>('/users?role=cadete'),
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['operations'] });
+  const invalidate = () => invalidateOperationsQueries(qc);
 
   const assign = useMutation({
     mutationFn: (cadeteId: string) =>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Phone, MessageCircle, Send, Repeat } from 'lucide-react';
 import { apiGet } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import CoordBadge from '../components/CoordBadge.tsx';
 import AssignModal from '../components/AssignModal.tsx';
 import { UsersIcon, PinIcon, PulseIcon } from '../components/CoordIcons.tsx';
@@ -134,7 +135,7 @@ export default function CadetesTab() {
           onClose={() => setReassigning(false)}
           onAssigned={() => {
             setReassigning(false);
-            qc.invalidateQueries({ queryKey: ['operations'] });
+            invalidateOperationsQueries(qc);
             qc.invalidateQueries({ queryKey: ['cadete-active-op'] });
           }}
         />

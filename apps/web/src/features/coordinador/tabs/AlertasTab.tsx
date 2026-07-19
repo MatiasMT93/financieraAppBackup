@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { apiGet, apiPost } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import type { Incident } from '@cambioapp/shared-types';
 import { AlertIcon, BellCheckIcon } from '../components/CoordIcons.tsx';
 
@@ -22,7 +23,7 @@ export default function AlertasTab() {
       // el estado de la operación y del cadete (que se ve en el mapa y en la
       // lista de cadetes).
       qc.invalidateQueries({ queryKey: ['incidents'] });
-      qc.invalidateQueries({ queryKey: ['operations'] });
+      invalidateOperationsQueries(qc);
       qc.invalidateQueries({ queryKey: ['cadetes'] });
       qc.invalidateQueries({ queryKey: ['locations'] });
     },

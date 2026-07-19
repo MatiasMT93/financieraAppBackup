@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Phone, MessageCircle, UserCheck, AlertTriangle, Repeat } from 'lucide-react';
 import { apiGet } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import type { Operation } from '@cambioapp/shared-types';
 import AssignModal from '../components/AssignModal.tsx';
 import CoordBadge from '../components/CoordBadge.tsx';
@@ -125,7 +126,7 @@ export default function OpsTab() {
           onClose={() => setAssigningOp(null)}
           onAssigned={() => {
             setAssigningOp(null);
-            qc.invalidateQueries({ queryKey: ['operations'] });
+            invalidateOperationsQueries(qc);
           }}
         />
       )}

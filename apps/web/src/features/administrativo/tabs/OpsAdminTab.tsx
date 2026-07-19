@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { apiGet, apiPost, apiPatch } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import type { Operation, OperationStatus } from '@cambioapp/shared-types';
 import { CANCELLABLE_STATUSES, EDITABLE_STATUSES } from '@cambioapp/shared-constants';
 import {
@@ -271,7 +272,7 @@ export default function OpsAdminTab() {
 
   const cancel = useMutation({
     mutationFn: (id: string) => apiPost(`/operations/${id}/cancel`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['operations'] }),
+    onSuccess: () => invalidateOperationsQueries(qc),
   });
 
   return (
@@ -374,7 +375,7 @@ export default function OpsAdminTab() {
           onClose={() => setEditingOp(null)}
           onSaved={() => {
             setEditingOp(null);
-            qc.invalidateQueries({ queryKey: ['operations'] });
+            invalidateOperationsQueries(qc);
           }}
         />
       )}

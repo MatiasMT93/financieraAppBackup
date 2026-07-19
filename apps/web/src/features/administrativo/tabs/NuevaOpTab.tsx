@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiPost } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import {
   PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
   PinIcon, UserIcon, PhoneIcon, ChevronDownIcon, BoxIllustration,
@@ -57,7 +58,7 @@ export default function NuevaOpTab() {
         notas: form.notas || undefined,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['operations'] });
+      invalidateOperationsQueries(qc);
       navigate('../ops');
     },
   });
