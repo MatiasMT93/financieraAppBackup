@@ -309,7 +309,8 @@
 /* Modalidad de entrega (Nueva operación) */
 .admin-shell .admin-modalidad-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .admin-shell .admin-modalidad-card {
-  display: flex; align-items: center; gap: 10px; padding: 12px 10px; text-align: left;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; padding: 16px 10px; text-align: center;
   border-radius: 14px; border: 1px solid rgba(99, 116, 139, 0.32); background: rgba(4, 15, 30, 0.68);
   color: #eef2f7; cursor: pointer; font: inherit;
 }
@@ -324,10 +325,10 @@
   background: linear-gradient(180deg, rgba(5, 25, 37, 0.82), rgba(6, 17, 29, 0.92));
 }
 .admin-shell .admin-modalidad-card__icon svg { width: 19px; height: 19px; }
-.admin-shell .admin-modalidad-card__copy { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.admin-shell .admin-modalidad-card__copy strong { font-size: 14px; }
-.admin-shell .admin-modalidad-card__copy small { color: #c1c7d0; font-size: 12px; }
-.admin-shell .admin-modalidad-card > svg { flex: 0 0 auto; width: 20px; height: 20px; color: #1fe0d2; }
+.admin-shell .admin-modalidad-card strong { font-size: 14px; font-weight: 600; }
+.admin-shell .admin-modalidad-card > svg {
+  position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; color: #1fe0d2;
+}
 
 /* Selector de cliente (Nueva operación) */
 .admin-shell .admin-client-search { display: flex; gap: 10px; }

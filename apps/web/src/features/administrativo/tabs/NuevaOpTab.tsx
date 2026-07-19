@@ -23,10 +23,10 @@ const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'];
 
 type Modalidad = 'ventanilla' | 'domicilio' | 'deposito';
 
-const MODALIDADES: Array<{ value: Modalidad; label: string; desc: string; Icon: typeof TruckIcon }> = [
-  { value: 'ventanilla', label: DELIVERY_MODE_LABELS.ventanilla, desc: 'Viene a la oficina', Icon: CounterIcon },
-  { value: 'domicilio', label: DELIVERY_MODE_LABELS.domicilio, desc: 'Cadete a domicilio', Icon: TruckIcon },
-  { value: 'deposito', label: DELIVERY_MODE_LABELS.deposito, desc: 'Cadete deposita', Icon: BankIcon },
+const MODALIDADES: Array<{ value: Modalidad; label: string; Icon: typeof TruckIcon }> = [
+  { value: 'ventanilla', label: DELIVERY_MODE_LABELS.ventanilla, Icon: CounterIcon },
+  { value: 'domicilio', label: DELIVERY_MODE_LABELS.domicilio, Icon: TruckIcon },
+  { value: 'deposito', label: DELIVERY_MODE_LABELS.deposito, Icon: BankIcon },
 ];
 
 interface FormState {
@@ -271,7 +271,7 @@ export default function NuevaOpTab() {
           <div className="admin-field">
             <span>Modalidad de entrega</span>
             <div className="admin-modalidad-grid">
-              {MODALIDADES.map(({ value, label, desc, Icon }) => (
+              {MODALIDADES.map(({ value, label, Icon }) => (
                 <button
                   key={value}
                   type="button"
@@ -279,10 +279,7 @@ export default function NuevaOpTab() {
                   onClick={() => set('modalidad', value)}
                 >
                   <span className="admin-modalidad-card__icon"><Icon /></span>
-                  <span className="admin-modalidad-card__copy">
-                    <strong>{label}</strong>
-                    <small>{desc}</small>
-                  </span>
+                  <strong>{label}</strong>
                   {form.modalidad === value && <CheckCircleIcon />}
                 </button>
               ))}
