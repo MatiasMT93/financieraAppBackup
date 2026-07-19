@@ -46,7 +46,7 @@
 .admin-shell .admin-field .admin-input-shell > svg,
 .admin-shell .admin-preview-list span svg,
 .admin-shell .admin-detail-field svg,
-.admin-shell .admin-map-address-card a svg,
+.admin-shell .admin-detail-field__link svg,
 .admin-shell .admin-preview-card__title svg,
 .admin-shell .admin-form-card__title svg,
 .admin-shell .admin-bottom-nav svg,
@@ -224,7 +224,6 @@
 .admin-shell .admin-detail-card__title-row small,
 .admin-shell .admin-notes-block > span,
 .admin-shell .admin-recent-block > span,
-.admin-shell .admin-map-card__label,
 .admin-shell .admin-detail-field span { color: #c1c7d0; font-size: 12px; line-height: 1.25; }
 .admin-shell .admin-detail-card__title-row h2 { margin: 1px 0 0; font-size: 22px; line-height: 0.95; font-family: 'Cormorant Garamond', Georgia, serif; }
 .admin-shell .admin-detail-card__status-row { display: flex; justify-content: flex-end; margin-bottom: 2px; }
@@ -258,27 +257,7 @@
 .admin-shell .admin-detail-field svg { flex: 0 0 auto; margin-top: 2px; }
 .admin-shell .admin-detail-field div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .admin-shell .admin-detail-field strong { color: #eef2f7; font-size: 13px; line-height: 1.25; font-weight: 500; word-break: break-word; }
-
-.admin-shell .admin-map-preview-row { display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 10px; margin-bottom: 4px; }
-.admin-shell .admin-map-card__surface { position: relative; min-height: 40px; margin-top: 4px; border-radius: 12px; overflow: hidden; background: linear-gradient(180deg, #16263c 0%, #132133 100%); }
-.admin-shell .admin-map-grid {
-  position: absolute; inset: 0;
-  background:
-    repeating-linear-gradient(70deg, rgba(255,196,87,0.12) 0 2px, transparent 2px 18px),
-    repeating-linear-gradient(0deg, rgba(206, 217, 231, 0.09) 0 1px, transparent 1px 16px),
-    repeating-linear-gradient(90deg, rgba(206, 217, 231, 0.09) 0 1px, transparent 1px 16px);
-}
-.admin-shell .admin-map-pin {
-  position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; transform: translate(-50%, -50%);
-  border-radius: 50% 50% 50% 0; rotate: -45deg; background: #1fe0d2; box-shadow: 0 0 0 5px rgba(31, 224, 210, 0.14);
-}
-.admin-shell .admin-map-address-card {
-  display: flex; flex-direction: column; justify-content: center; gap: 2px; min-height: 40px; padding: 6px 12px;
-  border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(7, 16, 28, 0.4);
-}
-.admin-shell .admin-map-address-card strong { font-size: 13px; line-height: 1.25; }
-.admin-shell .admin-map-address-card span { color: #c1c7d0; font-size: 12px; line-height: 1.25; }
-.admin-shell .admin-map-address-card a { display: inline-flex; align-items: center; gap: 6px; color: #1fe0d2; text-decoration: none; font-size: 12px; line-height: 1.25; }
+.admin-shell .admin-detail-field__link { display: inline-flex; align-items: center; gap: 6px; margin-top: 1px; color: #1fe0d2; text-decoration: none; font-size: 12px; line-height: 1.25; }
 
 .admin-shell .admin-notes-block,
 .admin-shell .admin-recent-block { margin-bottom: 4px; }
@@ -366,8 +345,11 @@
 }
 
 @media (max-width: 1320px) {
+  /* Apiladas (una debajo de otra) ya no compiten por una altura compartida:
+   * cada una toma su alto natural y la página entera scrollea si hace
+   * falta, en vez de forzar scroll interno en la lista o el detalle. */
   .admin-shell .admin-ops-layout,
-  .admin-shell .admin-new-layout { grid-template-columns: 1fr; }
+  .admin-shell .admin-new-layout { grid-template-columns: 1fr; flex: none; }
 }
 
 @media (max-width: 1100px) {
@@ -392,7 +374,6 @@
   .admin-shell .admin-header { flex-direction: column; align-items: stretch; gap: 10px; }
   .admin-shell .admin-back-button { align-self: flex-end; }
   .admin-shell .admin-detail-grid,
-  .admin-shell .admin-map-preview-row,
   .admin-shell .admin-form-grid--two,
   .admin-shell .admin-form-actions,
   .admin-shell .admin-detail-card__header-row,

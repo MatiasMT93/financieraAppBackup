@@ -250,19 +250,11 @@ export default function OpsAdminTab() {
     weekday: 'long', day: 'numeric', month: 'long',
   }).format(new Date());
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
-  const isClosedFilter = filter === 'cerrada';
-
-  // Las cerradas se limitan a hoy para no traer todo el historial. El resto
-  // (activas) no tienen filtro de fecha: una operación de ayer que sigue
-  // en_destino debe aparecer para que el admin pueda gestionarla.
+  // Sin filtro de fecha: el filtro de Cerradas tiene que mostrar todas las
+  // operaciones cerradas, no solo las de hoy (para eso está el Historial).
   const { data: ops = [], isLoading } = useQuery({
-    queryKey: ['operations-admin', filter, isClosedFilter ? today : 'all'],
-    queryFn: () =>
-      apiGet<Operation[]>('/operations', {
-        ...(filter ? { status: filter } : {}),
-        ...(isClosedFilter ? { date: today } : {}),
-      }),
+    queryKey: ['operations-admin', filter],
+    queryFn: () => apiGet<Operation[]>('/operations', filter ? { status: filter } : {}),
     refetchInterval: 30_000,
   });
 
@@ -438,27 +430,22 @@ function OperationDetail({
               <div className="admin-detail-field"><CurrencyIcon /><div><span>Moneda</span><strong>{op.moneda}</strong></div></div>
             </>
           )}
-          <div className="admin-detail-field"><PinIcon /><div><span>Dirección</span><strong>{op.direccion}</strong></div></div>
+          <div className="admin-detail-field">
+            <PinIcon />
+            <div>
+              <span>Dirección</span>
+              <strong>{op.direccion}</strong>
+              <a className="admin-detail-field__link" href={mapsHref} target="_blank" rel="noopener noreferrer">
+                Ver en Google Maps <ExternalLinkIcon />
+              </a>
+            </div>
+          </div>
         </div>
         <div className="admin-detail-col admin-detail-col--divider">
           <div className="admin-detail-field"><CalendarIcon /><div><span>Fecha / Hora</span><strong>{new Date(op.createdAt).toLocaleString('es-AR')}</strong></div></div>
           <div className="admin-detail-field"><UserIcon /><div><span>Contacto</span><strong>{op.contacto}</strong></div></div>
           {op.telefono && <div className="admin-detail-field"><PhoneIcon /><div><span>Teléfono</span><strong>{op.telefono}</strong></div></div>}
           <div className="admin-detail-field"><UserIcon /><div><span>Cadete</span><strong>{op.cadete?.nombre ?? 'Sin asignar'}</strong></div></div>
-        </div>
-      </div>
-
-      <div className="admin-map-preview-row">
-        <div className="admin-map-card">
-          <div className="admin-map-card__label">Ubicación</div>
-          <div className="admin-map-card__surface">
-            <div className="admin-map-grid" />
-            <div className="admin-map-pin" />
-          </div>
-        </div>
-        <div className="admin-map-address-card">
-          <strong>{op.direccion}</strong>
-          <a href={mapsHref} target="_blank" rel="noopener noreferrer">Ver en Google Maps <ExternalLinkIcon /></a>
         </div>
       </div>
 
