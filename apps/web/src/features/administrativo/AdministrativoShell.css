@@ -91,7 +91,7 @@
 .admin-shell .admin-page-header > .admin-primary-button svg { width: 20px; height: 20px; }
 .admin-shell .admin-page-header h1 { margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(26px, 2.4vw, 36px); line-height: 0.95; font-weight: 600; }
 .admin-shell .admin-page-header p { margin: 4px 0 0; display: flex; align-items: center; gap: 8px; color: #c3c9d1; font-size: 13px; }
-.admin-shell .admin-page-header--new { padding-left: 0; }
+.admin-shell .admin-page-header--new { padding-left: 0; justify-content: flex-start; }
 .admin-shell .admin-page-header__icon {
   width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px;
   border: 1px solid rgba(31, 224, 210, 0.48); color: #1fe0d2;
