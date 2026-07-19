@@ -141,7 +141,6 @@
 .admin-shell .admin-form-card,
 .admin-shell .admin-preview-card {
   position: relative;
-  overflow: hidden;
   border: 1px solid rgba(215, 167, 76, 0.3);
   border-radius: 18px;
   background:
@@ -149,6 +148,9 @@
     linear-gradient(90deg, rgba(10, 26, 38, 0.88), rgba(5, 13, 25, 0.95) 58%, rgba(6, 20, 33, 0.88));
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 14px 28px rgba(0,0,0,0.2);
 }
+.admin-shell .admin-operation-item,
+.admin-shell .admin-form-card,
+.admin-shell .admin-preview-card { overflow: hidden; }
 
 .admin-shell .admin-operation-item {
   width: 100%;
@@ -206,8 +208,8 @@
 .admin-shell .admin-preview-card { padding: 16px 16px 14px; }
 .admin-shell .admin-detail-card {
   padding: 8px 16px 8px;
-  align-self: stretch;
-  min-height: 0;
+  align-self: start;
+  overflow: visible;
 }
 
 .admin-shell .admin-form-card {
