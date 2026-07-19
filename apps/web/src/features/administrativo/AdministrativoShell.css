@@ -84,7 +84,11 @@
 }
 .admin-shell .admin-searchbar input { flex: 1; border: 0; outline: 0; background: transparent; color: #e9edf3; font-size: 14px; font-family: inherit; }
 
-.admin-shell .admin-page-header { flex: 0 0 auto; display: flex; align-items: center; gap: 16px; margin-bottom: 6px; padding: 2px 4px 0; }
+.admin-shell .admin-page-header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 6px; padding: 2px 4px 0; }
+.admin-shell .admin-page-header > .admin-primary-button {
+  min-height: 46px; padding: 0 24px; border-radius: 14px; font-size: 15px; font-weight: 600;
+}
+.admin-shell .admin-page-header > .admin-primary-button svg { width: 20px; height: 20px; }
 .admin-shell .admin-page-header h1 { margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(26px, 2.4vw, 36px); line-height: 0.95; font-weight: 600; }
 .admin-shell .admin-page-header p { margin: 4px 0 0; display: flex; align-items: center; gap: 8px; color: #c3c9d1; font-size: 13px; }
 .admin-shell .admin-page-header--new { padding-left: 0; }
@@ -415,7 +419,7 @@
      grids independientes, así que si el ancho dependiera del contenido, el
      header (celda vacía) y las filas (con botones) calcularían tracks
      distintos y las columnas quedarían desalineadas entre sí. */
-  display: grid; grid-template-columns: 1.4fr 1fr 1.3fr .8fr .8fr 164px; gap: 12px; align-items: center;
+  display: grid; grid-template-columns: 1.4fr 1fr 1.3fr .8fr .8fr 205px; gap: 12px; align-items: center;
   padding: 12px 18px;
 }
 .admin-shell .admin-clients-table__head {
@@ -435,11 +439,15 @@
 }
 .admin-shell .admin-clients-table__actions { display: flex; align-items: center; gap: 8px; justify-self: end; }
 .admin-shell .admin-clients-table__actions .admin-secondary-button { min-height: 32px; padding: 0 12px; font-size: 12px; white-space: nowrap; }
-.admin-shell .admin-clients-table__actions > button:last-child {
+.admin-shell .admin-clients-table__actions > button:not(.admin-secondary-button) {
   flex: 0 0 auto; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px;
   border: 1px solid rgba(99, 116, 139, 0.32); background: rgba(4, 15, 30, 0.68); color: #c1c7d0; cursor: pointer;
 }
-.admin-shell .admin-clients-table__actions > button:last-child svg { width: 15px; height: 15px; }
+.admin-shell .admin-clients-table__actions > button:not(.admin-secondary-button) svg { width: 15px; height: 15px; }
+.admin-shell .admin-clients-table__actions .admin-clients-table__delete-btn {
+  border-color: rgba(255, 77, 77, 0.32); color: #ff8a7a;
+}
+.admin-shell .admin-clients-table__actions .admin-clients-table__delete-btn:hover { background: rgba(255, 77, 77, 0.14); }
 
 .admin-shell .admin-preview-card {
   display: flex; flex-direction: column;

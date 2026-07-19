@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { apiGet, apiPost, apiPatch } from '../../../shared/api/client.ts';
 import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
+import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
 import type { Operation, OperationStatus } from '@cambioapp/shared-types';
 import { CANCELLABLE_STATUSES, EDITABLE_STATUSES } from '@cambioapp/shared-constants';
 import {
@@ -261,9 +262,9 @@ export default function OpsAdminTab() {
 
   const filtered = useMemo(() => {
     if (!query.trim()) return ops;
-    const q = query.toLowerCase();
+    const q = normalizeSearch(query);
     return ops.filter((op) => {
-      const searchable = `${op.id} ${op.direccion ?? ''} ${op.contacto} ${op.tipo}`.toLowerCase();
+      const searchable = normalizeSearch(`${op.id} ${op.direccion ?? ''} ${op.contacto} ${op.tipo}`);
       return searchable.includes(q);
     });
   }, [ops, query]);

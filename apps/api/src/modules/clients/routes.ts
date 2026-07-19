@@ -30,4 +30,22 @@ router.patch('/:id', async (req, res) => {
   res.json({ ok: true, data: client });
 });
 
+router.delete('/:id', async (req, res) => {
+  const existing = await repo.findClientById(req.params.id);
+  if (!existing) {
+    res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
+    return;
+  }
+  const operationsCount = await repo.countClientOperations(req.params.id);
+  if (operationsCount > 0) {
+    res.status(409).json({
+      ok: false,
+      error: `No se puede eliminar: tiene ${operationsCount} operación${operationsCount === 1 ? '' : 'es'} asociada${operationsCount === 1 ? '' : 's'}.`,
+    });
+    return;
+  }
+  await repo.deleteClient(req.params.id);
+  res.json({ ok: true });
+});
+
 export default router;

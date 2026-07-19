@@ -7,6 +7,7 @@ import CoordDatePicker from '../components/CoordDatePicker.tsx';
 import { CalendarIcon, PinIcon, SearchIcon, SearchDocIcon, UsersIcon } from '../components/CoordIcons.tsx';
 import type { Operation } from '@cambioapp/shared-types';
 import { formatDateTime } from '../../../shared/utils/format-time.ts';
+import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
 
 const FILTERS = [
   { label: 'Todas', value: '' },
@@ -43,14 +44,14 @@ export default function HistorialTab() {
   });
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearch(query.trim());
     return ops.filter((op) => {
       if (filter && !filter.split(',').includes(op.status)) return false;
       if (!q) return true;
       return (
         op.id.toLowerCase().includes(q) ||
-        (op.direccion?.toLowerCase().includes(q) ?? false) ||
-        op.contacto.toLowerCase().includes(q)
+        normalizeSearch(op.direccion ?? '').includes(q) ||
+        normalizeSearch(op.contacto).includes(q)
       );
     });
   }, [ops, query, filter]);

@@ -1,6 +1,6 @@
 import { db } from '../../db/connection.js';
 import { clients, operations } from '../../db/schema.js';
-import { and, desc, eq, gte, ilike, isNotNull, max, ne, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNotNull, max, ne, sql } from 'drizzle-orm';
 
 // Una operación cancelada no cuenta como actividad real del cliente.
 const notCancelled = ne(operations.status, 'cancelada');
@@ -13,8 +13,10 @@ export interface ClientInput {
 }
 
 export async function listClients(query?: string) {
+  // unaccent() para que la búsqueda ignore acentos (requiere la extensión
+  // `unaccent`, habilitada en la migración 0008).
   const searchCondition = query
-    ? or(ilike(clients.nombre, `%${query}%`), ilike(clients.telefono, `%${query}%`))
+    ? sql`(unaccent(${clients.nombre}) ilike unaccent(${`%${query}%`}) or unaccent(coalesce(${clients.telefono}, '')) ilike unaccent(${`%${query}%`}))`
     : undefined;
 
   return db
@@ -60,6 +62,21 @@ export async function updateClient(id: string, data: Partial<ClientInput>) {
     .where(eq(clients.id, id))
     .returning();
   return client;
+}
+
+/**
+ * Un cliente con operaciones asociadas no se puede borrar (la FK lo
+ * impide): se lo verifica antes para poder avisar con un mensaje claro
+ * en vez de que la ruta reviente con un error de Postgres.
+ */
+export async function countClientOperations(id: string): Promise<number> {
+  const [row] = await db.select({ total: count() }).from(operations).where(eq(operations.clientId, id));
+  return row?.total ?? 0;
+}
+
+export async function deleteClient(id: string) {
+  const [deleted] = await db.delete(clients).where(eq(clients.id, id)).returning({ id: clients.id });
+  return deleted;
 }
 
 /**

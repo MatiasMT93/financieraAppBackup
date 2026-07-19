@@ -5,6 +5,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getSocket, connectSocket } from '../../../shared/api/socket.ts';
 import { apiGet } from '../../../shared/api/client.ts';
+import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
 import CoordBadge from '../components/CoordBadge.tsx';
 import AnimatedCadetMarkers, { type CadetMarker } from '../components/AnimatedCadetMarkers.tsx';
 import LocateControl from '../components/LocateControl.tsx';
@@ -163,9 +164,9 @@ export default function MapaTab() {
       incidencia: [],
       sinConexion: [],
     };
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearch(query.trim());
     for (const loc of locations) {
-      if (q && !(loc.cadete?.nombre ?? '').toLowerCase().includes(q)) continue;
+      if (q && !normalizeSearch(loc.cadete?.nombre ?? '').includes(q)) continue;
       byGroup[groupOf(loc)].push(loc);
     }
     return byGroup;

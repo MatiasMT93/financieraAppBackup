@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { apiGet } from '../../../shared/api/client.ts';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiDelete, apiGet } from '../../../shared/api/client.ts';
 import { formatRelativeTime } from '../../../shared/utils/format-time.ts';
+import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
 import {
-  UsersIcon, SearchIcon, PlusIcon, PhoneIcon, EditIcon,
+  UsersIcon, SearchIcon, PlusIcon, PhoneIcon, EditIcon, TrashIcon,
 } from '../components/AdminIcons.tsx';
 import ClientFormModal from '../components/ClientFormModal.tsx';
 import type { Client, ClientsStats } from '@cambioapp/shared-types';
@@ -18,9 +19,11 @@ function initials(nombre: string) {
 
 export default function ClientesTab() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [query, setQuery] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [deletingClient, setDeletingClient] = useState<Client | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['clients'],
@@ -28,14 +31,22 @@ export default function ClientesTab() {
     refetchInterval: 30_000,
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiDelete(`/clients/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['clients'] });
+      setDeletingClient(null);
+    },
+  });
+
   const clients = data?.clients ?? [];
   const stats = data?.stats;
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearch(query.trim());
     if (!q) return clients;
     return clients.filter(
-      (c) => c.nombre.toLowerCase().includes(q) || (c.telefono ?? '').toLowerCase().includes(q),
+      (c) => normalizeSearch(c.nombre).includes(q) || (c.telefono ?? '').includes(q),
     );
   }, [clients, query]);
 
@@ -44,7 +55,6 @@ export default function ClientesTab() {
       <section className="admin-page-header">
         <div>
           <h1>Clientes</h1>
-          <p><UsersIcon />Cartera compartida entre todos los administrativos</p>
         </div>
         <button type="button" className="admin-primary-button" onClick={() => setShowNewModal(true)}>
           <PlusIcon />Nuevo cliente
@@ -86,7 +96,7 @@ export default function ClientesTab() {
         </div>
       ) : (
         <>
-          <div className="admin-ops-count">{filtered.length} {filtered.length === 1 ? 'cliente' : 'clientes'} en la cartera</div>
+          <div className="admin-ops-count">{filtered.length} {filtered.length === 1 ? 'cliente registrado' : 'clientes registrados'}</div>
           <div className="admin-clients-table">
             <div className="admin-clients-table__head">
               <span>Cliente</span>
@@ -118,6 +128,14 @@ export default function ClientesTab() {
                     <button type="button" onClick={() => setEditingClient(c)} aria-label="Editar cliente">
                       <EditIcon />
                     </button>
+                    <button
+                      type="button"
+                      className="admin-clients-table__delete-btn"
+                      onClick={() => setDeletingClient(c)}
+                      aria-label="Eliminar cliente"
+                    >
+                      <TrashIcon />
+                    </button>
                   </span>
                 </div>
               ))}
@@ -135,6 +153,42 @@ export default function ClientesTab() {
           onClose={() => setEditingClient(null)}
           onSaved={() => setEditingClient(null)}
         />
+      )}
+
+      {deletingClient && (
+        <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="admin-modal-card">
+            <div className="admin-modal-card__header">
+              <h2>Eliminar cliente</h2>
+            </div>
+            <p style={{ margin: '0 0 16px', color: '#c1c7d0', fontSize: 14 }}>
+              ¿Seguro que querés eliminar a <strong>{deletingClient.nombre}</strong>? Esta acción no se puede deshacer.
+            </p>
+            {deleteMutation.isError && (
+              <p style={{ color: '#ff8a7a', fontSize: 13, textAlign: 'center', margin: '0 0 8px' }}>
+                {(deleteMutation.error as { response?: { data?: { error?: string } } })?.response?.data?.error
+                  ?? 'No se pudo eliminar el cliente. Intentá de nuevo.'}
+              </p>
+            )}
+            <div className="admin-modal-card__actions">
+              <button
+                type="button"
+                className="admin-cancel-button"
+                onClick={() => { setDeletingClient(null); deleteMutation.reset(); }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="admin-danger-button"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate(deletingClient.id)}
+              >
+                <TrashIcon />{deleteMutation.isPending ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

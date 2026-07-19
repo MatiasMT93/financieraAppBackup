@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '../../../shared/api/client.ts';
 import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
+import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
 import {
   PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
   PinIcon, UserIcon, PhoneIcon, ChevronDownIcon, BoxIllustration,
@@ -71,10 +72,10 @@ export default function NuevaOpTab() {
   const clients = clientsData?.clients ?? [];
 
   const clientResults = useMemo(() => {
-    const q = clientQuery.trim().toLowerCase();
+    const q = normalizeSearch(clientQuery.trim());
     if (!q) return clients.slice(0, 4);
     return clients
-      .filter((c) => c.nombre.toLowerCase().includes(q) || (c.telefono ?? '').includes(q))
+      .filter((c) => normalizeSearch(c.nombre).includes(q) || (c.telefono ?? '').includes(q))
       .slice(0, 8);
   }, [clients, clientQuery]);
 
