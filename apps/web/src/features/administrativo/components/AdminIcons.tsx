@@ -143,6 +143,43 @@ export function TrashIcon() {
   );
 }
 
+export function CounterIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 20V9l9-5 9 5v11" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M3 20h18M8 20v-6h8v6" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M11 8h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function UsersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3 19c1-3 3-4.6 6-4.6s5 1.6 6 4.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M16 5.3a3 3 0 0 1 0 5.8M20 19c-.6-2-1.7-3.4-3.4-4.1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m8 12.3 2.6 2.6L16.2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function BoxIllustration() {
   return (
     <svg viewBox="0 0 220 180" fill="none" aria-hidden="true">

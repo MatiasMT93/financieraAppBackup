@@ -3,31 +3,50 @@ import { z } from 'zod';
 // `monto`/`moneda` representan el monto a entregar cuando tipo es
 // 'entrega_retiro'; `monto2`/`moneda2` representan el monto a retirar y solo
 // se usan en ese caso.
+// `direccion` es obligatoria salvo en modalidad 'ventanilla' (el cliente
+// viene a la oficina, no hay que despachar un cadete a ningún lado).
 const operationFields = z.object({
   tipo: z.enum(['entrega', 'retiro', 'entrega_retiro']),
   moneda: z.enum(['ARS', 'USD', 'EUR', 'BRL', 'USDT']),
   monto: z.number().positive(),
   moneda2: z.enum(['ARS', 'USD', 'EUR', 'BRL', 'USDT']).optional(),
   monto2: z.number().positive().optional(),
-  direccion: z.string().min(5),
+  modalidad: z.enum(['domicilio', 'ventanilla']).default('domicilio'),
+  direccion: z.string().optional(),
   contacto: z.string().min(2),
   telefono: z.string().optional(),
   notas: z.string().optional(),
+  clientId: z.string().uuid().optional(),
 });
 
 function requiresSecondAmount(data: { tipo?: string; monto2?: number; moneda2?: string }) {
   return data.tipo !== 'entrega_retiro' || (data.monto2 !== undefined && data.moneda2 !== undefined);
 }
 
-export const createOperationSchema = operationFields.refine(requiresSecondAmount, {
-  message: 'monto2 y moneda2 son obligatorios cuando tipo es entrega_retiro',
-  path: ['monto2'],
-});
+function requiresDireccionForDomicilio(data: { modalidad?: string; direccion?: string }) {
+  return data.modalidad === 'ventanilla' || (!!data.direccion && data.direccion.length >= 5);
+}
 
-export const updateOperationSchema = operationFields.partial().refine(requiresSecondAmount, {
-  message: 'monto2 y moneda2 son obligatorios cuando tipo es entrega_retiro',
-  path: ['monto2'],
-});
+export const createOperationSchema = operationFields
+  .refine(requiresSecondAmount, {
+    message: 'monto2 y moneda2 son obligatorios cuando tipo es entrega_retiro',
+    path: ['monto2'],
+  })
+  .refine(requiresDireccionForDomicilio, {
+    message: 'La dirección es obligatoria para entregas a domicilio',
+    path: ['direccion'],
+  });
+
+// La modalidad no se puede editar después de creada: cambia el circuito
+// entero (si lleva cadete o no), y de hecho una operación 'ventanilla'
+// nunca es editable porque nace directamente 'cerrada'.
+export const updateOperationSchema = operationFields
+  .omit({ modalidad: true })
+  .partial()
+  .refine(requiresSecondAmount, {
+    message: 'monto2 y moneda2 son obligatorios cuando tipo es entrega_retiro',
+    path: ['monto2'],
+  });
 
 export const transitionSchema = z.object({
   newStatus: z.enum([

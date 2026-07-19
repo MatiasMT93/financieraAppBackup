@@ -156,7 +156,7 @@ function OperationCard({
 
           <div className="coord-operation-card__meta"><CalendarIcon />{formatDateTime(op.createdAt)}</div>
           {op.cadete && <div className="coord-operation-card__meta"><UsersIconInline />{op.cadete.nombre}</div>}
-          <div className="coord-operation-card__meta"><PinIcon />{op.direccion}</div>
+          <div className="coord-operation-card__meta"><PinIcon />{op.direccion ?? 'Ventanilla'}</div>
           <div className="coord-operation-card__amount"><MoneyIcon /><span>{formatMonto(op)}</span></div>
 
           <div className="coord-operation-card__contact">

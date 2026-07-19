@@ -49,7 +49,7 @@ export default function HistorialTab() {
       if (!q) return true;
       return (
         op.id.toLowerCase().includes(q) ||
-        op.direccion.toLowerCase().includes(q) ||
+        (op.direccion?.toLowerCase().includes(q) ?? false) ||
         op.contacto.toLowerCase().includes(q)
       );
     });
@@ -160,15 +160,17 @@ export default function HistorialTab() {
                 {selected.telefono && <small><Phone size={13} /> {selected.telefono}</small>}
               </div>
               <div>
-                <span>Dirección</span>
-                <strong>{selected.direccion}</strong>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.direccion)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <PinIcon />Ver en Google Maps ↗
-                </a>
+                <span>{selected.direccion ? 'Dirección' : 'Modalidad'}</span>
+                <strong>{selected.direccion ?? 'Ventanilla'}</strong>
+                {selected.direccion && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selected.direccion)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <PinIcon />Ver en Google Maps ↗
+                  </a>
+                )}
               </div>
               <div>
                 <span>Cadete</span>

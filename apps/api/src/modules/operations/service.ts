@@ -28,10 +28,12 @@ export async function createOperation(
     monto: number;
     moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
     monto2?: number;
-    direccion: string;
+    modalidad: 'domicilio' | 'ventanilla';
+    direccion?: string;
     contacto: string;
     telefono?: string;
     notas?: string;
+    clientId?: string;
   },
   user: AuthUser,
 ) {

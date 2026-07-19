@@ -39,6 +39,13 @@ export const OPERATION_TYPE = {
 
 export type OperationType = (typeof OPERATION_TYPE)[keyof typeof OPERATION_TYPE];
 
+export const DELIVERY_MODE = {
+  DOMICILIO: 'domicilio',
+  VENTANILLA: 'ventanilla',
+} as const;
+
+export type DeliveryMode = (typeof DELIVERY_MODE)[keyof typeof DELIVERY_MODE];
+
 export const CURRENCY = {
   ARS: 'ARS',
   USD: 'USD',

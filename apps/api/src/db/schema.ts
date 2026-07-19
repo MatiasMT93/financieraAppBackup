@@ -34,6 +34,7 @@ export const cadeteStatusEnum = pgEnum('cadete_status', [
   'volviendo',
   'incidencia',
 ]);
+export const deliveryModeEnum = pgEnum('delivery_mode', ['domicilio', 'ventanilla']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -50,6 +51,23 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const clients = pgTable(
+  'clients',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    nombre: varchar('nombre', { length: 200 }).notNull(),
+    telefono: varchar('telefono', { length: 50 }),
+    direccion: text('direccion'),
+    notas: text('notas'),
+    createdById: uuid('created_by_id').references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    clients_nombre_idx: index('clients_nombre_idx').on(t.nombre),
+  }),
+);
+
 export const operations = pgTable(
   'operations',
   {
@@ -61,10 +79,14 @@ export const operations = pgTable(
     // representar el monto a entregar, y estas dos el monto a retirar.
     moneda2: currencyEnum('moneda2'),
     monto2: numeric('monto2', { precision: 15, scale: 2 }),
-    direccion: text('direccion').notNull(),
+    // Nula solo quedan las 'ventanilla': el cliente viene a la oficina, no
+    // hace falta una dirección de entrega ni despachar un cadete.
+    direccion: text('direccion'),
     contacto: varchar('contacto', { length: 200 }).notNull(),
     telefono: varchar('telefono', { length: 50 }),
     notas: text('notas'),
+    modalidad: deliveryModeEnum('modalidad').notNull().default('domicilio'),
+    clientId: uuid('client_id').references(() => clients.id),
     status: operationStatusEnum('status').notNull().default('pendiente'),
     administrativoId: uuid('administrativo_id')
       .notNull()
@@ -77,6 +99,7 @@ export const operations = pgTable(
   (t) => ({
     operations_status_idx: index('operations_status_idx').on(t.status),
     operations_cadete_idx: index('operations_cadete_idx').on(t.cadeteId),
+    operations_client_idx: index('operations_client_idx').on(t.clientId),
   }),
 );
 
@@ -175,6 +198,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   amountCorrections: many(amountCorrections),
   locations: many(cadetLocations),
   refreshTokens: many(refreshTokens),
+  clientsCreated: many(clients),
 }));
 
 export const operationsRelations = relations(operations, ({ one, many }) => ({
@@ -193,9 +217,21 @@ export const operationsRelations = relations(operations, ({ one, many }) => ({
     references: [users.id],
     relationName: 'op_coordinador',
   }),
+  client: one(clients, {
+    fields: [operations.clientId],
+    references: [clients.id],
+  }),
   statusHistory: many(operationStatusHistory),
   incidents: many(incidents, { relationName: 'incident_operation' }),
   amountCorrections: many(amountCorrections),
+}));
+
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [clients.createdById],
+    references: [users.id],
+  }),
+  operations: many(operations),
 }));
 
 export const operationStatusHistoryRelations = relations(operationStatusHistory, ({ one }) => ({

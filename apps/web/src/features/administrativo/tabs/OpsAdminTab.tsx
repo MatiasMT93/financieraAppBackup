@@ -76,7 +76,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
     monto: String(op.monto),
     moneda2: op.moneda2 ?? 'ARS',
     monto2: op.monto2 != null ? String(op.monto2) : '',
-    direccion: op.direccion,
+    direccion: op.direccion ?? '',
     contacto: op.contacto,
     telefono: op.telefono ?? '',
     notas: op.notas ?? '',
@@ -263,7 +263,7 @@ export default function OpsAdminTab() {
     if (!query.trim()) return ops;
     const q = query.toLowerCase();
     return ops.filter((op) => {
-      const searchable = `${op.id} ${op.direccion} ${op.contacto} ${op.tipo}`.toLowerCase();
+      const searchable = `${op.id} ${op.direccion ?? ''} ${op.contacto} ${op.tipo}`.toLowerCase();
       return searchable.includes(q);
     });
   }, [ops, query]);
@@ -342,7 +342,7 @@ export default function OpsAdminTab() {
                       <small>{op.tipo === 'entrega_retiro' && op.monto2 != null && op.moneda2 ? `+ ${formatMonto2(op)}` : op.moneda}</small>
                     </span>
                     <span className="admin-operation-item__address">
-                      <strong>{op.direccion}</strong>
+                      <strong>{op.direccion ?? 'Ventanilla'}</strong>
                       <small>{op.contacto}</small>
                     </span>
                     <span className="admin-operation-item__status-column">
@@ -398,7 +398,10 @@ function OperationDetail({
 }) {
   const canEdit = EDITABLE_STATUSES.includes(op.status);
   const canCancel = CANCELLABLE_STATUSES.includes(op.status);
-  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(op.direccion)}`;
+  const isVentanilla = op.modalidad === 'ventanilla';
+  const mapsHref = op.direccion
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(op.direccion)}`
+    : null;
 
   return (
     <aside className="admin-detail-card">
@@ -434,11 +437,16 @@ function OperationDetail({
           <div className="admin-detail-field">
             <PinIcon />
             <div>
-              <span>Dirección</span>
-              <strong>{op.direccion}</strong>
-              <a className="admin-detail-field__link" href={mapsHref} target="_blank" rel="noopener noreferrer">
-                Ver en Google Maps <ExternalLinkIcon />
-              </a>
+              <span>Modalidad</span>
+              <strong>{isVentanilla ? 'Ventanilla' : 'A domicilio'}</strong>
+              {mapsHref && op.direccion && (
+                <>
+                  <em className="admin-detail-field__inline">{op.direccion}</em>
+                  <a className="admin-detail-field__link" href={mapsHref} target="_blank" rel="noopener noreferrer">
+                    Ver en Google Maps <ExternalLinkIcon />
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -446,7 +454,9 @@ function OperationDetail({
           <div className="admin-detail-field"><CalendarIcon /><div><span>Fecha / Hora</span><strong>{new Date(op.createdAt).toLocaleString('es-AR')}</strong></div></div>
           <div className="admin-detail-field"><UserIcon /><div><span>Contacto</span><strong>{op.contacto}</strong></div></div>
           {op.telefono && <div className="admin-detail-field"><PhoneIcon /><div><span>Teléfono</span><strong>{op.telefono}</strong></div></div>}
-          <div className="admin-detail-field"><UserIcon /><div><span>Cadete</span><strong>{op.cadete?.nombre ?? 'Sin asignar'}</strong></div></div>
+          {!isVentanilla && (
+            <div className="admin-detail-field"><UserIcon /><div><span>Cadete</span><strong>{op.cadete?.nombre ?? 'Sin asignar'}</strong></div></div>
+          )}
         </div>
       </div>
 

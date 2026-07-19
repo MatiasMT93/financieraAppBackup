@@ -91,7 +91,7 @@ export default function CadetesTab() {
                   <PinIcon />
                   <span>Destino asignado<strong>{activeOp.direccion}</strong></span>
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeOp.direccion)}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeOp.direccion ?? '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

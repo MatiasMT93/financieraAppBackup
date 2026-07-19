@@ -9,6 +9,7 @@ export async function findOperationById(id: string) {
     with: {
       administrativo: { columns: { id: true, nombre: true } },
       cadete: { columns: { id: true, nombre: true, celular: true } },
+      client: { columns: { id: true, nombre: true } },
     },
   });
 }
@@ -47,6 +48,7 @@ export async function listOperations(filters: {
     with: {
       administrativo: { columns: { id: true, nombre: true } },
       cadete: { columns: { id: true, nombre: true, celular: true } },
+      client: { columns: { id: true, nombre: true } },
     },
     orderBy: (t, { desc }) => [desc(t.createdAt)],
   });
@@ -58,10 +60,12 @@ export async function createOperation(data: {
   monto: number;
   moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto2?: number;
-  direccion: string;
+  modalidad: 'domicilio' | 'ventanilla';
+  direccion?: string;
   contacto: string;
   telefono?: string;
   notas?: string;
+  clientId?: string;
   administrativoId: string;
 }) {
   const [op] = await db
@@ -70,6 +74,10 @@ export async function createOperation(data: {
       ...data,
       monto: String(data.monto),
       monto2: data.monto2 !== undefined ? String(data.monto2) : undefined,
+      // Ventanilla se resuelve en el momento en el mostrador: no hay cadete
+      // que despachar, así que arranca directamente cerrada en vez de
+      // pasar por pendiente/asignación como las operaciones a domicilio.
+      status: data.modalidad === 'ventanilla' ? 'cerrada' : undefined,
     })
     .returning();
   return op;
@@ -85,6 +93,7 @@ export async function updateOperation(id: string, data: Partial<{
   contacto: string;
   telefono: string;
   notas: string;
+  clientId: string;
 }>) {
   const values: Record<string, unknown> = { ...data, updatedAt: new Date() };
   if (data.monto !== undefined) values.monto = String(data.monto);

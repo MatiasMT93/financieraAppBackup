@@ -1,12 +1,15 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiPost } from '../../../shared/api/client.ts';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiGet, apiPost } from '../../../shared/api/client.ts';
 import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import {
   PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
   PinIcon, UserIcon, PhoneIcon, ChevronDownIcon, BoxIllustration,
+  SearchIcon, CounterIcon, CheckCircleIcon, CloseIcon,
 } from '../components/AdminIcons.tsx';
+import ClientFormModal from '../components/ClientFormModal.tsx';
+import type { Client } from '@cambioapp/shared-types';
 
 const TIPOS: Array<{ value: string; label: string }> = [
   { value: 'entrega', label: 'Entrega' },
@@ -15,21 +18,31 @@ const TIPOS: Array<{ value: string; label: string }> = [
 ];
 const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'];
 
+const MODALIDADES: Array<{ value: 'domicilio' | 'ventanilla'; label: string; desc: string; Icon: typeof TruckIcon }> = [
+  { value: 'domicilio', label: 'A domicilio', desc: 'Va un cadete a la dirección', Icon: TruckIcon },
+  { value: 'ventanilla', label: 'Ventanilla', desc: 'El cliente viene a la oficina', Icon: CounterIcon },
+];
+
 interface FormState {
   tipo: string;
   moneda: string;
   monto: string;
   moneda2: string;
   monto2: string;
+  modalidad: 'domicilio' | 'ventanilla';
   direccion: string;
   contacto: string;
   telefono: string;
   notas: string;
+  clientId: string;
 }
 
 export default function NuevaOpTab() {
   const navigate = useNavigate();
+  const location = useLocation();
   const qc = useQueryClient();
+  // Al venir del botón "Nueva op" de un cliente en la pestaña Clientes.
+  const prefillClientId = (location.state as { clientId?: string } | null)?.clientId;
 
   const [form, setForm] = useState<FormState>({
     tipo: 'entrega',
@@ -37,13 +50,58 @@ export default function NuevaOpTab() {
     monto: '',
     moneda2: 'ARS',
     monto2: '',
+    modalidad: 'domicilio',
     direccion: '',
     contacto: '',
     telefono: '',
     notas: '',
+    clientId: '',
   });
+  const [clientQuery, setClientQuery] = useState('');
+  const [showClientResults, setShowClientResults] = useState(false);
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
 
   const isCombined = form.tipo === 'entrega_retiro';
+  const isVentanilla = form.modalidad === 'ventanilla';
+
+  const { data: clientsData } = useQuery({
+    queryKey: ['clients'],
+    queryFn: () => apiGet<{ clients: Client[] }>('/clients'),
+  });
+  const clients = clientsData?.clients ?? [];
+
+  const clientResults = useMemo(() => {
+    const q = clientQuery.trim().toLowerCase();
+    if (!q) return clients.slice(0, 4);
+    return clients
+      .filter((c) => c.nombre.toLowerCase().includes(q) || (c.telefono ?? '').includes(q))
+      .slice(0, 8);
+  }, [clients, clientQuery]);
+
+  const quickAccessClients = clients.slice(0, 4);
+  const selectedClient = clients.find((c) => c.id === form.clientId) ?? null;
+
+  function selectClient(client: Client) {
+    setForm((prev) => ({
+      ...prev,
+      clientId: client.id,
+      contacto: client.nombre,
+      telefono: client.telefono ?? prev.telefono,
+      direccion: client.direccion ?? prev.direccion,
+    }));
+    setClientQuery('');
+    setShowClientResults(false);
+  }
+
+  function clearClient() {
+    setForm((prev) => ({ ...prev, clientId: '' }));
+  }
+
+  useEffect(() => {
+    if (!prefillClientId || form.clientId) return;
+    const client = clients.find((c) => c.id === prefillClientId);
+    if (client) selectClient(client);
+  }, [prefillClientId, clients]);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -52,10 +110,12 @@ export default function NuevaOpTab() {
         moneda: form.moneda,
         monto: parseFloat(form.monto),
         ...(isCombined ? { moneda2: form.moneda2, monto2: parseFloat(form.monto2) } : {}),
-        direccion: form.direccion,
+        modalidad: form.modalidad,
+        direccion: isVentanilla ? undefined : form.direccion,
         contacto: form.contacto,
         telefono: form.telefono || undefined,
         notas: form.notas || undefined,
+        clientId: form.clientId || undefined,
       }),
     onSuccess: () => {
       invalidateOperationsQueries(qc);
@@ -71,7 +131,7 @@ export default function NuevaOpTab() {
     form.monto !== '' &&
     parseFloat(form.monto) > 0 &&
     (!isCombined || (form.monto2 !== '' && parseFloat(form.monto2) > 0)) &&
-    form.direccion.length >= 5 &&
+    (isVentanilla || form.direccion.length >= 5) &&
     form.contacto.length >= 2;
 
   const tipoLabel = TIPOS.find((t) => t.value === form.tipo)?.label ?? form.tipo;
@@ -188,13 +248,95 @@ export default function NuevaOpTab() {
             </label>
           )}
 
-          <label className="admin-field">
-            <span>Dirección</span>
-            <div className="admin-input-shell">
-              <PinIcon />
-              <input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Calle y número" />
+          <div className="admin-field">
+            <span>Modalidad de entrega</span>
+            <div className="admin-modalidad-grid">
+              {MODALIDADES.map(({ value, label, desc, Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`admin-modalidad-card ${form.modalidad === value ? 'is-selected' : ''}`}
+                  onClick={() => set('modalidad', value)}
+                >
+                  <span className="admin-modalidad-card__icon"><Icon /></span>
+                  <span className="admin-modalidad-card__copy">
+                    <strong>{label}</strong>
+                    <small>{desc}</small>
+                  </span>
+                  {form.modalidad === value && <CheckCircleIcon />}
+                </button>
+              ))}
             </div>
-          </label>
+          </div>
+
+          <div className="admin-field">
+            <span>Cliente</span>
+            {selectedClient ? (
+              <div className="admin-selected-client">
+                <UserIcon />
+                <div>
+                  <strong>{selectedClient.nombre}</strong>
+                  {selectedClient.telefono && <small>{selectedClient.telefono}</small>}
+                </div>
+                <button type="button" onClick={clearClient}><CloseIcon /></button>
+              </div>
+            ) : (
+              <>
+                <div className="admin-client-search">
+                  <div className="admin-input-shell">
+                    <SearchIcon />
+                    <input
+                      value={clientQuery}
+                      onChange={(e) => { setClientQuery(e.target.value); setShowClientResults(true); }}
+                      onFocus={() => setShowClientResults(true)}
+                      onBlur={() => setTimeout(() => setShowClientResults(false), 150)}
+                      placeholder="Buscar cliente por nombre o teléfono..."
+                    />
+                  </div>
+                  <button type="button" className="admin-secondary-button" onClick={() => setShowNewClientModal(true)}>
+                    <PlusIcon />Nuevo cliente
+                  </button>
+                </div>
+
+                {showClientResults && clientResults.length > 0 && (
+                  <div className="admin-client-results">
+                    {clientResults.map((c) => (
+                      <button key={c.id} type="button" onClick={() => selectClient(c)}>
+                        <UserIcon />
+                        <span>
+                          <strong>{c.nombre}</strong>
+                          {c.telefono && <small>{c.telefono}</small>}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {!clientQuery && quickAccessClients.length > 0 && (
+                  <div className="admin-client-quick">
+                    <span>Acceso rápido</span>
+                    <div className="admin-client-quick__chips">
+                      {quickAccessClients.map((c) => (
+                        <button key={c.id} type="button" onClick={() => selectClient(c)}>
+                          <UserIcon />{c.nombre}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {!isVentanilla && (
+            <label className="admin-field">
+              <span>Dirección</span>
+              <div className="admin-input-shell">
+                <PinIcon />
+                <input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Calle y número" />
+              </div>
+            </label>
+          )}
 
           <div className="admin-form-grid admin-form-grid--two">
             <label className="admin-field">
@@ -253,13 +395,26 @@ export default function NuevaOpTab() {
                 <div><span><CurrencyIcon />Monto</span><strong>{form.monto || '—'}</strong></div>
               </>
             )}
-            <div><span><PinIcon />Dirección</span><strong>{form.direccion || '—'}</strong></div>
+            <div><span><CounterIcon />Modalidad</span><strong>{isVentanilla ? 'Ventanilla' : 'A domicilio'}</strong></div>
+            {!isVentanilla && (
+              <div><span><PinIcon />Dirección</span><strong>{form.direccion || '—'}</strong></div>
+            )}
             <div><span><UserIcon />Contacto</span><strong>{form.contacto || '—'}</strong></div>
             <div><span><PhoneIcon />Teléfono</span><strong>{form.telefono || '—'}</strong></div>
             <div><span><ClipboardIcon />Notas</span><strong>{form.notas || '—'}</strong></div>
           </div>
         </aside>
       </section>
+
+      {showNewClientModal && (
+        <ClientFormModal
+          onClose={() => setShowNewClientModal(false)}
+          onSaved={(client) => {
+            selectClient(client);
+            setShowNewClientModal(false);
+          }}
+        />
+      )}
     </>
   );
 }
