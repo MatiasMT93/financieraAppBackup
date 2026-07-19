@@ -4,12 +4,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '../../../shared/api/client.ts';
 import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
+import { ARGENTINE_BANKS } from '../constants/banks.ts';
 import {
   PlusIcon, EyeIcon, ClipboardIcon, TruckIcon, CurrencyIcon,
   PinIcon, UserIcon, PhoneIcon, ChevronDownIcon, BoxIllustration,
-  SearchIcon, CounterIcon, CheckCircleIcon, CloseIcon,
+  SearchIcon, CounterIcon, CheckCircleIcon, CloseIcon, BankIcon,
 } from '../components/AdminIcons.tsx';
 import ClientFormModal from '../components/ClientFormModal.tsx';
+import { DELIVERY_MODE_LABELS } from '@cambioapp/shared-constants';
 import type { Client } from '@cambioapp/shared-types';
 
 const TIPOS: Array<{ value: string; label: string }> = [
@@ -19,9 +21,12 @@ const TIPOS: Array<{ value: string; label: string }> = [
 ];
 const MONEDAS = ['ARS', 'USD', 'EUR', 'BRL', 'USDT'];
 
-const MODALIDADES: Array<{ value: 'domicilio' | 'ventanilla'; label: string; desc: string; Icon: typeof TruckIcon }> = [
-  { value: 'domicilio', label: 'A domicilio', desc: 'Va un cadete a la dirección', Icon: TruckIcon },
-  { value: 'ventanilla', label: 'Ventanilla', desc: 'El cliente viene a la oficina', Icon: CounterIcon },
+type Modalidad = 'ventanilla' | 'domicilio' | 'deposito';
+
+const MODALIDADES: Array<{ value: Modalidad; label: string; desc: string; Icon: typeof TruckIcon }> = [
+  { value: 'ventanilla', label: DELIVERY_MODE_LABELS.ventanilla, desc: 'Viene a la oficina', Icon: CounterIcon },
+  { value: 'domicilio', label: DELIVERY_MODE_LABELS.domicilio, desc: 'Cadete a domicilio', Icon: TruckIcon },
+  { value: 'deposito', label: DELIVERY_MODE_LABELS.deposito, desc: 'Cadete deposita', Icon: BankIcon },
 ];
 
 interface FormState {
@@ -30,8 +35,9 @@ interface FormState {
   monto: string;
   moneda2: string;
   monto2: string;
-  modalidad: 'domicilio' | 'ventanilla';
+  modalidad: Modalidad;
   direccion: string;
+  banco: string;
   contacto: string;
   telefono: string;
   notas: string;
@@ -53,6 +59,7 @@ export default function NuevaOpTab() {
     monto2: '',
     modalidad: 'domicilio',
     direccion: '',
+    banco: '',
     contacto: '',
     telefono: '',
     notas: '',
@@ -61,9 +68,17 @@ export default function NuevaOpTab() {
   const [clientQuery, setClientQuery] = useState('');
   const [showClientResults, setShowClientResults] = useState(false);
   const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [showBankResults, setShowBankResults] = useState(false);
 
   const isCombined = form.tipo === 'entrega_retiro';
   const isVentanilla = form.modalidad === 'ventanilla';
+  const isDeposito = form.modalidad === 'deposito';
+
+  const bankResults = useMemo(() => {
+    const q = normalizeSearch(form.banco.trim());
+    if (!q) return ARGENTINE_BANKS.slice(0, 6);
+    return ARGENTINE_BANKS.filter((b) => normalizeSearch(b).includes(q)).slice(0, 6);
+  }, [form.banco]);
 
   const { data: clientsData } = useQuery({
     queryKey: ['clients'],
@@ -113,6 +128,7 @@ export default function NuevaOpTab() {
         ...(isCombined ? { moneda2: form.moneda2, monto2: parseFloat(form.monto2) } : {}),
         modalidad: form.modalidad,
         direccion: isVentanilla ? undefined : form.direccion,
+        banco: isDeposito ? form.banco : undefined,
         contacto: form.contacto,
         telefono: form.telefono || undefined,
         notas: form.notas || undefined,
@@ -133,6 +149,7 @@ export default function NuevaOpTab() {
     parseFloat(form.monto) > 0 &&
     (!isCombined || (form.monto2 !== '' && parseFloat(form.monto2) > 0)) &&
     (isVentanilla || form.direccion.length >= 5) &&
+    (!isDeposito || form.banco.trim().length >= 2) &&
     form.contacto.length >= 2;
 
   const tipoLabel = TIPOS.find((t) => t.value === form.tipo)?.label ?? form.tipo;
@@ -331,12 +348,38 @@ export default function NuevaOpTab() {
 
           {!isVentanilla && (!selectedClient || !selectedClient.direccion) && (
             <label className="admin-field">
-              <span>Dirección</span>
+              <span>{isDeposito ? 'Dirección de la sucursal' : 'Dirección'}</span>
               <div className="admin-input-shell">
                 <PinIcon />
                 <input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Calle y número" />
               </div>
             </label>
+          )}
+
+          {isDeposito && (
+            <div className="admin-field">
+              <span>Banco</span>
+              <div className="admin-input-shell">
+                <BankIcon />
+                <input
+                  value={form.banco}
+                  onChange={(e) => set('banco', e.target.value)}
+                  onFocus={() => setShowBankResults(true)}
+                  onBlur={() => setTimeout(() => setShowBankResults(false), 150)}
+                  placeholder="Buscar banco..."
+                />
+              </div>
+              {showBankResults && bankResults.length > 0 && (
+                <div className="admin-client-results">
+                  {bankResults.map((b) => (
+                    <button key={b} type="button" onClick={() => { set('banco', b); setShowBankResults(false); }}>
+                      <BankIcon />
+                      <span><strong>{b}</strong></span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {!selectedClient && (
@@ -398,9 +441,12 @@ export default function NuevaOpTab() {
                 <div><span><CurrencyIcon />Monto</span><strong>{form.monto || '—'}</strong></div>
               </>
             )}
-            <div><span><CounterIcon />Modalidad</span><strong>{isVentanilla ? 'Ventanilla' : 'A domicilio'}</strong></div>
+            <div><span><CounterIcon />Modalidad</span><strong>{DELIVERY_MODE_LABELS[form.modalidad]}</strong></div>
             {!isVentanilla && (
               <div><span><PinIcon />Dirección</span><strong>{form.direccion || '—'}</strong></div>
+            )}
+            {isDeposito && (
+              <div><span><BankIcon />Banco</span><strong>{form.banco || '—'}</strong></div>
             )}
             <div><span><UserIcon />Contacto</span><strong>{form.contacto || '—'}</strong></div>
             <div><span><PhoneIcon />Teléfono</span><strong>{form.telefono || '—'}</strong></div>

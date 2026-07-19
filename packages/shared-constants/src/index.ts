@@ -42,9 +42,17 @@ export type OperationType = (typeof OPERATION_TYPE)[keyof typeof OPERATION_TYPE]
 export const DELIVERY_MODE = {
   DOMICILIO: 'domicilio',
   VENTANILLA: 'ventanilla',
+  DEPOSITO: 'deposito',
 } as const;
 
 export type DeliveryMode = (typeof DELIVERY_MODE)[keyof typeof DELIVERY_MODE];
+
+/** Etiqueta visible por modalidad ("domicilio" se muestra como "Calle"). */
+export const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
+  domicilio: 'Calle',
+  ventanilla: 'Ventanilla',
+  deposito: 'Depósito',
+};
 
 export const CURRENCY = {
   ARS: 'ARS',

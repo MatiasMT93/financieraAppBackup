@@ -30,6 +30,8 @@ export interface Operation {
   telefono: string | null;
   notas: string | null;
   modalidad: DeliveryMode;
+  /** Solo presente cuando modalidad === 'deposito': banco de destino. */
+  banco: string | null;
   clientId: string | null;
   status: OperationStatus;
   administrativoId: string;

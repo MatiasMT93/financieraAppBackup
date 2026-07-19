@@ -34,7 +34,7 @@ export const cadeteStatusEnum = pgEnum('cadete_status', [
   'volviendo',
   'incidencia',
 ]);
-export const deliveryModeEnum = pgEnum('delivery_mode', ['domicilio', 'ventanilla']);
+export const deliveryModeEnum = pgEnum('delivery_mode', ['domicilio', 'ventanilla', 'deposito']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -86,6 +86,9 @@ export const operations = pgTable(
     telefono: varchar('telefono', { length: 50 }),
     notas: text('notas'),
     modalidad: deliveryModeEnum('modalidad').notNull().default('domicilio'),
+    // Solo se usa cuando modalidad = 'deposito': banco donde el cadete hace
+    // el depósito (la dirección de la sucursal sigue yendo en `direccion`).
+    banco: varchar('banco', { length: 150 }),
     clientId: uuid('client_id').references(() => clients.id),
     status: operationStatusEnum('status').notNull().default('pendiente'),
     administrativoId: uuid('administrativo_id')

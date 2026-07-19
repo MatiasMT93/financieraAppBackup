@@ -5,10 +5,10 @@ import { apiGet, apiPost, apiPatch } from '../../../shared/api/client.ts';
 import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import { normalizeSearch } from '../../../shared/utils/normalize-search.ts';
 import type { Operation, OperationStatus } from '@cambioapp/shared-types';
-import { CANCELLABLE_STATUSES, EDITABLE_STATUSES } from '@cambioapp/shared-constants';
+import { CANCELLABLE_STATUSES, EDITABLE_STATUSES, DELIVERY_MODE_LABELS } from '@cambioapp/shared-constants';
 import {
   SearchIcon, CalendarIcon, ClipboardIcon, GridIcon, TruckIcon, CurrencyIcon,
-  PinIcon, UserIcon, PhoneIcon, PlusIcon, ExternalLinkIcon, EditIcon, TrashIcon,
+  PinIcon, UserIcon, PhoneIcon, PlusIcon, ExternalLinkIcon, EditIcon, TrashIcon, BankIcon,
 } from '../components/AdminIcons.tsx';
 
 const FILTERS = [
@@ -65,12 +65,14 @@ interface EditForm {
   moneda2: string;
   monto2: string;
   direccion: string;
+  banco: string;
   contacto: string;
   telefono: string;
   notas: string;
 }
 
 function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => void; onSaved: () => void }) {
+  const isDeposito = op.modalidad === 'deposito';
   const [form, setForm] = useState<EditForm>({
     tipo: op.tipo,
     moneda: op.moneda,
@@ -78,6 +80,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
     moneda2: op.moneda2 ?? 'ARS',
     monto2: op.monto2 != null ? String(op.monto2) : '',
     direccion: op.direccion ?? '',
+    banco: op.banco ?? '',
     contacto: op.contacto,
     telefono: op.telefono ?? '',
     notas: op.notas ?? '',
@@ -93,6 +96,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
         monto: parseFloat(form.monto),
         ...(isCombined ? { moneda2: form.moneda2, monto2: parseFloat(form.monto2) } : {}),
         direccion: form.direccion,
+        banco: isDeposito ? form.banco : undefined,
         contacto: form.contacto,
         telefono: form.telefono || undefined,
         notas: form.notas || undefined,
@@ -108,6 +112,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
     parseFloat(form.monto) > 0 &&
     (!isCombined || (form.monto2 !== '' && parseFloat(form.monto2) > 0)) &&
     form.direccion.length >= 3 &&
+    (!isDeposito || form.banco.trim().length >= 2) &&
     form.contacto.length >= 2;
 
   return (
@@ -203,6 +208,7 @@ function EditModal({ op, onClose, onSaved }: { op: Operation; onClose: () => voi
 
           {([
             { field: 'direccion', label: 'Dirección', type: 'text' },
+            ...(isDeposito ? [{ field: 'banco', label: 'Banco', type: 'text' }] as const : []),
             { field: 'contacto', label: 'Contacto', type: 'text' },
             { field: 'telefono', label: 'Teléfono (opcional)', type: 'tel' },
             { field: 'notas', label: 'Notas (opcional)', type: 'text' },
@@ -439,7 +445,7 @@ function OperationDetail({
             <PinIcon />
             <div>
               <span>Modalidad</span>
-              <strong>{isVentanilla ? 'Ventanilla' : 'A domicilio'}</strong>
+              <strong>{DELIVERY_MODE_LABELS[op.modalidad]}</strong>
               {mapsHref && op.direccion && (
                 <>
                   <em className="admin-detail-field__inline">{op.direccion}</em>
@@ -450,6 +456,9 @@ function OperationDetail({
               )}
             </div>
           </div>
+          {op.modalidad === 'deposito' && op.banco && (
+            <div className="admin-detail-field"><BankIcon /><div><span>Banco</span><strong>{op.banco}</strong></div></div>
+          )}
         </div>
         <div className="admin-detail-col admin-detail-col--divider">
           <div className="admin-detail-field"><CalendarIcon /><div><span>Fecha / Hora</span><strong>{new Date(op.createdAt).toLocaleString('es-AR')}</strong></div></div>

@@ -173,6 +173,9 @@ export default function HistorialTab() {
                   </a>
                 )}
               </div>
+              {selected.modalidad === 'deposito' && selected.banco && (
+                <div><span>Banco</span><strong>{selected.banco}</strong></div>
+              )}
               <div>
                 <span>Cadete</span>
                 <strong>{selected.cadete?.nombre ?? 'Sin asignar'}</strong>

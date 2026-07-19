@@ -153,6 +153,16 @@ export function CounterIcon() {
   );
 }
 
+export function BankIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 9.5 12 4l9 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 9.5h16M5 9.5v9M9 9.5v9M15 9.5v9M19 9.5v9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M3 20.5h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function UsersIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

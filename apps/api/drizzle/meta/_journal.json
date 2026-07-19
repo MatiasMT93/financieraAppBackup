@@ -64,6 +64,13 @@
       "when": 1784485086580,
       "tag": "0008_enable_unaccent_extension",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784489734174,
+      "tag": "0009_add_deposito_modalidad",
+      "breakpoints": true
     }
   ]
 }

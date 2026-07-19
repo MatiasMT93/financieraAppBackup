@@ -28,8 +28,9 @@ export async function createOperation(
     monto: number;
     moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
     monto2?: number;
-    modalidad: 'domicilio' | 'ventanilla';
+    modalidad: 'domicilio' | 'ventanilla' | 'deposito';
     direccion?: string;
+    banco?: string;
     contacto: string;
     telefono?: string;
     notas?: string;
