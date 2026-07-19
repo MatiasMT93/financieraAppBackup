@@ -103,7 +103,9 @@ export default function NuevaOpTab() {
       clientId: client.id,
       contacto: client.nombre,
       telefono: client.telefono ?? prev.telefono,
-      direccion: client.direccion ?? prev.direccion,
+      // En depósito la dirección es la de la sucursal bancaria, no tiene nada
+      // que ver con el domicilio del cliente: no se debe pisar con el suyo.
+      direccion: prev.modalidad === 'deposito' ? prev.direccion : (client.direccion ?? prev.direccion),
     }));
     setClientQuery('');
     setShowClientResults(false);
@@ -346,7 +348,7 @@ export default function NuevaOpTab() {
             )}
           </div>
 
-          {!isVentanilla && (!selectedClient || !selectedClient.direccion) && (
+          {!isVentanilla && (isDeposito || !selectedClient || !selectedClient.direccion) && (
             <label className="admin-field">
               <span>{isDeposito ? 'Dirección de la sucursal' : 'Dirección'}</span>
               <div className="admin-input-shell">
