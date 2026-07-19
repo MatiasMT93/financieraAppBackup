@@ -94,7 +94,7 @@ export default function NuevaOpTab() {
   }
 
   function clearClient() {
-    setForm((prev) => ({ ...prev, clientId: '' }));
+    setForm((prev) => ({ ...prev, clientId: '', contacto: '', telefono: '', direccion: '' }));
   }
 
   useEffect(() => {
