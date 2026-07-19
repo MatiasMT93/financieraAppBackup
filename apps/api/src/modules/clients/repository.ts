@@ -1,6 +1,9 @@
 import { db } from '../../db/connection.js';
 import { clients, operations } from '../../db/schema.js';
-import { and, desc, eq, gte, ilike, isNotNull, max, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, ilike, isNotNull, max, ne, or, sql } from 'drizzle-orm';
+
+// Una operación cancelada no cuenta como actividad real del cliente.
+const notCancelled = ne(operations.status, 'cancelada');
 
 export interface ClientInput {
   nombre: string;
@@ -32,7 +35,10 @@ export async function listClients(query?: string) {
       lastOperationAt: max(operations.createdAt),
     })
     .from(clients)
-    .leftJoin(operations, eq(operations.clientId, clients.id))
+    // La condición de "no cancelada" va en el ON, no en el WHERE: así un
+    // cliente sin operaciones válidas (o con todas canceladas) sigue
+    // apareciendo en la lista con 0, en vez de desaparecer por el LEFT JOIN.
+    .leftJoin(operations, and(eq(operations.clientId, clients.id), notCancelled))
     .where(searchCondition)
     .groupBy(clients.id)
     .orderBy(desc(clients.createdAt));
@@ -76,7 +82,7 @@ export async function getClientsStats() {
   const [{ operaronHoy }] = await db
     .select({ operaronHoy: sql<number>`count(distinct ${operations.clientId})::int` })
     .from(operations)
-    .where(and(gte(operations.createdAt, startOfToday), isNotNull(operations.clientId)));
+    .where(and(gte(operations.createdAt, startOfToday), isNotNull(operations.clientId), notCancelled));
 
   return { total, nuevosEsteMes, operaronHoy };
 }
