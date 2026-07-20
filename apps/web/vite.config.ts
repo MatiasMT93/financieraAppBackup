@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'CambioApp',
-        short_name: 'CambioApp',
+        name: 'FinancieraApp',
+        short_name: 'FinancieraApp',
         description: 'Sistema logístico para financieras de cambio',
         theme_color: '#185FA5',
         background_color: '#ffffff',
