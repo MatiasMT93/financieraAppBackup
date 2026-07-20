@@ -20,8 +20,10 @@ export function BrandMark({ size = 76, className }: BrandMarkProps) {
           <stop offset="1" stopColor="#F0D487" />
         </linearGradient>
       </defs>
-      <path d="M50 8 92 50 50 92 8 50 50 8Z" stroke="url(#brand-gold)" strokeWidth="6" />
-      <path d="M53 30 75 52 53 74 31 52 53 30Z" stroke="url(#brand-gold)" strokeWidth="5.4" />
+      <path d="M50 7 89 46 50 85 11 46 50 7Z" stroke="url(#brand-gold)" strokeWidth="5.4" />
+      <path d="m50 22 24 24-24 24-24-24 24-24Z" stroke="url(#brand-gold)" strokeWidth="5.4" />
+      <path d="M19 53 53 19M47 81 81 47" stroke="url(#brand-gold)" strokeWidth="5.4" />
+      <path d="M37 34 51 20 65 34" stroke="url(#brand-gold)" strokeWidth="5.4" strokeLinecap="square" />
     </svg>
   );
 }
