@@ -105,7 +105,7 @@ export default function OpsTab() {
       <div className="coord-stack-list">
         {ops.length === 0 && (
           <div className="coord-empty-panel coord-empty-panel--compact">
-            <TrendPlaceholder />
+            <div className="coord-empty-panel__icon"><TrendPlaceholder /></div>
             <h3>Sin operaciones</h3>
             <p>No hay operaciones registradas para este filtro.</p>
           </div>
