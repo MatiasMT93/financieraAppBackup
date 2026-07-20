@@ -104,14 +104,14 @@
   position: relative;
   display: grid;
   place-items: center;
-  padding: 42px 24px;
+  padding: clamp(10px, 3vh, 42px) 24px;
   width: 100%;
 }
 
 .login-page .login-card-ghost {
   position: absolute;
   width: min(640px, calc(100vw - 72px));
-  height: min(792px, calc(100vh - 92px));
+  height: min(800px, calc(100vh - 24px));
   border-radius: 34px;
   pointer-events: none;
   clip-path: polygon(0 0, 78% 0, 100% 14%, 100% 100%, 8% 100%, 0 90%);
@@ -134,8 +134,9 @@
 .login-page .login-card {
   position: relative;
   width: min(584px, 100%);
-  min-height: 742px;
-  padding: 54px 46px 40px;
+  height: min(800px, calc(100vh - 24px));
+  padding: clamp(24px, 5vh, 54px) clamp(28px, 5vw, 46px) clamp(20px, 4vh, 40px);
+  overflow-y: auto;
   border-radius: 34px;
   clip-path: polygon(0 0, 80% 0, 100% 14%, 100% 100%, 10% 100%, 0 90%);
   background:
@@ -169,11 +170,13 @@
 }
 
 .login-page .login-card__brand-mark {
+  width: clamp(40px, 8vh, 64px);
+  height: clamp(40px, 8vh, 64px);
   filter: drop-shadow(0 0 14px rgba(221, 178, 90, 0.12));
 }
 
 .login-page .login-card__brand-name {
-  margin: 14px 0 0;
+  margin: clamp(6px, 1.5vh, 14px) 0 0;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 30px;
   font-weight: 500;
@@ -183,7 +186,7 @@
   position: relative;
   width: 112px;
   height: 18px;
-  margin: 12px 0 20px;
+  margin: clamp(6px, 1.5vh, 12px) 0 clamp(10px, 2.5vh, 20px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,27 +210,27 @@
 .login-page .login-card__header h1 {
   margin: 0;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(56px, 5vw, 72px);
+  font-size: clamp(40px, 6vh, 72px);
   line-height: 0.95;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .login-page .login-card__subtitle {
-  margin: 16px 0 0;
+  margin: clamp(8px, 2vh, 16px) 0 0;
   color: #c7ccd4;
   font-size: 15px;
 }
 
 .login-page .login-form {
-  margin-top: 42px;
+  margin-top: clamp(18px, 4vh, 42px);
 }
 
 .login-page .login-field-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 24px;
+  gap: clamp(4px, 1vh, 10px);
+  margin-bottom: clamp(12px, 2.5vh, 24px);
 }
 
 .login-page .login-field-group label {
@@ -240,7 +243,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  min-height: 68px;
+  min-height: clamp(48px, 8vh, 68px);
   padding: 0 18px;
   border-radius: 18px;
   border: 1px solid rgba(106, 122, 145, 0.34);
@@ -291,7 +294,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 8px 0 28px;
+  margin: clamp(4px, 1vh, 8px) 0 clamp(14px, 3vh, 28px);
 }
 
 .login-page .login-remember-option {
@@ -354,7 +357,7 @@
 
 .login-page .login-submit-button {
   width: 100%;
-  min-height: 74px;
+  min-height: clamp(50px, 9vh, 74px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -365,7 +368,7 @@
   background: linear-gradient(90deg, rgba(31, 125, 123, 0.96), rgba(28, 123, 110, 0.92) 38%, rgba(16, 83, 90, 0.92) 100%);
   color: #f8f0d8;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 30px;
+  font-size: clamp(20px, 3.5vh, 30px);
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
