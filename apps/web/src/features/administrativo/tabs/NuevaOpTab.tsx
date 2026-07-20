@@ -90,7 +90,7 @@ export default function NuevaOpTab() {
     const q = normalizeSearch(clientQuery.trim());
     if (!q) return clients.slice(0, 4);
     return clients
-      .filter((c) => normalizeSearch(c.nombre).includes(q) || (c.telefono ?? '').includes(q))
+      .filter((c) => normalizeSearch(c.nombre).includes(q) || normalizeSearch(c.direccion ?? '').includes(q))
       .slice(0, 8);
   }, [clients, clientQuery]);
 
@@ -307,7 +307,7 @@ export default function NuevaOpTab() {
                       onChange={(e) => { setClientQuery(e.target.value); setShowClientResults(true); }}
                       onFocus={() => setShowClientResults(true)}
                       onBlur={() => setTimeout(() => setShowClientResults(false), 150)}
-                      placeholder="Buscar cliente por nombre o teléfono..."
+                      placeholder="Buscar cliente por nombre o dirección..."
                     />
                   </div>
                   <button type="button" className="admin-secondary-button" onClick={() => setShowNewClientModal(true)}>

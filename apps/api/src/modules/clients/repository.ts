@@ -14,9 +14,10 @@ export interface ClientInput {
 
 export async function listClients(query?: string) {
   // unaccent() para que la búsqueda ignore acentos (requiere la extensión
-  // `unaccent`, habilitada en la migración 0008).
+  // `unaccent`, habilitada en la migración 0008). Por nombre o dirección,
+  // no por teléfono.
   const searchCondition = query
-    ? sql`(unaccent(${clients.nombre}) ilike unaccent(${`%${query}%`}) or unaccent(coalesce(${clients.telefono}, '')) ilike unaccent(${`%${query}%`}))`
+    ? sql`(unaccent(${clients.nombre}) ilike unaccent(${`%${query}%`}) or unaccent(coalesce(${clients.direccion}, '')) ilike unaccent(${`%${query}%`}))`
     : undefined;
 
   return db

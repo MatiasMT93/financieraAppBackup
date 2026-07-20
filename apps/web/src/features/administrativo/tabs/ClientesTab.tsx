@@ -46,7 +46,7 @@ export default function ClientesTab() {
     const q = normalizeSearch(query.trim());
     if (!q) return clients;
     return clients.filter(
-      (c) => normalizeSearch(c.nombre).includes(q) || (c.telefono ?? '').includes(q),
+      (c) => normalizeSearch(c.nombre).includes(q) || normalizeSearch(c.direccion ?? '').includes(q),
     );
   }, [clients, query]);
 
@@ -82,7 +82,7 @@ export default function ClientesTab() {
       <div className="admin-toolbar">
         <div className="admin-searchbar">
           <SearchIcon />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre o teléfono..." />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar por nombre o dirección..." />
         </div>
       </div>
 
