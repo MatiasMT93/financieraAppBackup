@@ -7,6 +7,10 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  /* Cormorant Garamond usa numerales de "estilo antiguo" (alturas
+     desparejas) por default: el "1" se confunde con una "I" y los números
+     quedan desalineados entre sí. Se fuerzan numerales alineados. */
+  font-variant-numeric: lining-nums;
   color: #f5f4f1;
   font-family: 'Inter', system-ui, sans-serif;
   background:
