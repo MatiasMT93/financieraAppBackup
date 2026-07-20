@@ -121,7 +121,9 @@ export default function CadetesTab() {
             ) : (
               <span className="coord-quick-actions__empty">Sin teléfono cargado</span>
             )}
-            <button type="button" onClick={() => navigate('../mapa')}><Send size={18} />Ver en mapa</button>
+            {activeOp && (
+              <button type="button" onClick={() => navigate('../mapa')}><Send size={18} />Ver en mapa</button>
+            )}
             {activeOp && (
               <button type="button" className="gold" onClick={() => setReassigning(true)}><Repeat size={18} />Reasignar</button>
             )}
