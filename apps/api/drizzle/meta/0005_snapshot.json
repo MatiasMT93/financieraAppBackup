@@ -1,5 +1,5 @@
 {
-  "id": "3ae7fe4e-dde0-4dea-a17c-f8bebe414838",
+  "id": "6877b515-1023-4f61-ba99-7b1db668bbef",
   "prevId": "ce80f69e-2854-49a2-8e49-6248395c90b3",
   "version": "7",
   "dialect": "postgresql",
@@ -162,97 +162,6 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.contacts": {
-      "name": "contacts",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "nombre": {
-          "name": "nombre",
-          "type": "varchar(200)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "telefono": {
-          "name": "telefono",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "direccion": {
-          "name": "direccion",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "direccion_normalizada": {
-          "name": "direccion_normalizada",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "usos_count": {
-          "name": "usos_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "notas": {
-          "name": "notas",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "contacts_direccion_norm_idx": {
-          "name": "contacts_direccion_norm_idx",
-          "columns": [
-            {
-              "expression": "direccion_normalizada",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "public.incidents": {
       "name": "incidents",
       "schema": "",
@@ -368,63 +277,6 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.operation_contacts": {
-      "name": "operation_contacts",
-      "schema": "",
-      "columns": {
-        "operation_id": {
-          "name": "operation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "contact_id": {
-          "name": "contact_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "operation_contacts_operation_id_operations_id_fk": {
-          "name": "operation_contacts_operation_id_operations_id_fk",
-          "tableFrom": "operation_contacts",
-          "tableTo": "operations",
-          "columnsFrom": [
-            "operation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "operation_contacts_contact_id_contacts_id_fk": {
-          "name": "operation_contacts_contact_id_contacts_id_fk",
-          "tableFrom": "operation_contacts",
-          "tableTo": "contacts",
-          "columnsFrom": [
-            "contact_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "operation_contacts_operation_id_contact_id_pk": {
-          "name": "operation_contacts_operation_id_contact_id_pk",
-          "columns": [
-            "operation_id",
-            "contact_id"
-          ]
-        }
-      },
       "uniqueConstraints": {}
     },
     "public.operation_status_history": {
@@ -888,7 +740,8 @@
         "ARS",
         "USD",
         "EUR",
-        "BRL"
+        "BRL",
+        "USDT"
       ]
     },
     "public.operation_status": {

@@ -1,29 +1,35 @@
-import { Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
-import { ClipboardList, Map, Users, Clock, AlertTriangle, UserCog } from 'lucide-react';
+import { Routes, Route, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import AppHeader from '../../shared/components/AppHeader.tsx';
+import { useAuthStore } from '../../shared/store/auth-store.ts';
+import { apiPost } from '../../shared/api/client.ts';
+import { disconnectSocket } from '../../shared/api/socket.ts';
 import { useRealtimeSync } from '../../shared/hooks/use-socket.ts';
 import { PullToRefresh } from '../../shared/components/PullToRefresh.tsx';
+import { BrandMark } from '../../shared/components/BrandMark.tsx';
+import { BackIcon, OpsIcon, MapIcon, UsersIcon, HistoryIcon, AlertIcon, UserCogIcon } from './components/CoordIcons.tsx';
 import OpsTab from './tabs/OpsTab.tsx';
 import MapaTab from './tabs/MapaTab.tsx';
 import CadetesTab from './tabs/CadetesTab.tsx';
 import HistorialTab from './tabs/HistorialTab.tsx';
 import AlertasTab from './tabs/AlertasTab.tsx';
 import GestionCadetesTab from './tabs/GestionCadetesTab.tsx';
+import './CoordinadorShell.css';
 
 const tabs = [
-  { path: 'ops', label: 'Ops.', Icon: ClipboardList },
-  { path: 'mapa', label: 'Mapa', Icon: Map },
-  { path: 'cadetes', label: 'Cadetes', Icon: Users },
-  { path: 'historial', label: 'Historial', Icon: Clock },
-  { path: 'alertas', label: 'Alertas', Icon: AlertTriangle },
-  { path: 'usuarios', label: 'Usuarios', Icon: UserCog },
+  { path: 'ops', label: 'Operaciones', Icon: OpsIcon },
+  { path: 'mapa', label: 'Mapa', Icon: MapIcon },
+  { path: 'cadetes', label: 'Cadetes', Icon: UsersIcon },
+  { path: 'historial', label: 'Historial', Icon: HistoryIcon },
+  { path: 'alertas', label: 'Alertas', Icon: AlertIcon },
+  { path: 'usuarios', label: 'Usuarios', Icon: UserCogIcon },
 ];
 
 export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
   useRealtimeSync();
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { clearAuth, refreshToken } = useAuthStore();
 
   const todayLabel = new Intl.DateTimeFormat('es-AR', {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -31,12 +37,45 @@ export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
 
   const currentTab = tabs.find((t) => location.pathname.includes(t.path));
 
+  async function handleLogout() {
+    try {
+      if (refreshToken) await apiPost('/auth/logout', { refreshToken });
+    } finally {
+      disconnectSocket();
+      queryClient.clear();
+      clearAuth();
+      navigate('/login', { replace: true });
+    }
+  }
+
   return (
-    <div className="flex flex-col h-viewport bg-gray-50">
-      <AppHeader title={currentTab?.label ?? 'CambioApp'} color="#185FA5" subtitle={todayLabel} onBack={onBack} />
+    <main className="coordinator-shell">
+      <header className="coordinator-header">
+        <div className="coordinator-header__brand">
+          <BrandMark size={56} />
+          <span className="coordinator-header__name">Plaza App</span>
+          <span className="coordinator-header__divider" aria-hidden="true" />
+          <div className="coordinator-header__title-group">
+            <h1>{currentTab?.label ?? 'Operaciones'}</h1>
+            <p>{todayLabel}</p>
+          </div>
+        </div>
+
+        {onBack ? (
+          <button type="button" className="coord-back-button" onClick={onBack}>
+            <BackIcon />
+            <span>Volver</span>
+          </button>
+        ) : (
+          <button type="button" className="coord-back-button" onClick={handleLogout}>
+            <BackIcon />
+            <span>Salir</span>
+          </button>
+        )}
+      </header>
 
       <PullToRefresh
-        className="flex-1 overflow-y-auto"
+        className="coordinator-content"
         onRefresh={() => queryClient.refetchQueries()}
       >
         <Routes>
@@ -50,24 +89,14 @@ export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
         </Routes>
       </PullToRefresh>
 
-      <nav className="bg-white border-t border-gray-200 safe-area-pb">
-        <div className="flex">
-          {tabs.map(({ path, label, Icon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
-                  isActive ? 'text-coordinador' : 'text-gray-500'
-                }`
-              }
-            >
-              <Icon size={22} />
-              <span className="mt-0.5">{label}</span>
-            </NavLink>
-          ))}
-        </div>
+      <nav className="coordinator-bottom-nav" aria-label="Pestañas de coordinador">
+        {tabs.map(({ path, label, Icon }) => (
+          <NavLink key={path} to={path} className={({ isActive }) => (isActive ? 'is-active' : '')}>
+            <span className="coordinator-bottom-nav__icon"><Icon /></span>
+            <span>{label}</span>
+          </NavLink>
+        ))}
       </nav>
-    </div>
+    </main>
   );
 }

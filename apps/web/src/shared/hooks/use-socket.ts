@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { connectSocket, getSocket, disconnectSocket } from '../api/socket.ts';
+import { invalidateOperationsQueries } from '../utils/invalidate-operations.ts';
 
 export function useRealtimeSync() {
   const queryClient = useQueryClient();
@@ -9,7 +10,7 @@ export function useRealtimeSync() {
     connectSocket();
     const s = getSocket();
 
-    const invalidateOps = () => queryClient.invalidateQueries({ queryKey: ['operations'] });
+    const invalidateOps = () => invalidateOperationsQueries(queryClient);
     const invalidateIncidents = () => queryClient.invalidateQueries({ queryKey: ['incidents'] });
     const invalidateCadetes = () => queryClient.invalidateQueries({ queryKey: ['cadetes'] });
     const invalidateLocations = () => queryClient.invalidateQueries({ queryKey: ['locations'] });

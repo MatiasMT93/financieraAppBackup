@@ -9,6 +9,7 @@ export async function findOperationById(id: string) {
     with: {
       administrativo: { columns: { id: true, nombre: true } },
       cadete: { columns: { id: true, nombre: true, celular: true } },
+      client: { columns: { id: true, nombre: true } },
     },
   });
 }
@@ -19,21 +20,27 @@ export async function listOperations(filters: {
   date?: string;
 }) {
   const conditions = [];
-  if (filters.status) {
-    const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
-    if (statuses.length === 1) {
-      conditions.push(eq(operations.status, statuses[0]));
-    } else if (statuses.length > 1) {
-      conditions.push(inArray(operations.status, statuses));
-    }
+  const statuses = filters.status
+    ? Array.isArray(filters.status) ? filters.status : [filters.status]
+    : [];
+  if (statuses.length === 1) {
+    conditions.push(eq(operations.status, statuses[0]));
+  } else if (statuses.length > 1) {
+    conditions.push(inArray(operations.status, statuses));
   }
   if (filters.cadeteId) conditions.push(eq(operations.cadeteId, filters.cadeteId));
   if (filters.date) {
     // Interpret date in Buenos Aires timezone (UTC-3, no DST)
     const start = new Date(`${filters.date}T00:00:00-03:00`);
     const end = new Date(`${filters.date}T23:59:59.999-03:00`);
-    conditions.push(gte(operations.createdAt, start));
-    conditions.push(lte(operations.createdAt, end));
+    // Para "cerradas" el día relevante es cuándo se cerraron, no cuándo se
+    // crearon: una operación creada ayer y cerrada hoy debe aparecer en el
+    // filtro de cerradas de hoy (antes quedaba afuera al mirar createdAt).
+    const dateColumn = statuses.length === 1 && statuses[0] === 'cerrada'
+      ? operations.updatedAt
+      : operations.createdAt;
+    conditions.push(gte(dateColumn, start));
+    conditions.push(lte(dateColumn, end));
   }
 
   return db.query.operations.findMany({
@@ -41,36 +48,64 @@ export async function listOperations(filters: {
     with: {
       administrativo: { columns: { id: true, nombre: true } },
       cadete: { columns: { id: true, nombre: true, celular: true } },
+      client: { columns: { id: true, nombre: true } },
     },
     orderBy: (t, { desc }) => [desc(t.createdAt)],
   });
 }
 
 export async function createOperation(data: {
-  tipo: 'entrega' | 'retiro';
-  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL';
+  tipo: 'entrega' | 'retiro' | 'entrega_retiro';
+  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto: number;
-  direccion: string;
+  moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
+  monto2?: number;
+  modalidad: 'domicilio' | 'ventanilla' | 'deposito';
+  direccion?: string;
+  banco?: string;
   contacto: string;
   telefono?: string;
   notas?: string;
+  clientId?: string;
   administrativoId: string;
 }) {
-  const [op] = await db.insert(operations).values({ ...data, monto: String(data.monto) }).returning();
+  const [op] = await db
+    .insert(operations)
+    .values({
+      ...data,
+      monto: String(data.monto),
+      monto2: data.monto2 !== undefined ? String(data.monto2) : undefined,
+      // Ventanilla se resuelve en el momento en el mostrador: no hay cadete
+      // que despachar, así que arranca directamente cerrada en vez de
+      // pasar por pendiente/asignación como las operaciones a domicilio.
+      status: data.modalidad === 'ventanilla' ? 'cerrada' : undefined,
+    })
+    .returning();
   return op;
 }
 
 export async function updateOperation(id: string, data: Partial<{
-  tipo: 'entrega' | 'retiro';
-  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL';
+  tipo: 'entrega' | 'retiro' | 'entrega_retiro';
+  moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto: number;
+  moneda2: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
+  monto2: number;
   direccion: string;
+  banco: string;
   contacto: string;
   telefono: string;
   notas: string;
+  clientId: string;
 }>) {
   const values: Record<string, unknown> = { ...data, updatedAt: new Date() };
   if (data.monto !== undefined) values.monto = String(data.monto);
+  if (data.monto2 !== undefined) values.monto2 = String(data.monto2);
+  // Si vuelve a un tipo simple, limpiamos el segundo monto para no dejar
+  // datos viejos huérfanos en la operación.
+  if (data.tipo && data.tipo !== 'entrega_retiro') {
+    values.monto2 = null;
+    values.moneda2 = null;
+  }
   const [op] = await db.update(operations).set(values).where(eq(operations.id, id)).returning();
   return op;
 }

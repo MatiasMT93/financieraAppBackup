@@ -1,6 +1,6 @@
-import type { Role, OperationStatus, OperationType, Currency, CadeteStatus } from '@cambioapp/shared-constants';
+import type { Role, OperationStatus, OperationType, Currency, CadeteStatus, DeliveryMode } from '@cambioapp/shared-constants';
 
-export type { Role, OperationStatus, OperationType, Currency, CadeteStatus };
+export type { Role, OperationStatus, OperationType, Currency, CadeteStatus, DeliveryMode };
 
 export interface User {
   id: string;
@@ -20,10 +20,19 @@ export interface Operation {
   tipo: OperationType;
   moneda: Currency;
   monto: number;
-  direccion: string;
+  /** Solo presente cuando tipo === 'entrega_retiro': moneda del monto a retirar. */
+  moneda2: Currency | null;
+  /** Solo presente cuando tipo === 'entrega_retiro': monto a retirar (el campo `monto` de arriba pasa a representar el monto a entregar). */
+  monto2: number | null;
+  /** Nula solo en modalidad 'ventanilla' (el cliente viene a la oficina). */
+  direccion: string | null;
   contacto: string;
   telefono: string | null;
   notas: string | null;
+  modalidad: DeliveryMode;
+  /** Solo presente cuando modalidad === 'deposito': banco de destino. */
+  banco: string | null;
+  clientId: string | null;
   status: OperationStatus;
   administrativoId: string;
   cadeteId: string | null;
@@ -32,6 +41,25 @@ export interface Operation {
   updatedAt: string;
   administrativo?: Pick<User, 'id' | 'nombre'>;
   cadete?: Pick<User, 'id' | 'nombre' | 'celular'> | null;
+  client?: Pick<Client, 'id' | 'nombre'> | null;
+}
+
+export interface Client {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  direccion: string | null;
+  notas: string | null;
+  createdAt: string;
+  updatedAt: string;
+  operationsCount?: number;
+  lastOperationAt?: string | null;
+}
+
+export interface ClientsStats {
+  total: number;
+  nuevosEsteMes: number;
+  operaronHoy: number;
 }
 
 export interface Incident {

@@ -9,15 +9,13 @@ import {
   pgEnum,
   bigserial,
   real,
-  integer,
-  primaryKey,
   index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const roleEnum = pgEnum('role', ['cadete', 'coordinador', 'administrativo', 'dueno']);
-export const operationTypeEnum = pgEnum('operation_type', ['entrega', 'retiro']);
-export const currencyEnum = pgEnum('currency', ['ARS', 'USD', 'EUR', 'BRL']);
+export const operationTypeEnum = pgEnum('operation_type', ['entrega', 'retiro', 'entrega_retiro']);
+export const currencyEnum = pgEnum('currency', ['ARS', 'USD', 'EUR', 'BRL', 'USDT']);
 export const operationStatusEnum = pgEnum('operation_status', [
   'pendiente',
   'asignada',
@@ -36,58 +34,7 @@ export const cadeteStatusEnum = pgEnum('cadete_status', [
   'volviendo',
   'incidencia',
 ]);
-export const contacts = pgTable(
-  'contacts',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    nombre: varchar('nombre', { length: 200 }).notNull(),
-    telefono: varchar('telefono', { length: 50 }),
-    direccion: text('direccion').notNull(),
-    // versión normalizada (sin tildes, minúsculas, espacios colapsados) para
-    // poder matchear direcciones aunque el admin las tipee distinto cada vez
-    direccionNormalizada: text('direccion_normalizada').notNull().default(''),
-    usosCount: integer('usos_count').notNull().default(1),
-    email: varchar('email', { length: 100 }),
-    notas: text('notas'),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  },
-  (t) => ({
-    contacts_direccion_norm_idx: index('contacts_direccion_norm_idx').on(t.direccionNormalizada),
-  }),
-);
-
-export const operationContacts = pgTable(
-  'operation_contacts',
-  {
-    operationId: uuid('operation_id')
-      .notNull()
-      .references(() => operations.id, { onDelete: 'cascade' }),
-    contactId: uuid('contact_id')
-      .notNull()
-      .references(() => contacts.id, { onDelete: 'cascade' }),
-  },
-  (t) => ({
-    pk: primaryKey(t.operationId, t.contactId),
-  }),
-);
-
-// ─── Relaciones para contactos ────────────────────────────────────────────────
-
-export const contactsRelations = relations(contacts, ({ many }) => ({
-  operationContacts: many(operationContacts),
-}));
-
-export const operationContactsRelations = relations(operationContacts, ({ one }) => ({
-  operation: one(operations, {
-    fields: [operationContacts.operationId],
-    references: [operations.id],
-  }),
-  contact: one(contacts, {
-    fields: [operationContacts.contactId],
-    references: [contacts.id],
-  }),
-}));
+export const deliveryModeEnum = pgEnum('delivery_mode', ['domicilio', 'ventanilla', 'deposito']);
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -104,6 +51,23 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+export const clients = pgTable(
+  'clients',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    nombre: varchar('nombre', { length: 200 }).notNull(),
+    telefono: varchar('telefono', { length: 50 }),
+    direccion: text('direccion'),
+    notas: text('notas'),
+    createdById: uuid('created_by_id').references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => ({
+    clients_nombre_idx: index('clients_nombre_idx').on(t.nombre),
+  }),
+);
+
 export const operations = pgTable(
   'operations',
   {
@@ -111,10 +75,21 @@ export const operations = pgTable(
     tipo: operationTypeEnum('tipo').notNull(),
     moneda: currencyEnum('moneda').notNull(),
     monto: numeric('monto', { precision: 15, scale: 2 }).notNull(),
-    direccion: text('direccion').notNull(),
+    // Solo se usan cuando tipo = 'entrega_retiro': `monto`/`moneda` pasan a
+    // representar el monto a entregar, y estas dos el monto a retirar.
+    moneda2: currencyEnum('moneda2'),
+    monto2: numeric('monto2', { precision: 15, scale: 2 }),
+    // Nula solo quedan las 'ventanilla': el cliente viene a la oficina, no
+    // hace falta una dirección de entrega ni despachar un cadete.
+    direccion: text('direccion'),
     contacto: varchar('contacto', { length: 200 }).notNull(),
     telefono: varchar('telefono', { length: 50 }),
     notas: text('notas'),
+    modalidad: deliveryModeEnum('modalidad').notNull().default('domicilio'),
+    // Solo se usa cuando modalidad = 'deposito': banco donde el cadete hace
+    // el depósito (la dirección de la sucursal sigue yendo en `direccion`).
+    banco: varchar('banco', { length: 150 }),
+    clientId: uuid('client_id').references(() => clients.id),
     status: operationStatusEnum('status').notNull().default('pendiente'),
     administrativoId: uuid('administrativo_id')
       .notNull()
@@ -127,6 +102,7 @@ export const operations = pgTable(
   (t) => ({
     operations_status_idx: index('operations_status_idx').on(t.status),
     operations_cadete_idx: index('operations_cadete_idx').on(t.cadeteId),
+    operations_client_idx: index('operations_client_idx').on(t.clientId),
   }),
 );
 
@@ -225,6 +201,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   amountCorrections: many(amountCorrections),
   locations: many(cadetLocations),
   refreshTokens: many(refreshTokens),
+  clientsCreated: many(clients),
 }));
 
 export const operationsRelations = relations(operations, ({ one, many }) => ({
@@ -243,10 +220,21 @@ export const operationsRelations = relations(operations, ({ one, many }) => ({
     references: [users.id],
     relationName: 'op_coordinador',
   }),
+  client: one(clients, {
+    fields: [operations.clientId],
+    references: [clients.id],
+  }),
   statusHistory: many(operationStatusHistory),
   incidents: many(incidents, { relationName: 'incident_operation' }),
   amountCorrections: many(amountCorrections),
-  operationContacts: many(operationContacts), // <--- NUEVA RELACIÓN
+}));
+
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [clients.createdById],
+    references: [users.id],
+  }),
+  operations: many(operations),
 }));
 
 export const operationStatusHistoryRelations = relations(operationStatusHistory, ({ one }) => ({

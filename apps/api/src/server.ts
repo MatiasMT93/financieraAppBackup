@@ -17,7 +17,7 @@ import incidentsRoutes from './modules/incidents/routes.js';
 import locationsRoutes from './modules/locations/routes.js';
 import ownerRoutes from './modules/owner/routes.js';
 import usersRoutes from './modules/users/routes.js';
-import contactsRoutes from './modules/contacts/routes.js';
+import clientsRoutes from './modules/clients/routes.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,7 +40,7 @@ app.use('/api/incidents', incidentsRoutes);
 app.use('/api/locations', locationsRoutes);
 app.use('/api/owner', ownerRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/contacts', contactsRoutes);
+app.use('/api/clients', clientsRoutes);
 
 app.get('/health', (_req, res) => res.json({ ok: true, status: 'healthy' }));
 

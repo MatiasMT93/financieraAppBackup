@@ -1,0 +1,42 @@
+/**
+ * Bancos habilitados por el BCRA que operan en Argentina (los más usuales).
+ * Es solo para sugerir mientras se escribe: el campo Banco acepta cualquier
+ * texto, así que uno que no esté en esta lista igual se puede cargar.
+ */
+export const ARGENTINE_BANKS = [
+  'Banco de la Nación Argentina',
+  'Banco de la Provincia de Buenos Aires',
+  'Banco Ciudad de Buenos Aires',
+  'Banco Santander Río',
+  'BBVA Argentina',
+  'Banco Galicia',
+  'Banco Macro',
+  'Banco Credicoop',
+  'Banco Supervielle',
+  'Banco Patagonia',
+  'Banco Comafi',
+  'Banco Hipotecario',
+  'Banco Itaú Argentina',
+  'HSBC Argentina',
+  'ICBC Argentina',
+  'Banco de Corrientes',
+  'Banco de Córdoba (Bancor)',
+  'Banco de Santa Fe (Bapro/Nuevo Banco de Santa Fe)',
+  'Banco Municipal de Rosario',
+  'Banco del Sol',
+  'Banco Voii',
+  'Banco Meridian',
+  'Banco Piano',
+  'Banco Roela',
+  'Banco Mariva',
+  'Banco Julio',
+  'Brubank',
+  'Reba (Rebanking)',
+  'Wilobank',
+  'Banco Bica',
+  'Naranja X',
+  'Mercado Pago',
+  'Ualá',
+  'Personal Pay',
+  'Cuenta DNI',
+] as const;

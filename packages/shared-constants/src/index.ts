@@ -34,15 +34,32 @@ export type CadeteStatus = (typeof CADETE_STATUS)[keyof typeof CADETE_STATUS];
 export const OPERATION_TYPE = {
   ENTREGA: 'entrega',
   RETIRO: 'retiro',
+  ENTREGA_RETIRO: 'entrega_retiro',
 } as const;
 
 export type OperationType = (typeof OPERATION_TYPE)[keyof typeof OPERATION_TYPE];
+
+export const DELIVERY_MODE = {
+  DOMICILIO: 'domicilio',
+  VENTANILLA: 'ventanilla',
+  DEPOSITO: 'deposito',
+} as const;
+
+export type DeliveryMode = (typeof DELIVERY_MODE)[keyof typeof DELIVERY_MODE];
+
+/** Etiqueta visible por modalidad ("domicilio" se muestra como "Calle"). */
+export const DELIVERY_MODE_LABELS: Record<DeliveryMode, string> = {
+  domicilio: 'Calle',
+  ventanilla: 'Ventanilla',
+  deposito: 'Depósito',
+};
 
 export const CURRENCY = {
   ARS: 'ARS',
   USD: 'USD',
   EUR: 'EUR',
   BRL: 'BRL',
+  USDT: 'USDT',
 } as const;
 
 export type Currency = (typeof CURRENCY)[keyof typeof CURRENCY];

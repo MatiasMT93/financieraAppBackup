@@ -1,19 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  UserCheck,
-  UserX,
-  ChevronDown,
-  ChevronUp,
-  Phone,
-  MessageCircle,
-  Trash2,
-  Clock,
-  Users,
-} from 'lucide-react';
+import { UserCheck, UserX, Phone, MessageCircle, Clock, Pencil } from 'lucide-react';
 import { apiGet, apiPost, apiDelete } from '../../../shared/api/client.ts';
 import type { User } from '@cambioapp/shared-types';
 import DownloadApkButton from '../components/DownloadApkButton.tsx';
+import EditCadeteModal from '../components/EditCadeteModal.tsx';
+import { UsersIcon, CalendarIcon, TrashIcon } from '../components/CoordIcons.tsx';
 
 function ConfirmDeleteDialog({
   cadete,
@@ -28,7 +20,7 @@ function ConfirmDeleteDialog({
 }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="card w-full max-w-sm">
+      <div className="card w-full max-w-sm" style={{ color: '#111827' }}>
         <h2 className="font-semibold text-gray-900 mb-2">Eliminar cadete</h2>
         <p className="text-sm text-gray-600 mb-6">
           ¿Estás seguro que querés eliminar a{' '}
@@ -43,7 +35,7 @@ function ConfirmDeleteDialog({
             disabled={isPending}
             className="btn-primary flex-1 bg-red-600 hover:bg-red-700 flex items-center justify-center gap-1"
           >
-            <Trash2 size={15} />
+            <TrashIcon />
             {isPending ? 'Eliminando...' : 'Eliminar'}
           </button>
           <button onClick={onCancel} className="btn-secondary border-gray-300 text-gray-600 px-4">
@@ -55,63 +47,16 @@ function ConfirmDeleteDialog({
   );
 }
 
-function CadeteDetail({ cadete, onDelete }: { cadete: User; onDelete: () => void }) {
-  const celular = cadete.celular?.replace(/\D/g, '') ?? '';
-  const waNumber = celular.startsWith('0') ? `549${celular.slice(1)}` : `549${celular}`;
-
-  return (
-    <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-      <div className="grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <p className="text-xs text-gray-400">Nombre completo</p>
-          <p className="font-medium text-gray-800">
-            {cadete.nombre} {cadete.apellido}
-          </p>
-        </div>
-        {cadete.celular && (
-          <div>
-            <p className="text-xs text-gray-400">Celular</p>
-            <p className="font-medium text-gray-800">{cadete.celular}</p>
-          </div>
-        )}
-      </div>
-
-      {cadete.celular && (
-        <div className="flex gap-2">
-          <a
-            href={`tel:${cadete.celular}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
-          >
-            <Phone size={15} />
-            Llamar
-          </a>
-          <a
-            href={`https://wa.me/${waNumber}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors"
-          >
-            <MessageCircle size={15} />
-            WhatsApp
-          </a>
-        </div>
-      )}
-
-      <button
-        onClick={onDelete}
-        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors"
-      >
-        <Trash2 size={15} />
-        Eliminar cadete
-      </button>
-    </div>
-  );
+function waLink(celular: string) {
+  const n = celular.replace(/\D/g, '');
+  return `https://wa.me/${n.startsWith('0') ? `549${n.slice(1)}` : `549${n}`}`;
 }
 
 export default function GestionCadetesTab() {
   const qc = useQueryClient();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [editTarget, setEditTarget] = useState<User | null>(null);
 
   const { data: cadetes = [], isLoading } = useQuery({
     queryKey: ['cadetes-gestion'],
@@ -145,121 +90,143 @@ export default function GestionCadetesTab() {
       qc.invalidateQueries({ queryKey: ['cadetes-gestion'] });
       qc.invalidateQueries({ queryKey: ['cadetes'] });
       setDeleteTarget(null);
-      setExpandedId(null);
+      setSelectedId(null);
     },
   });
 
-  function toggleExpand(id: string) {
-    setExpandedId((prev) => (prev === id ? null : id));
-  }
+  const selected = cadetes.find((c) => c.id === selectedId) ?? cadetes[0] ?? null;
 
   return (
-    <div className="p-4 space-y-5">
+    <>
       <DownloadApkButton />
 
-      {/* Solicitudes pendientes */}
       {(isLoadingPending || pending.length > 0) && (
         <section>
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={15} className="text-amber-500" />
-            <h3 className="text-sm font-semibold text-gray-700">
-              Solicitudes pendientes
-              {pending.length > 0 && (
-                <span className="ml-2 bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                  {pending.length}
-                </span>
-              )}
-            </h3>
+          <div className="coord-section-title">
+            <Clock size={18} style={{ color: '#f2bc57' }} />
+            Solicitudes pendientes
+            {pending.length > 0 && <span className="coord-pending-badge">{pending.length}</span>}
           </div>
 
-          <div className="space-y-2">
-            {isLoadingPending && (
-              <p className="text-sm text-gray-400 text-center py-2">Cargando...</p>
-            )}
+          <div className="coord-stack-list">
+            {isLoadingPending && <p style={{ color: '#c0c6d0', textAlign: 'center' }}>Cargando…</p>}
             {pending.map((cadete) => (
-              <div key={cadete.id} className="card">
-                <div className="flex items-center justify-between">
+              <article key={cadete.id} className="coord-user-card">
+                <div className="coord-user-card__summary" style={{ cursor: 'default' }}>
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">
-                      {cadete.nombre} {cadete.apellido}
-                    </p>
-                    {cadete.celular && (
-                      <p className="text-xs text-gray-400">{cadete.celular}</p>
-                    )}
+                    <h3>{cadete.nombre} {cadete.apellido}</h3>
+                    {cadete.celular && <p>{cadete.celular}</p>}
                   </div>
-                  <div className="flex gap-2">
+                </div>
+                <div className="coord-user-card__details" style={{ paddingTop: 0 }}>
+                  <div className="coord-approve-row">
                     <button
+                      type="button"
+                      className="coord-approve-button"
                       onClick={() => approve.mutate(cadete.id)}
                       disabled={approve.isPending || reject.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-sm font-medium hover:bg-green-100 transition-colors disabled:opacity-50"
                     >
-                      <UserCheck size={15} />
+                      <UserCheck size={16} />
                       Aceptar
                     </button>
                     <button
+                      type="button"
+                      className="coord-reject-button"
                       onClick={() => reject.mutate(cadete.id)}
                       disabled={approve.isPending || reject.isPending}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
                     >
-                      <UserX size={15} />
+                      <UserX size={16} />
                       Rechazar
                     </button>
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </section>
       )}
 
-      {/* Cadetes activos */}
-      <section>
-        <div className="flex items-center gap-2 mb-2">
-          <Users size={15} className="text-coordinador" />
-          <h3 className="text-sm font-semibold text-gray-700">Cadetes activos</h3>
+      <div className="coord-section-title"><UsersIcon />Cadetes activos</div>
+
+      {isLoading && <p style={{ color: '#c0c6d0', textAlign: 'center' }}>Cargando…</p>}
+      {!isLoading && cadetes.length === 0 && (
+        <div className="coord-empty-panel coord-empty-panel--compact">
+          <p>No hay cadetes activos</p>
         </div>
+      )}
 
-        {isLoading && (
-          <p className="text-sm text-gray-400 text-center py-4">Cargando...</p>
-        )}
-
-        {!isLoading && cadetes.length === 0 && (
-          <p className="text-center text-gray-400 text-sm py-6">No hay cadetes activos</p>
-        )}
-
-        <div className="space-y-2">
-          {cadetes.map((cadete) => {
-            const expanded = expandedId === cadete.id;
-            return (
-              <div key={cadete.id} className="card">
+      {!isLoading && cadetes.length > 0 && (
+        <div className="coord-split-page">
+          <aside className="coord-list-panel">
+            <h3><UsersIcon />{cadetes.length} cadetes</h3>
+            <div className="coord-list-panel__scroll">
+              {cadetes.map((c) => (
                 <button
-                  className="w-full flex items-center justify-between"
-                  onClick={() => toggleExpand(cadete.id)}
+                  key={c.id}
+                  type="button"
+                  className={selected?.id === c.id ? 'is-selected' : ''}
+                  onClick={() => setSelectedId(c.id)}
                 >
-                  <div className="text-left">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {cadete.nombre} {cadete.apellido}
-                    </p>
-                    <p className="text-xs text-gray-400">Cadete</p>
-                  </div>
-                  {expanded ? (
-                    <ChevronUp size={18} className="text-gray-400 shrink-0" />
-                  ) : (
-                    <ChevronDown size={18} className="text-gray-400 shrink-0" />
-                  )}
+                  <span className="coord-avatar coord-avatar--small">{c.nombre[0]}{c.apellido?.[0] ?? ''}</span>
+                  <span><strong>{c.nombre} {c.apellido}</strong><small>Cadete</small></span>
                 </button>
+              ))}
+            </div>
+          </aside>
 
-                {expanded && (
-                  <CadeteDetail
-                    cadete={cadete}
-                    onDelete={() => setDeleteTarget(cadete)}
-                  />
-                )}
+          {selected && (
+            <section className="coord-detail-panel">
+              <div className="coord-cadet-hero">
+                <span className="coord-avatar">{selected.nombre[0]}{selected.apellido?.[0] ?? ''}</span>
+                <div>
+                  <h2>{selected.nombre} {selected.apellido}</h2>
+                  <p>Cadete</p>
+                </div>
+                <button type="button" className="coord-assign-button coord-assign-button--ghost" onClick={() => setEditTarget(selected)}>
+                  <Pencil size={16} />Editar
+                </button>
               </div>
-            );
-          })}
+
+              <div className="coord-user-info-grid">
+                <div>
+                  <UsersIcon />
+                  <span>Nombre completo<strong>{selected.nombre} {selected.apellido}</strong></span>
+                </div>
+                <div>
+                  <Phone size={20} />
+                  <span>Teléfono (opcional)<strong>{selected.celular ?? '—'}</strong></span>
+                </div>
+                <div>
+                  <CalendarIcon />
+                  <span>Fecha de alta<strong>{new Date(selected.createdAt).toLocaleDateString('es-AR')}</strong></span>
+                </div>
+              </div>
+
+              {selected.celular && (
+                <div className="coord-operation-card__contact" style={{ margin: '16px 0' }}>
+                  <a href={`tel:${selected.celular}`} className="coord-contact-link coord-contact-link--call">
+                    <Phone size={15} />
+                    Llamar
+                  </a>
+                  <a href={waLink(selected.celular)} target="_blank" rel="noopener noreferrer" className="coord-contact-link coord-contact-link--wa">
+                    <MessageCircle size={15} />
+                    WhatsApp
+                  </a>
+                </div>
+              )}
+
+              <button type="button" className="coord-delete-button" onClick={() => setDeleteTarget(selected)}>
+                <TrashIcon />
+                <span>Eliminar cadete</span>
+              </button>
+            </section>
+          )}
         </div>
-      </section>
+      )}
+
+      {editTarget && (
+        <EditCadeteModal cadete={editTarget} onClose={() => setEditTarget(null)} />
+      )}
 
       {deleteTarget && (
         <ConfirmDeleteDialog
@@ -269,6 +236,6 @@ export default function GestionCadetesTab() {
           isPending={remove.isPending}
         />
       )}
-    </div>
+    </>
   );
 }

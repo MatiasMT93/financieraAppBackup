@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Check } from 'lucide-react';
 import { apiGet, apiPost } from '../../../shared/api/client.ts';
+import { invalidateOperationsQueries } from '../../../shared/utils/invalidate-operations.ts';
 import type { Operation, User } from '@cambioapp/shared-types';
 import { useState } from 'react';
 
@@ -21,7 +22,7 @@ export default function AssignModal({ operation, onClose, onAssigned }: Props) {
     queryFn: () => apiGet<User[]>('/users?role=cadete'),
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['operations'] });
+  const invalidate = () => invalidateOperationsQueries(qc);
 
   const assign = useMutation({
     mutationFn: (cadeteId: string) =>
@@ -38,7 +39,7 @@ export default function AssignModal({ operation, onClose, onAssigned }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="card w-full max-w-md">
+      <div className="card w-full max-w-md" style={{ color: '#111827' }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-900">
             {isAssigned ? 'Reasignar cadete' : 'Asignar cadete'}

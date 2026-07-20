@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, ChevronDown, ChevronUp, LogOut, Map, ClipboardList, ChevronRight } from 'lucide-react';
 import { apiGet, apiPost } from '../../shared/api/client.ts';
 import { useAuthStore } from '../../shared/store/auth-store.ts';
 import { PullToRefresh } from '../../shared/components/PullToRefresh.tsx';
+import { BrandMark } from '../../shared/components/BrandMark.tsx';
+import { WavePattern } from '../../shared/components/WavePattern.tsx';
 import type { OwnerSummary, CurrencySummary } from '@cambioapp/shared-types';
+import './DuenoShell.css';
 
 type Period = 'today' | 'week' | 'month';
 
@@ -16,7 +18,7 @@ const PERIOD_LABELS: Record<Period, string> = {
 };
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
-  ARS: '$', USD: 'U$', EUR: '€', BRL: 'R$',
+  ARS: '$', USD: 'U$', EUR: '€', BRL: 'R$', USDT: '₮',
 };
 
 const CURRENCY_NAMES: Record<string, string> = {
@@ -24,53 +26,97 @@ const CURRENCY_NAMES: Record<string, string> = {
   USD: 'Dolares — USD',
   EUR: 'Euros — EUR',
   BRL: 'Reales — BRL',
+  USDT: 'Tether — USDT',
 };
+
+function MapIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path d="m7 12 11-5 12 5 11-5v29l-11 5-12-5-11 5V12Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
+      <path d="M18 7v29M30 12v29" stroke="currentColor" strokeWidth="2.2" />
+    </svg>
+  );
+}
+
+function ClipboardIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <rect x="10" y="9" width="28" height="34" rx="4" stroke="currentColor" strokeWidth="2.2" />
+      <rect x="17" y="5" width="14" height="9" rx="3" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M17 23h14M17 31h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="15" cy="23" r="1" fill="currentColor" />
+      <circle cx="15" cy="31" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="m11 6 10 10-10 10" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M13 6H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M18 10l6 6-6 6M11 16h13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TrendIcon() {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="1.7" />
+      <path d="m9 20 5-5 4 3 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 11h4v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CurrencyIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <path d="M30 14c-1.6-2-4-3-7-3-4.4 0-8 2.4-8 6s3.2 5.2 8 6c4.8.8 8 2.4 8 6s-3.6 7-8.5 7c-3.3 0-6.2-1.2-8.2-3.5M23 6v36" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon({ open }: { open: boolean }) {
+  return (
+    <svg className={open ? 'is-open' : ''} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="m8 12 8 8 8-8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function CurrencyCard({ cs }: { cs: CurrencySummary }) {
   const [expanded, setExpanded] = useState(cs.currency === 'USD');
   const sym = CURRENCY_SYMBOLS[cs.currency] ?? cs.currency;
 
   return (
-    <div className="card">
+    <div className={`currency-card ${expanded ? 'is-open' : ''}`}>
       <button
-        className="w-full flex items-center justify-between"
-        onClick={() => setExpanded((e) => !e)}
+        className="currency-card__summary"
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
       >
-        <div className="text-left">
-          <p className="font-semibold text-gray-900">
-            {sym} {CURRENCY_NAMES[cs.currency]}
-          </p>
-          <p className="text-xs text-gray-400">
-            Total movido: {sym} {Number(cs.totalMoved).toLocaleString('es-AR')} · {cs.totalOps} ops.
-          </p>
-        </div>
-        {expanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+        <span className="currency-icon"><CurrencyIcon /></span>
+        <span className="currency-copy">
+          <strong>{sym} {CURRENCY_NAMES[cs.currency] ?? cs.currency}</strong>
+          <small>Total movido: {sym} {Number(cs.totalMoved).toLocaleString('es-AR')} · {cs.totalOps} ops.</small>
+        </span>
+        <span className="currency-chevron"><ChevronDownIcon open={expanded} /></span>
       </button>
-
-      {expanded && (
-        <div className="mt-3 border-t border-gray-100 pt-3 grid grid-cols-2 gap-3">
-          <div className="text-center">
-            <p className="text-xs text-gray-500 font-medium uppercase">Comprados</p>
-            <p className="text-lg font-bold text-gray-800">
-              {sym} {Number(cs.comprado).toLocaleString('es-AR')}
-            </p>
-            <p className="text-xs text-gray-400">{cs.opComprado} ops.</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-500 font-medium uppercase">Vendidos</p>
-            <p className="text-lg font-bold text-gray-800">
-              {sym} {Number(cs.vendido).toLocaleString('es-AR')}
-            </p>
-            <p className="text-xs text-gray-400">{cs.opVendido} ops.</p>
-          </div>
-          <div className="col-span-2 border-t border-gray-100 pt-2 text-center">
-            <p className="text-xs text-gray-500">TOTAL MOVIDO</p>
-            <p className="text-xl font-bold text-gray-900">
-              {sym} {Number(cs.totalMoved).toLocaleString('es-AR')}
-            </p>
-          </div>
-        </div>
-      )}
+      <div className="currency-details" aria-hidden={!expanded}>
+        <div><span>Comprados</span><strong>{sym} {Number(cs.comprado).toLocaleString('es-AR')}</strong></div>
+        <div><span>Vendidos</span><strong>{sym} {Number(cs.vendido).toLocaleString('es-AR')}</strong></div>
+        <div><span>Total</span><strong>{sym} {Number(cs.totalMoved).toLocaleString('es-AR')}</strong></div>
+      </div>
     </div>
   );
 }
@@ -80,9 +126,9 @@ export default function DuenoShell() {
   const { clearAuth, refreshToken } = useAuthStore();
   const navigate = useNavigate();
 
-  const todayLabel = new Intl.DateTimeFormat('es-AR', {
-    weekday: 'long', day: 'numeric', month: 'long',
-  }).format(new Date());
+  const dateLabel = new Intl.DateTimeFormat('es-AR', {
+    weekday: 'long', day: '2-digit', month: 'long',
+  }).format(new Date()).replace(/^./, (letter) => letter.toLowerCase());
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['owner-summary', period],
@@ -98,114 +144,110 @@ export default function DuenoShell() {
     }
   }
 
+  const periods: Period[] = ['today', 'week', 'month'];
+
   return (
-    <div className="flex flex-col h-viewport bg-gray-50">
-      <header className="flex items-center justify-between px-4 py-3 text-white safe-area-pt shrink-0" style={{ backgroundColor: '#26215C' }}>
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="" className="w-8 h-8 rounded-lg" />
-          <div>
-            <span className="font-bold text-base">CambioApp</span>
-            <p className="text-xs opacity-80">{todayLabel}</p>
-          </div>
+    <main className="dashboard-shell">
+      <header className="dashboard-header">
+        <div className="dashboard-header__network" aria-hidden="true">
+          <WavePattern />
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => refetch()} className="p-1 hover:opacity-80">
-            <RefreshCw size={18} />
-          </button>
-          <button onClick={handleLogout} className="p-1 hover:opacity-80">
-            <LogOut size={18} />
+        <div className="dashboard-brand">
+          <BrandMark size={72} />
+          <span>Plaza App</span>
+          <span className="dashboard-brand__divider" aria-hidden="true" />
+          <time dateTime={new Date().toISOString().slice(0, 10)}>{dateLabel}</time>
+        </div>
+        <div className="dashboard-actions">
+          <button className="icon-button" type="button" onClick={handleLogout} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <LogoutIcon />
           </button>
         </div>
       </header>
 
-      {/* El header queda fijo arriba; este wrapper toma el resto y scrollea
-       *  el contenido interno cuando es más largo que la pantalla. */}
-      <PullToRefresh className="flex-1 overflow-y-auto" onRefresh={async () => { await refetch(); }}>
-      <div className="p-4 space-y-3">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-          Cubrir un rol hoy
-        </p>
-
-        <button
-          onClick={() => navigate('/dueno/coord')}
-          className="w-full flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl text-left active:opacity-80 transition-opacity"
-        >
-          <div className="w-14 h-14 rounded-xl bg-coordinador/10 flex items-center justify-center shrink-0">
-            <Map size={28} className="text-coordinador" />
+      <PullToRefresh className="dashboard-content" onRefresh={async () => { await refetch(); }}>
+        <section aria-labelledby="role-heading">
+          <div className="section-heading">
+            <h1 id="role-heading">Cubrir un rol hoy</h1>
+            <span aria-hidden="true" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-900">Coordinador</p>
-            <p className="text-sm text-gray-500 mt-0.5">Asignar cadetes y seguir las entregas en tiempo real</p>
-          </div>
-          <ChevronRight size={20} className="text-gray-300 shrink-0" />
-        </button>
 
-        <button
-          onClick={() => navigate('/dueno/admin')}
-          className="w-full flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl text-left active:opacity-80 transition-opacity"
-        >
-          <div className="w-14 h-14 rounded-xl bg-administrativo/10 flex items-center justify-center shrink-0">
-            <ClipboardList size={28} className="text-administrativo" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-gray-900">Administrador</p>
-            <p className="text-sm text-gray-500 mt-0.5">Cargar y gestionar las operaciones del día</p>
-          </div>
-          <ChevronRight size={20} className="text-gray-300 shrink-0" />
-        </button>
-      </div>
-
-      <div className="px-4 pb-2">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Resumen</p>
-      </div>
-
-      <div className="px-4 pb-6 space-y-4">
-        <div className="flex rounded-lg overflow-hidden border border-gray-200 bg-white">
-          {(['today', 'week', 'month'] as Period[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                period === p ? 'text-white' : 'text-gray-600 hover:bg-gray-50'
-              }`}
-              style={period === p ? { backgroundColor: '#26215C' } : {}}
-            >
-              {PERIOD_LABELS[p]}
+          <div className="role-grid">
+            <button className="role-card role-card--coordinator" type="button" onClick={() => navigate('/dueno/coord')}>
+              <WavePattern className="role-card__wave" />
+              <span className="role-icon"><MapIcon /></span>
+              <span className="role-copy">
+                <strong>Coordinador</strong>
+                <small>Asignar cadetes y seguir las entregas en tiempo real</small>
+              </span>
+              <span className="role-arrow"><ChevronRightIcon /></span>
             </button>
-          ))}
-        </div>
 
-        {isLoading && <div className="text-center text-gray-500 py-8">Cargando...</div>}
+            <button className="role-card role-card--administrator" type="button" onClick={() => navigate('/dueno/admin')}>
+              <WavePattern className="role-card__wave" />
+              <span className="role-icon"><ClipboardIcon /></span>
+              <span className="role-copy">
+                <strong>Administrador</strong>
+                <small>Cargar y gestionar las operaciones del día</small>
+              </span>
+              <span className="role-arrow"><ChevronRightIcon /></span>
+            </button>
+          </div>
+        </section>
 
-        {data && (
-          <>
-            <div className="card text-center py-6" style={{ borderLeft: '4px solid #26215C' }}>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <RefreshCw size={24} style={{ color: '#26215C' }} />
-                <span className="text-5xl font-bold text-gray-900">{data.totalOperations}</span>
-              </div>
-              <p className="text-gray-500">
-                operaciones realizadas {PERIOD_LABELS[period].toLowerCase()}
-              </p>
+        <section className="summary-section" aria-labelledby="summary-heading">
+          <div className="section-heading section-heading--compact">
+            <h2 id="summary-heading">Resumen</h2>
+          </div>
+
+          <div className="period-tabs" role="tablist" aria-label="Período del resumen">
+            {periods.map((p) => (
+              <button
+                key={p}
+                className={period === p ? 'is-active' : ''}
+                type="button"
+                role="tab"
+                aria-selected={period === p}
+                onClick={() => setPeriod(p)}
+              >
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
+
+          {isLoading ? (
+            <div className="loading-state"><p>Cargando…</p></div>
+          ) : (
+            <article className="operations-card">
+              <WavePattern className="operations-card__wave operations-card__wave--left" />
+              <WavePattern className="operations-card__wave operations-card__wave--right" />
+              <strong>{data?.totalOperations ?? 0}</strong>
+              <p>operaciones realizadas {PERIOD_LABELS[period].toLowerCase()}</p>
+            </article>
+          )}
+        </section>
+
+        {!isLoading && data && (
+          <section className="money-section" aria-labelledby="money-heading">
+            <div className="section-heading section-heading--compact">
+              <h2 id="money-heading">Dinero movido por moneda</h2>
             </div>
 
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Dinero movido por moneda
-            </p>
-
             {data.byCurrency.filter((c) => c.totalOps > 0).length === 0 && (
-              <p className="text-center text-gray-400 py-4">Sin movimientos en este periodo</p>
+              <div className="empty-state">
+                <TrendIcon />
+                <p>Sin movimientos en este período</p>
+              </div>
             )}
 
-            <div className="space-y-3">
+            <div className="currency-list">
               {data.byCurrency.map((cs) => (
                 <CurrencyCard key={cs.currency} cs={cs} />
               ))}
             </div>
-          </>
+          </section>
         )}
-      </div>
       </PullToRefresh>
-    </div>
+    </main>
   );
 }

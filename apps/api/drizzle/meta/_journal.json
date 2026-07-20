@@ -40,8 +40,36 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1784399599993,
-      "tag": "0005_colorful_warbird",
+      "when": 1784341420622,
+      "tag": "0005_charming_mariko_yashida",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784407006433,
+      "tag": "0006_add_entrega_retiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784478963887,
+      "tag": "0007_add_clients_and_delivery_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784485086580,
+      "tag": "0008_enable_unaccent_extension",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784489734174,
+      "tag": "0009_add_deposito_modalidad",
       "breakpoints": true
     }
   ]

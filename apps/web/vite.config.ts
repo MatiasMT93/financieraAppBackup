@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'FinancieraApp',
-        short_name: 'FinancieraApp',
+        name: 'Plaza App',
+        short_name: 'Plaza App',
         description: 'Sistema logístico para financieras de cambio',
         theme_color: '#185FA5',
         background_color: '#ffffff',

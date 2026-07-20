@@ -23,6 +23,7 @@ router.get('/summary', async (req, res) => {
     USD: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
     EUR: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
     BRL: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
+    USDT: { totalMoved: 0, comprado: 0, vendido: 0, opComprado: 0, opVendido: 0 },
   };
 
   for (const op of ops) {
@@ -30,14 +31,26 @@ router.get('/summary', async (req, res) => {
     const monto = parseFloat(String(op.monto));
     const tipo = op.tipo as OperationType;
 
+    // En 'entrega_retiro', `monto`/`moneda` son el monto a entregar (vendido)
+    // y `monto2`/`moneda2` el monto a retirar (comprado); pueden estar en
+    // monedas distintas, así que se suman por separado a cada bucket.
     if (tipo === 'retiro') {
       byCurrency[currency].comprado += monto;
       byCurrency[currency].opComprado++;
+      byCurrency[currency].totalMoved += monto;
     } else {
       byCurrency[currency].vendido += monto;
       byCurrency[currency].opVendido++;
+      byCurrency[currency].totalMoved += monto;
+
+      if (tipo === 'entrega_retiro' && op.monto2 != null && op.moneda2) {
+        const currency2 = op.moneda2 as Currency;
+        const monto2 = parseFloat(String(op.monto2));
+        byCurrency[currency2].comprado += monto2;
+        byCurrency[currency2].opComprado++;
+        byCurrency[currency2].totalMoved += monto2;
+      }
     }
-    byCurrency[currency].totalMoved += monto;
   }
 
   res.json({
@@ -61,12 +74,19 @@ router.get('/cash-in-street', async (_req, res) => {
     USD: { total: 0, operationCount: 0 },
     EUR: { total: 0, operationCount: 0 },
     BRL: { total: 0, operationCount: 0 },
+    USDT: { total: 0, operationCount: 0 },
   };
 
   for (const op of ops) {
     const currency = op.moneda as Currency;
     byCurrency[currency].total += parseFloat(String(op.monto));
     byCurrency[currency].operationCount++;
+
+    if (op.tipo === 'entrega_retiro' && op.monto2 != null && op.moneda2) {
+      const currency2 = op.moneda2 as Currency;
+      byCurrency[currency2].total += parseFloat(String(op.monto2));
+      byCurrency[currency2].operationCount++;
+    }
   }
 
   res.json({

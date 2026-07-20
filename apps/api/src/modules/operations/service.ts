@@ -6,7 +6,6 @@ import { operations, operationStatusHistory, amountCorrections } from '../../db/
 import * as repo from './repository.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { broadcast, emitToUser } from '../../realtime/socket.js';
-import { findOrCreateContact, linkContactToOperation } from '../contacts/repository.js';
 
 export async function listOperations(filters: {
   status?: OperationStatus | OperationStatus[];
@@ -24,27 +23,22 @@ export async function getOperation(id: string) {
 
 export async function createOperation(
   data: {
-    tipo: 'entrega' | 'retiro';
-    moneda: 'ARS' | 'USD' | 'EUR' | 'BRL';
+    tipo: 'entrega' | 'retiro' | 'entrega_retiro';
+    moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
     monto: number;
-    direccion: string;
+    moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
+    monto2?: number;
+    modalidad: 'domicilio' | 'ventanilla' | 'deposito';
+    direccion?: string;
+    banco?: string;
     contacto: string;
     telefono?: string;
     notas?: string;
+    clientId?: string;
   },
   user: AuthUser,
 ) {
   const op = await repo.createOperation({ ...data, administrativoId: user.id });
-
-  // Guarda/actualiza el contacto normalizado para poder sugerirlo la próxima
-  // vez que se cargue una operación en la misma dirección.
-  const contact = await findOrCreateContact({
-    nombre: data.contacto,
-    telefono: data.telefono,
-    direccion: data.direccion,
-  });
-  await linkContactToOperation(op.id, contact.id);
-
   const full = await repo.findOperationById(op.id);
   broadcast('operation:created', { operation: full });
   return full;
