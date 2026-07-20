@@ -76,24 +76,35 @@ export default function AssignModal({ operation, onClose, onAssigned }: Props) {
           )}
           {cadetes
             .filter((u: User) => u.role === 'cadete' && u.id !== operation.cadeteId)
-            .map((c: User) => (
-              <button
-                key={c.id}
-                onClick={() => setSelectedId(c.id)}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  selectedId === c.id
-                    ? 'border-coordinador bg-blue-50'
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-coordinador text-white flex items-center justify-center text-sm font-bold">
-                    {c.nombre[0]}
+            .map((c: User) => {
+              // Un cadete con otra operación activa no está disponible: no se
+              // le puede asignar una segunda hasta que termine/lo desasignen.
+              const isBusy = (c.cadeteStatus ?? 'disponible') !== 'disponible';
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => !isBusy && setSelectedId(c.id)}
+                  disabled={isBusy}
+                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                    isBusy
+                      ? 'border-gray-100 opacity-50 cursor-not-allowed'
+                      : selectedId === c.id
+                      ? 'border-coordinador bg-blue-50'
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-coordinador text-white flex items-center justify-center text-sm font-bold">
+                        {c.nombre[0]}
+                      </div>
+                      <span className="font-medium">{c.nombre}</span>
+                    </div>
+                    {isBusy && <span className="text-xs text-gray-400">Ocupado</span>}
                   </div>
-                  <span className="font-medium">{c.nombre}</span>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
         </div>
 
         <button
