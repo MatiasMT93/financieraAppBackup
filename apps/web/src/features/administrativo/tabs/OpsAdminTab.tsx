@@ -179,13 +179,38 @@ export default function OpsAdminTab() {
     refetchInterval: 30_000,
   });
 
+  const [cancelingOpId, setCancelingOpId] = useState<string | null>(null);
+
   const cancel = useMutation({
     mutationFn: (id: string) => apiPost(`/operations/${id}/cancel`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['operations'] }),
+    onMutate: (id: string) => {
+      setCancelingOpId(id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['operations-admin', filter, isClosedFilter ? today : 'all'] });
+      qc.invalidateQueries({ queryKey: ['operations'] });
+    },
+    onError: () => {
+      setCancelingOpId(null);
+    },
+    onSettled: () => {
+      setCancelingOpId(null);
+    },
   });
 
   return (
     <div>
+      {cancelingOpId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-white px-6 py-6 text-center shadow-xl">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-administrativo text-white">
+              <RefreshCw className="animate-spin" size={20} />
+            </div>
+            <p className="text-base font-semibold text-gray-900">Cancelando operación...</p>
+            <p className="mt-2 text-sm text-gray-500">Esperá un momento mientras actualizamos el estado.</p>
+          </div>
+        </div>
+      )}
       {/* Title card */}
       <div className="bg-white px-4 pt-5 pb-4 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -291,7 +316,7 @@ export default function OpsAdminTab() {
                         </div>
                       )}
 
-                      <div className="flex gap-2 pt-1 flex-wrap">
+                      <div className="flex gap-2 pt-1 flex-wrap items-center">
                         {canEdit && (
                           <button
                             onClick={() => setEditingOp(op)}
@@ -310,6 +335,11 @@ export default function OpsAdminTab() {
                             <X size={14} />
                             Cancelar
                           </button>
+                        )}
+                        {cancelingOpId === op.id && (
+                          <p className="text-xs text-white bg-red-600 px-2 py-1 rounded">
+                            Cancelando operación...
+                          </p>
                         )}
                         {!canCancel && !['cerrada', 'cancelada'].includes(op.status) && (
                           <p className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
