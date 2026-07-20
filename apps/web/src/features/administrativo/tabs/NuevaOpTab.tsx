@@ -87,6 +87,12 @@ export default function NuevaOpTab() {
     }
   }, []);
 
+  const handleContactFocus = () => {
+    if (form.contacto.trim().length >= 2) {
+      fetchSuggestions(form.contacto);
+    }
+  };
+
   // Debounce al escribir en el campo contacto
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -129,7 +135,7 @@ export default function NuevaOpTab() {
       </div>
 
       <div className="px-4 pt-4 pb-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
             <select
@@ -159,21 +165,26 @@ export default function NuevaOpTab() {
               type={type}
               value={form[field]}
               onChange={(e) => set(field, e.target.value)}
+              onFocus={field === 'contacto' ? handleContactFocus : undefined}
               placeholder={placeholder}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-administrativo"
             />
             {field === 'contacto' && showSuggestions && suggestions.length > 0 && (
-              <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+              <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-72 overflow-auto">
                 {suggestions.map((contact) => (
                   <li
                     key={contact.id}
-                    onClick={() => handleSelectSuggestion(contact)}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
+                    onPointerDown={() => handleSelectSuggestion(contact)}
+                    style={{ touchAction: 'manipulation' }}
+                    className="px-4 py-4 hover:bg-gray-100 cursor-pointer text-sm flex flex-col gap-1"
                   >
-                    <span className="font-medium">{contact.nombre}</span>
-                    <span className="text-xs text-gray-500">
-                      {contact.direccion} {contact.telefono && `- ${contact.telefono}`}
+                    <span className="font-medium text-base">{contact.nombre}</span>
+                    <span className="text-xs text-gray-500 leading-5">
+                      {contact.direccion}
                     </span>
+                    {contact.telefono && (
+                      <span className="text-xs text-gray-500 leading-5">{contact.telefono}</span>
+                    )}
                   </li>
                 ))}
               </ul>
