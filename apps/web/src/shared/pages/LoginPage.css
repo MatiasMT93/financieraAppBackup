@@ -282,6 +282,21 @@
   color: #7f8898;
 }
 
+/* El autocompletado de usuario/contraseña del navegador pinta el input con
+   fondo blanco y texto negro por su cuenta, pisando el tema oscuro. Esto lo
+   fuerza de vuelta al estilo del campo (el "inset" gigante simula el color
+   de fondo porque Chrome no deja tocar background-color directamente). */
+.login-page .login-field-shell input:-webkit-autofill,
+.login-page .login-field-shell input:-webkit-autofill:hover,
+.login-page .login-field-shell input:-webkit-autofill:focus,
+.login-page .login-field-shell input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f4f7fb;
+  caret-color: #f4f7fb;
+  -webkit-box-shadow: 0 0 0 1000px #0a121f inset;
+  box-shadow: 0 0 0 1000px #0a121f inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .login-page .login-password-toggle {
   padding: 0;
   border: 0;
