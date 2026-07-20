@@ -276,6 +276,7 @@
   background: transparent;
   color: #f4f7fb;
   font-size: 16px;
+  color-scheme: dark;
 }
 
 .login-page .login-field-shell input::placeholder {
@@ -292,8 +293,11 @@
 .login-page .login-field-shell input:-webkit-autofill:active {
   -webkit-text-fill-color: #f4f7fb;
   caret-color: #f4f7fb;
-  -webkit-box-shadow: 0 0 0 1000px #0a121f inset;
-  box-shadow: 0 0 0 1000px #0a121f inset;
+  /* Color medido directamente del fondo compuesto real del campo (los
+     degradados superpuestos de shell + tarjeta + página), para que el
+     "parche" del autocompletado sea indistinguible del resto del campo. */
+  -webkit-box-shadow: 0 0 0 1000px #050d1a inset;
+  box-shadow: 0 0 0 1000px #050d1a inset;
   transition: background-color 9999s ease-in-out 0s;
 }
 
