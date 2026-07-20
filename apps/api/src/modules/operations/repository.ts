@@ -1,7 +1,26 @@
 import { db } from '../../db/connection.js';
 import { operations, operationStatusHistory, amountCorrections } from '../../db/schema.js';
-import { eq, and, gte, lte, sql, inArray } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, inArray, ne } from 'drizzle-orm';
 import type { OperationStatus } from '@cambioapp/shared-types';
+
+// Mismo set que usa recomputeCadeteStatus para decidir si un cadete está
+// "ocupado": una operación en cualquiera de estos estados cuenta como activa.
+const ACTIVE_CADETE_STATUSES: OperationStatus[] = ['asignada', 'en_camino', 'en_destino', 'volviendo', 'incidencia'];
+
+/**
+ * Busca si el cadete ya tiene otra operación activa (excluyendo la que se
+ * está por asignar/reasignar). Se usa para no poder asignarle una segunda
+ * operación mientras sigue ocupado con la primera.
+ */
+export async function findActiveOperationForCadete(cadeteId: string, excludeOperationId: string) {
+  return db.query.operations.findFirst({
+    where: and(
+      eq(operations.cadeteId, cadeteId),
+      inArray(operations.status, ACTIVE_CADETE_STATUSES),
+      ne(operations.id, excludeOperationId),
+    ),
+  });
+}
 
 export async function findOperationById(id: string) {
   return db.query.operations.findFirst({

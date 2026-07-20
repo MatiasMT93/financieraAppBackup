@@ -5,6 +5,7 @@ import { db } from '../../db/connection.js';
 import { operations, operationStatusHistory, amountCorrections } from '../../db/schema.js';
 import * as repo from './repository.js';
 import type { AuthUser } from '../../middleware/auth.js';
+import { AppError } from '../../middleware/error-handler.js';
 import { broadcast, emitToUser } from '../../realtime/socket.js';
 
 export async function listOperations(filters: {
@@ -90,6 +91,14 @@ export async function assignCadete(id: string, cadeteId: string, user: AuthUser)
   if (!op) throw new Error('Operación no encontrada');
   if (op.status !== 'pendiente' && op.status !== 'asignada') {
     throw new Error('Solo se puede asignar cadete a operaciones pendientes o asignadas');
+  }
+
+  // Un cadete solo puede tener una operación activa a la vez: si ya está
+  // ocupado con otra (asignada/en camino/en destino/volviendo/incidencia),
+  // no se lo puede volver a asignar hasta que quede disponible.
+  const busyWith = await repo.findActiveOperationForCadete(cadeteId, id);
+  if (busyWith) {
+    throw new AppError(409, 'El cadete ya tiene una operación activa asignada — no está disponible.');
   }
 
   const previousCadeteId = op.cadeteId;
