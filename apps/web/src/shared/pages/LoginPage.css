@@ -276,10 +276,45 @@
   background: transparent;
   color: #f4f7fb;
   font-size: 16px;
+  color-scheme: dark;
 }
 
 .login-page .login-field-shell input::placeholder {
   color: #7f8898;
+}
+
+/* El autocompletado de usuario/contraseña del navegador pinta el input con
+   fondo blanco y texto negro por su cuenta, pisando el tema oscuro. Esto lo
+   fuerza de vuelta al estilo del campo. Chrome/Edge/Safari (WebKit/Blink)
+   usan el pseudo-selector con prefijo; Firefox y Safari 16+ usan el
+   estándar sin prefijo. Van en bloques separados a propósito: si se
+   mezclan en un mismo selector separado por comas, un motor que no
+   reconozca uno de los dos puede invalidar la regla entera. */
+.login-page .login-field-shell input:-webkit-autofill,
+.login-page .login-field-shell input:-webkit-autofill:hover,
+.login-page .login-field-shell input:-webkit-autofill:focus,
+.login-page .login-field-shell input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f4f7fb;
+  caret-color: #f4f7fb;
+  /* Color medido directamente del fondo compuesto real del campo (los
+     degradados superpuestos de shell + tarjeta + página), para que el
+     "parche" del autocompletado sea indistinguible del resto del campo.
+     El box-shadow gigante es la única forma que deja WebKit/Blink de
+     tocar el fondo del autocompletado. */
+  -webkit-box-shadow: 0 0 0 1000px #050d1a inset;
+  box-shadow: 0 0 0 1000px #050d1a inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.login-page .login-field-shell input:autofill,
+.login-page .login-field-shell input:autofill:hover,
+.login-page .login-field-shell input:autofill:focus,
+.login-page .login-field-shell input:autofill:active {
+  color: #f4f7fb;
+  caret-color: #f4f7fb;
+  background-color: #050d1a;
+  box-shadow: 0 0 0 1000px #050d1a inset;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 .login-page .login-password-toggle {
