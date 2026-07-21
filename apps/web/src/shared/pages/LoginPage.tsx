@@ -85,7 +85,7 @@ export default function LoginPage() {
 
           <header className="login-card__header">
             <BrandMark size={64} className="login-card__brand-mark" />
-            <p className="login-card__brand-name">Fiber Plaza App</p>
+            <p className="login-card__brand-name">Plaza App</p>
             <span className="login-card__ornament" aria-hidden="true" />
             <h1 id="login-title">Iniciar sesión</h1>
             <p className="login-card__subtitle">Accedé al panel de control</p>

@@ -55,7 +55,7 @@ export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
       <header className="coordinator-header">
         <div className="coordinator-header__brand">
           <BrandMark size={56} />
-          <span className="coordinator-header__name">Fiber Plaza App</span>
+          <span className="coordinator-header__name">Plaza App</span>
           <span className="coordinator-header__divider" aria-hidden="true" />
           <div className="coordinator-header__title-group">
             <h1>{currentTab?.label ?? 'Operaciones'}</h1>

@@ -30,7 +30,7 @@ export default function AdministrativoShell({ onBack }: { onBack?: () => void })
       <header className="admin-header">
         <div className="admin-brand">
           <BrandMark size={48} />
-          <span>Fiber Plaza App</span>
+          <span>Plaza App</span>
         </div>
 
         {onBack ? (
