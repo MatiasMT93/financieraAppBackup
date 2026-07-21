@@ -127,6 +127,162 @@
   gap: 1rem;
   margin-bottom: 2rem;
 }
+/* ============================================================ */
+/* MINI PANEL DE ALERTAS - VERSIÓN MEJORADA */
+/* ============================================================ */
+.alertas-mini-card {
+  background: #1e2128;
+  border-radius: 12px;
+  padding: 18px 20px 16px;
+  margin-top: 20px;
+  border: 1px solid #2c303a;
+  transition: all 0.2s;
+}
+
+.alertas-mini-card:hover {
+  border-color: #3a3f4a;
+}
+
+.alertas-mini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.alertas-mini-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e6e9ef;
+}
+
+.alertas-mini-title svg {
+  width: 20px;
+  height: 20px;
+  color: #f59e0b;
+}
+
+.alertas-mini-title h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e6e9ef;
+}
+
+/* Estadísticas: Activas / Resueltas */
+.alertas-mini-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #171a1f;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  border: 1px solid #2a2d35;
+}
+
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: 1;
+}
+
+.stat-item .stat-number {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-item .stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #8b93a3;
+}
+
+.stat-item.active .stat-number {
+  color: #f5b942;
+}
+
+.stat-item.resolved .stat-number {
+  color: #4ade80;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: #2c303a;
+  flex-shrink: 0;
+}
+
+/* Estado general */
+.alertas-mini-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.alertas-mini-status .status-icon {
+  font-size: 16px;
+}
+
+.alertas-mini-status.all-clear {
+  background: rgba(74, 222, 128, 0.06);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+.alertas-mini-status.has-alerts {
+  background: rgba(245, 158, 11, 0.08);
+  color: #f5b942;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.alertas-mini-status .status-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: #8b93a3;
+  margin-left: 4px;
+}
+
+/* Footer */
+.alertas-mini-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #2c303a;
+  padding-top: 10px;
+}
+
+.alertas-mini-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.alertas-mini-link:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.alertas-mini-link svg {
+  width: 18px;
+  height: 18px;
+}
 
 .role-card {
   padding: 1.5rem;
