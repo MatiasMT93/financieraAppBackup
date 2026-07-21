@@ -107,6 +107,16 @@ export interface OwnerSummary {
   period: 'today' | 'week' | 'month';
   totalOperations: number;
   byCurrency: CurrencySummary[];
+  accounting?: {
+    [currency: string]: {
+      balance: number;
+      entradas: number;
+      salidas: number;
+      promedioDiario: number;
+      ratioEntradaSalida: number;
+      dias: number;
+    };
+  };
 }
 
 export interface CurrencySummary {
@@ -123,6 +133,28 @@ export interface CashInStreet {
   currency: Currency;
   total: number;
   operationCount: number;
+}
+
+export interface AccountingEntry {
+  operationId: string;
+  operationType: OperationType;
+  date: string;
+  kind: 'entrega' | 'retiro';
+  currency: Currency;
+  concepto: string;
+  valorInicial: number;
+  valorFinal: number;
+}
+
+export interface AccountingLedger {
+  date: string;
+  totalEntries: number;
+  byCurrency: Array<{
+    currency: Currency;
+    saldoFinal: number;
+    entries: number;
+    lines: AccountingEntry[];
+  }>;
 }
 
 // API response wrappers

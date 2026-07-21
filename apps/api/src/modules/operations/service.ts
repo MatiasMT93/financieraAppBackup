@@ -26,7 +26,7 @@ export async function createOperation(
   data: {
     tipo: 'entrega' | 'retiro' | 'entrega_retiro';
     moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
-    monto: number;
+    monto?: number;
     moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
     monto2?: number;
     modalidad: 'domicilio' | 'ventanilla' | 'deposito';
@@ -41,6 +41,9 @@ export async function createOperation(
 ) {
   const op = await repo.createOperation({ ...data, administrativoId: user.id });
   const full = await repo.findOperationById(op.id);
+
+  // TODO: guardar contacto para futuras sugerencias de autocompletado
+
   broadcast('operation:created', { operation: full });
   return full;
 }

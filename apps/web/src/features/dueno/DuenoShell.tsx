@@ -29,23 +29,24 @@ const CURRENCY_NAMES: Record<string, string> = {
   USDT: 'Tether — USDT',
 };
 
-function MapIcon() {
+function CoordinatorIcon() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path d="m7 12 11-5 12 5 11-5v29l-11 5-12-5-11 5V12Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-      <path d="M18 7v29M30 12v29" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M10 8h28v32H10z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M24 8v32" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M16 14h8M16 20h8M16 26h8M32 14h4M32 20h4M32 26h4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     </svg>
   );
 }
 
-function ClipboardIcon() {
+function AdministratorIcon() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <rect x="10" y="9" width="28" height="34" rx="4" stroke="currentColor" strokeWidth="2.2" />
-      <rect x="17" y="5" width="14" height="9" rx="3" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M17 23h14M17 31h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <circle cx="15" cy="23" r="1" fill="currentColor" />
-      <circle cx="15" cy="31" r="1" fill="currentColor" />
+      <rect x="12" y="10" width="24" height="28" rx="2" stroke="currentColor" strokeWidth="2" />
+      <rect x="17" y="6" width="14" height="8" rx="1" stroke="currentColor" strokeWidth="2" />
+      <path d="M18 20h12M18 28h12M18 36h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="25" cy="20" r="1.5" fill="currentColor" />
+      <circle cx="25" cy="28" r="1.5" fill="currentColor" />
     </svg>
   );
 }
@@ -93,36 +94,35 @@ function ChevronDownIcon({ open }: { open: boolean }) {
   );
 }
 
-function CurrencyCard({ cs }: { cs: CurrencySummary }) {
-  const [expanded, setExpanded] = useState(cs.currency === 'USD');
+function CurrencyTableRow({ cs, onSelect }: { cs: CurrencySummary; onSelect: (currency: string) => void }) {
   const sym = CURRENCY_SYMBOLS[cs.currency] ?? cs.currency;
 
   return (
-    <div className={`currency-card ${expanded ? 'is-open' : ''}`}>
-      <button
-        className="currency-card__summary"
-        type="button"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((value) => !value)}
-      >
-        <span className="currency-icon"><CurrencyIcon /></span>
-        <span className="currency-copy">
-          <strong>{sym} {CURRENCY_NAMES[cs.currency] ?? cs.currency}</strong>
-          <small>Total movido: {sym} {Number(cs.totalMoved).toLocaleString('es-AR')} · {cs.totalOps} ops.</small>
-        </span>
-        <span className="currency-chevron"><ChevronDownIcon open={expanded} /></span>
-      </button>
-      <div className="currency-details" aria-hidden={!expanded}>
-        <div><span>Comprados</span><strong>{sym} {Number(cs.comprado).toLocaleString('es-AR')}</strong></div>
-        <div><span>Vendidos</span><strong>{sym} {Number(cs.vendido).toLocaleString('es-AR')}</strong></div>
-        <div><span>Total</span><strong>{sym} {Number(cs.totalMoved).toLocaleString('es-AR')}</strong></div>
-      </div>
-    </div>
+    <tr className="currency-row" onClick={() => onSelect(cs.currency)}>
+      <td className="currency-name">
+        <span className="currency-badge">{cs.currency}</span>
+        <span className="currency-label">{CURRENCY_NAMES[cs.currency] ?? cs.currency}</span>
+      </td>
+      <td className="currency-data">
+        <span className="data-label">Total Movido</span>
+        <span className="data-value">{sym} {Number(cs.totalMoved).toLocaleString('es-AR')}</span>
+      </td>
+      <td className="currency-data">
+        <span className="data-label">Comprados</span>
+        <span className="data-value">{sym} {Number(cs.comprado).toLocaleString('es-AR')}</span>
+      </td>
+      <td className="currency-data">
+        <span className="data-label">Vendidos</span>
+        <span className="data-value">{sym} {Number(cs.vendido).toLocaleString('es-AR')}</span>
+      </td>
+      <td className="currency-ops">{cs.totalOps} ops</td>
+    </tr>
   );
 }
 
 export default function DuenoShell() {
   const [period, setPeriod] = useState<Period>('today');
+  const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
   const { clearAuth, refreshToken } = useAuthStore();
   const navigate = useNavigate();
 
@@ -154,7 +154,7 @@ export default function DuenoShell() {
         </div>
         <div className="dashboard-brand">
           <BrandMark size={72} />
-          <span>Plaza App</span>
+          <span>Fiber Plaza App</span>
           <span className="dashboard-brand__divider" aria-hidden="true" />
           <time dateTime={new Date().toISOString().slice(0, 10)}>{dateLabel}</time>
         </div>
@@ -169,35 +169,40 @@ export default function DuenoShell() {
         <section aria-labelledby="role-heading">
           <div className="section-heading">
             <h1 id="role-heading">Cubrir un rol hoy</h1>
-            <span aria-hidden="true" />
           </div>
 
           <div className="role-grid">
-            <button className="role-card role-card--coordinator" type="button" onClick={() => navigate('/dueno/coord')}>
-              <WavePattern className="role-card__wave" />
-              <span className="role-icon"><MapIcon /></span>
-              <span className="role-copy">
+            <button 
+              className="role-card role-card--coordinator" 
+              type="button" 
+              onClick={() => navigate('/dueno/coord')}
+            >
+              <span className="role-icon"><CoordinatorIcon /></span>
+              <div>
                 <strong>Coordinador</strong>
-                <small>Asignar cadetes y seguir las entregas en tiempo real</small>
-              </span>
-              <span className="role-arrow"><ChevronRightIcon /></span>
+                <small>Asignar cadetes y seguir entregas</small>
+              </div>
+              <span className="role-arrow">→</span>
             </button>
 
-            <button className="role-card role-card--administrator" type="button" onClick={() => navigate('/dueno/admin')}>
-              <WavePattern className="role-card__wave" />
-              <span className="role-icon"><ClipboardIcon /></span>
-              <span className="role-copy">
+            <button 
+              className="role-card role-card--administrator" 
+              type="button" 
+              onClick={() => navigate('/dueno/admin')}
+            >
+              <span className="role-icon"><AdministratorIcon /></span>
+              <div>
                 <strong>Administrador</strong>
-                <small>Cargar y gestionar las operaciones del día</small>
-              </span>
-              <span className="role-arrow"><ChevronRightIcon /></span>
+                <small>Cargar y gestionar operaciones</small>
+              </div>
+              <span className="role-arrow">→</span>
             </button>
           </div>
         </section>
 
         <section className="summary-section" aria-labelledby="summary-heading">
           <div className="section-heading section-heading--compact">
-            <h2 id="summary-heading">Resumen</h2>
+            <h2 id="summary-heading">Resumen del Período</h2>
           </div>
 
           <div className="period-tabs" role="tablist" aria-label="Período del resumen">
@@ -218,12 +223,35 @@ export default function DuenoShell() {
           {isLoading ? (
             <div className="loading-state"><p>Cargando…</p></div>
           ) : (
-            <article className="operations-card">
-              <WavePattern className="operations-card__wave operations-card__wave--left" />
-              <WavePattern className="operations-card__wave operations-card__wave--right" />
-              <strong>{data?.totalOperations ?? 0}</strong>
-              <p>operaciones realizadas {PERIOD_LABELS[period].toLowerCase()}</p>
-            </article>
+            <>
+              <article className="operations-card">
+                <WavePattern className="operations-card__wave operations-card__wave--left" />
+                <WavePattern className="operations-card__wave operations-card__wave--right" />
+                <strong>{data?.totalOperations ?? 0}</strong>
+                <p>operaciones realizadas {PERIOD_LABELS[period].toLowerCase()}</p>
+              </article>
+
+              {/* NUEVO: Resumen de Contabilidad */}
+              {data?.accounting && Object.keys(data.accounting).length > 0 && (
+                <div className="accounting-grid">
+                  {Object.entries(data.accounting).map(([currency, acc]) => (
+                    <div key={currency} className="accounting-card">
+                      <small className="accounting-card-label">{currency}</small>
+                      <div className="accounting-card-item">
+                        <span>Balance</span>
+                        <strong style={{ color: acc.balance >= 0 ? '#10b981' : '#ef4444' }}>
+                          {CURRENCY_SYMBOLS[currency]} {acc.balance.toLocaleString('es-AR')}
+                        </strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', gap: '0.5rem' }}>
+                        <span>↓ {CURRENCY_SYMBOLS[currency]} {acc.salidas.toLocaleString('es-AR')}</span>
+                        <span>↑ {CURRENCY_SYMBOLS[currency]} {acc.entradas.toLocaleString('es-AR')}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -240,11 +268,109 @@ export default function DuenoShell() {
               </div>
             )}
 
-            <div className="currency-list">
-              {data.byCurrency.map((cs) => (
-                <CurrencyCard key={cs.currency} cs={cs} />
-              ))}
-            </div>
+            {data.byCurrency.some((c) => c.totalOps > 0) && (
+              <div className="currency-table-wrapper">
+                <table className="currency-table">
+                  <thead>
+                    <tr>
+                      <th>Moneda</th>
+                      <th>Total Movido</th>
+                      <th>Comprados</th>
+                      <th>Vendidos</th>
+                      <th>Operaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.byCurrency
+                      .filter((c) => c.totalOps > 0)
+                      .map((cs) => (
+                        <CurrencyTableRow
+                          key={cs.currency}
+                          cs={cs}
+                          onSelect={setSelectedCurrency}
+                        />
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {selectedCurrency && (
+              <div className="currency-detail-modal-overlay" onClick={() => setSelectedCurrency(null)}>
+                <div className="currency-detail-modal" onClick={(e) => e.stopPropagation()}>
+                  <button className="modal-close" onClick={() => setSelectedCurrency(null)}>✕</button>
+                  {data.byCurrency
+                    .filter((c) => c.currency === selectedCurrency)
+                    .map((cs) => {
+                      const sym = CURRENCY_SYMBOLS[cs.currency] ?? cs.currency;
+                      const totalMoved = cs.totalMoved;
+                      const ratio = cs.comprado > 0 ? (cs.vendido / cs.comprado) : 0;
+                      const accounting = data.accounting?.[cs.currency];
+                      const balance = accounting?.balance ?? 0;
+                      const promedioDiario = accounting?.promedioDiario ?? 0;
+                      const ratioEntradaSalida = accounting?.ratioEntradaSalida ?? 0;
+                      const dias = accounting?.dias ?? 0;
+                      const velocidadMovimiento = dias > 0 ? totalMoved / dias : 0;
+                      const balanceStatus = balance >= 0 ? 'positive' : 'negative';
+                      
+                      return (
+                        <div key={cs.currency} className="modal-content">
+                          <div className="modal-header">
+                            <span className="badge">{cs.currency}</span>
+                            <h3>{CURRENCY_NAMES[cs.currency] ?? cs.currency}</h3>
+                          </div>
+                          <div className="modal-stats">
+                            <div className="stat-row">
+                              <span className="stat-label">Balance Total</span>
+                              <span className={`stat-value large ${balanceStatus}`}>
+                                {sym} {Math.abs(balance).toLocaleString('es-AR')}
+                              </span>
+                            </div>
+                            <div className="stat-row">
+                              <span className="stat-label">Total Movido</span>
+                              <span className="stat-value large">{sym} {totalMoved.toLocaleString('es-AR')}</span>
+                            </div>
+                            <div className="stat-grid">
+                              <div className="stat-card">
+                                <span className="stat-label">Comprados</span>
+                                <span className="stat-value buy">{sym} {cs.comprado.toLocaleString('es-AR')}</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Vendidos</span>
+                                <span className="stat-value sell">{sym} {cs.vendido.toLocaleString('es-AR')}</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Operaciones</span>
+                                <span className="stat-value">{cs.totalOps}</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Ratio V/C</span>
+                                <span className="stat-value">{ratio.toFixed(2)}x</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Promedio Diario</span>
+                                <span className="stat-value">{sym} {promedioDiario.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Velocidad Movimiento</span>
+                                <span className="stat-value">{sym} {velocidadMovimiento.toLocaleString('es-AR', { maximumFractionDigits: 0 })}/día</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Ratio Entrada/Salida</span>
+                                <span className="stat-value">{ratioEntradaSalida.toFixed(2)}x</span>
+                              </div>
+                              <div className="stat-card">
+                                <span className="stat-label">Período</span>
+                                <span className="stat-value">{dias} {dias === 1 ? 'día' : 'días'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </section>
         )}
       </PullToRefresh>

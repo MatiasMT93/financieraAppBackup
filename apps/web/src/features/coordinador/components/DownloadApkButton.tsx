@@ -24,7 +24,7 @@ export default function DownloadApkButton() {
         </span>
         <div className="coord-download-banner__copy">
           <h2>Descargar APK para cadete</h2>
-          <p>Instalá la app de Plaza App en el dispositivo del cadete.</p>
+          <p>Instalá la app de Fiber Plaza App en el dispositivo del cadete.</p>
         </div>
 
         <button
