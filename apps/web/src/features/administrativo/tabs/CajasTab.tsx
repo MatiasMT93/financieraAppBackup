@@ -1,20 +1,33 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '../../../shared/api/client.ts';
-import { Download } from 'lucide-react';
-import type { AccountingLedger } from '@cambioapp/shared-types';
+import { Download, ChevronDown, ChevronUp } from 'lucide-react';
+import type { AccountingLedger, Operation } from '@cambioapp/shared-types';
 import * as XLSX from 'xlsx';
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   ARS: '$', USD: 'U$', EUR: '€', BRL: 'R$', USDT: '₮',
 };
 
-const CURRENCY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  ARS: { bg: '#FEF3C7', border: '#F59E0B', text: '#B45309' },
-  USD: { bg: '#DBEAFE', border: '#3B82F6', text: '#1E40AF' },
-  EUR: { bg: '#DCFCE7', border: '#10B981', text: '#065F46' },
-  BRL: { bg: '#FCE7F3', border: '#EC4899', text: '#831843' },
-  USDT: { bg: '#F3E8FF', border: '#A855F7', text: '#6B21A8' },
+const CURRENCY_COLORS: Record<string, { border: string; text: string }> = {
+  ARS: { border: '#F59E0B', text: '#F5B942' },
+  USD: { border: '#3B82F6', text: '#6FA8FF' },
+  EUR: { border: '#10B981', text: '#4ADE80' },
+  BRL: { border: '#EC4899', text: '#F472B6' },
+  USDT: { border: '#A855F7', text: '#C084FC' },
+};
+
+type Line = {
+  valorFinal: string | number;
+  concepto: string;
+  operationId: string;
+};
+
+type CurrencyGroup = {
+  currency: string;
+  lines: Line[];
+  saldoFinal?: number;
+  entries?: number;
 };
 
 export default function CajasTab() {
@@ -25,8 +38,11 @@ export default function CajasTab() {
   });
   const [dateTo, setDateTo] = useState(new Date().toISOString().slice(0, 10));
   const [selectedCurrency, setSelectedCurrency] = useState<string>('ARS');
+  const [tooltipOpen, setTooltipOpen] = useState<'promedio' | 'ratio' | null>(null);
+  const [expandedLines, setExpandedLines] = useState<Set<string>>(new Set());
+  const [operationDetails, setOperationDetails] = useState<Record<string, Operation>>({});
+  const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
 
-  // Fetch ledgers for all dates in range
   const dateRange = useMemo(() => {
     const dates = [];
     const current = new Date(dateFrom);
@@ -50,10 +66,26 @@ export default function CajasTab() {
     },
   });
 
-  // Aggregate data
+  // ============================================================
+  // AGREGACIÓN
+  // ============================================================
   const aggregated = useMemo(() => {
-    if (!ledgers || ledgers.length === 0)
-      return { byCurrency: {} as Record<string, { entries: number; entradas: number; salidas: number; saldo: number; dateCount: number }>, dateCount: 0 };
+    if (!ledgers || ledgers.length === 0) {
+      return {
+        byCurrency: {} as Record<
+          string,
+          {
+            entries: number;
+            entradas: number;
+            salidas: number;
+            balanceNeto: number;
+            sumaFlujoDiario: number;
+            dateCount: number;
+          }
+        >,
+        dateCount: 0,
+      };
+    }
 
     const byCurrency: Record<
       string,
@@ -61,38 +93,49 @@ export default function CajasTab() {
         entries: number;
         entradas: number;
         salidas: number;
-        saldo: number;
+        balanceNeto: number;
+        sumaFlujoDiario: number;
         dateCount: number;
       }
     > = {};
 
     ledgers.forEach(ledger => {
-      ledger.byCurrency.forEach(group => {
-        if (!byCurrency[group.currency]) {
-          byCurrency[group.currency] = {
+      const groups = ledger.byCurrency as CurrencyGroup[];
+      groups.forEach((group: CurrencyGroup) => {
+        const curr = group.currency;
+        if (!byCurrency[curr]) {
+          byCurrency[curr] = {
             entries: 0,
             entradas: 0,
             salidas: 0,
-            saldo: 0,
+            balanceNeto: 0,
+            sumaFlujoDiario: 0,
             dateCount: 0,
           };
         }
 
-        byCurrency[group.currency].entries += group.entries;
-        byCurrency[group.currency].saldo += Number(group.saldoFinal);
-        byCurrency[group.currency].dateCount++;
+        byCurrency[curr].entries += group.lines.length;
+        byCurrency[curr].dateCount++;
 
-        // Calcular entradas vs salidas basado en los tipos
-        group.lines.forEach(line => {
+        let entradasDiarias = 0;
+        let salidasDiarias = 0;
+        group.lines.forEach((line: Line) => {
           const valor = Number(line.valorFinal);
-          // Retiro = entra dinero a la caja. Entrega = sale dinero de la caja.
-          if (line.concepto === 'Retiro' || line.concepto.toLowerCase().includes('retiro')) {
-            byCurrency[group.currency].entradas += valor;
+          if (line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega')) {
+            byCurrency[curr].entradas += valor;
+            entradasDiarias += valor;
           } else {
-            byCurrency[group.currency].salidas += valor;
+            byCurrency[curr].salidas += valor;
+            salidasDiarias += valor;
           }
         });
+
+        byCurrency[curr].sumaFlujoDiario += (entradasDiarias - salidasDiarias);
       });
+    });
+
+    Object.keys(byCurrency).forEach(curr => {
+      byCurrency[curr].balanceNeto = byCurrency[curr].entradas - byCurrency[curr].salidas;
     });
 
     return {
@@ -114,54 +157,42 @@ export default function CajasTab() {
   }, [dateTo]);
 
   const currencies = Object.keys(aggregated.byCurrency).sort();
-  const filteredCurrencies = selectedCurrency ? [selectedCurrency] : currencies;
 
-  const maxValue = Math.max(
-    ...filteredCurrencies.map(c => Math.abs((aggregated.byCurrency[c]?.saldo as number) || 0))
-  );
-
-  // Función para generar y descargar CSV
+  // ============================================================
+  // EXPORTACIÓN
+  // ============================================================
   const handleExportCSV = () => {
     if (!ledgers || ledgers.length === 0) return;
 
-    const symbol = CURRENCY_SYMBOLS[selectedCurrency];
-    const data = (aggregated.byCurrency[selectedCurrency] as any);
+    const data = aggregated.byCurrency[selectedCurrency];
+    if (!data) return;
 
-    // Datos de asientos
     const detallRows: (string | number)[][] = [];
     let totalEntradas = 0;
     let totalSalidas = 0;
 
-    detallRows.push(['Fecha', 'ID Operación', 'Concepto', 'Tipo', 'Valor Final']);
+    detallRows.push(['Fecha', 'ID Operación', 'Concepto', 'Monto']);
 
     ledgers.forEach(ledger => {
-      const ledgerData = ledger as any;
-      if (ledgerData.byCurrency && ledgerData.byCurrency[selectedCurrency]) {
-        const currencyData = ledgerData.byCurrency[selectedCurrency];
-        if (currencyData.lines && Array.isArray(currencyData.lines)) {
-          currencyData.lines.forEach((line: any) => {
-            const valorFinal = Number(line.valorFinal);
-            const isEntrada = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
+      const groups = ledger.byCurrency as CurrencyGroup[];
+      const currencyData = groups.find((g: CurrencyGroup) => g.currency === selectedCurrency);
+      if (currencyData) {
+        currencyData.lines.forEach((line: Line) => {
+          const valor = Number(line.valorFinal);
+          const isEntrada = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
+          if (isEntrada) totalEntradas += valor;
+          else totalSalidas += valor;
 
-            if (isEntrada) {
-              totalEntradas += valorFinal;
-            } else {
-              totalSalidas += valorFinal;
-            }
-
-            detallRows.push([
-              ledgerData.date,
-              line.operationId,
-              line.concepto,
-              line.concepto,
-              valorFinal,
-            ]);
-          });
-        }
+          detallRows.push([
+            ledger.date,
+            line.operationId,
+            line.concepto,
+            valor,
+          ]);
+        });
       }
     });
 
-    // Hoja 1: Resumen
     const resumenData = [
       ['REPORTE DE CAJAS - ' + selectedCurrency],
       ['Período: ' + dateFrom + ' al ' + dateTo],
@@ -170,39 +201,41 @@ export default function CajasTab() {
       ['Total Entradas', totalEntradas],
       ['Total Salidas', totalSalidas],
       ['Balance Neto', totalEntradas - totalSalidas],
-      ['Promedio Diario', Math.round(data.saldo / aggregated.dateCount)],
+      ['Promedio Diario (flujo neto)', Math.round(data.sumaFlujoDiario / data.dateCount)],
       ['Ratio Entrada/Salida', (totalEntradas / Math.max(totalSalidas, 1)).toFixed(2)],
-      ['Días analizados', aggregated.dateCount],
+      ['Días analizados', data.dateCount],
     ];
 
-    // Crear workbook
     const wb = XLSX.utils.book_new();
     const ws1 = XLSX.utils.aoa_to_sheet(resumenData);
     const ws2 = XLSX.utils.aoa_to_sheet(detallRows);
-
-    // Establecer ancho de columnas
     ws1['!cols'] = [{ wch: 30 }, { wch: 20 }];
-    ws2['!cols'] = [{ wch: 12 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
-
+    ws2['!cols'] = [{ wch: 12 }, { wch: 18 }, { wch: 15 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
     XLSX.utils.book_append_sheet(wb, ws2, 'Detalle');
-
-    // Escribir archivo
     XLSX.writeFile(wb, `Cajas_${selectedCurrency}_${dateFrom}_${dateTo}.xlsx`);
   };
 
-  // Recolectar datos por fecha para gráfico
+  // ============================================================
+  // DATOS PARA GRÁFICO
+  // ============================================================
   const dataByDate = useMemo(() => {
     if (!ledgers) return [];
-    const byDateMap = new Map<string, { entradas: number; salidas: number }>();
-    
+
+    const ledgerMap = new Map();
     ledgers.forEach(ledger => {
-      const ledgerData = ledger as any;
-      if (ledgerData.byCurrency && ledgerData.byCurrency[selectedCurrency]) {
-        const currencyData = ledgerData.byCurrency[selectedCurrency];
-        if (currencyData.lines && Array.isArray(currencyData.lines)) {
-          let entradas = 0, salidas = 0;
-          currencyData.lines.forEach((line: any) => {
+      ledgerMap.set(ledger.date, ledger);
+    });
+
+    return dateRange.map(date => {
+      const ledger = ledgerMap.get(date);
+      let entradas = 0,
+        salidas = 0;
+      if (ledger) {
+        const groups = ledger.byCurrency as CurrencyGroup[];
+        const currencyData = groups.find((g: CurrencyGroup) => g.currency === selectedCurrency);
+        if (currencyData) {
+          currencyData.lines.forEach((line: Line) => {
             const valor = Number(line.valorFinal);
             if (line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega')) {
               entradas += valor;
@@ -210,279 +243,545 @@ export default function CajasTab() {
               salidas += valor;
             }
           });
-          byDateMap.set(ledgerData.date, { entradas, salidas });
         }
       }
+      const [y, m, d] = date.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      const displayDate = dateObj.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+      return { date: displayDate, entradas, salidas };
     });
-    
-    return Array.from(byDateMap.entries())
-      .map(([date, data]) => ({
-        date: new Date(date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }),
-        ...data,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [ledgers, selectedCurrency]);
+  }, [ledgers, selectedCurrency, dateRange]);
 
   const maxDailyValue = Math.max(
     ...dataByDate.map(d => Math.max(d.entradas, d.salidas))
   ) || 1;
 
+  // ============================================================
+  // HELPERS
+  // ============================================================
+  const formatCurrency = (value: number) => {
+    return `${CURRENCY_SYMBOLS[selectedCurrency]} ${Math.abs(value).toLocaleString('es-AR')}`;
+  };
+
+  const formatSignedCurrency = (value: number) => {
+    const sign = value > 0 ? '+' : '';
+    return `${sign}${formatCurrency(value)}`;
+  };
+
+  const getPromedioTooltip = () => {
+    const data = aggregated.byCurrency[selectedCurrency];
+    if (!data) return '';
+    const suma = data.sumaFlujoDiario;
+    const dias = data.dateCount;
+    const promedio = Math.round(suma / dias);
+    return `Se calcula como: Suma del flujo diario (entradas - salidas) (${formatSignedCurrency(suma)}) / Días con movimientos (${dias}) = ${formatSignedCurrency(promedio)}\nNota: Refleja el flujo neto promedio por día.`;
+  };
+
+  const getRatioTooltip = () => {
+    const data = aggregated.byCurrency[selectedCurrency];
+    if (!data) return '';
+    const ent = data.entradas;
+    const sal = data.salidas;
+    const ratio = (ent / Math.max(sal, 1)).toFixed(2);
+    return `Se calcula como: Entradas totales (${formatCurrency(ent)}) / Salidas totales (${formatCurrency(sal)}) = ${ratio}x\nIndica cuánto ingresa por cada peso que sale.`;
+  };
+
+  // ============================================================
+  // FUNCIÓN PARA OBTENER DETALLES DE LA OPERACIÓN
+  // ============================================================
+  const fetchOperationDetails = async (operationId: string) => {
+    if (operationDetails[operationId] || loadingDetails[operationId]) return;
+
+    setLoadingDetails(prev => ({ ...prev, [operationId]: true }));
+    try {
+      console.log(`🔍 Cargando detalles de operación: ${operationId}`);
+      const data = await apiGet<Operation>(`/operations/${operationId}`);
+      console.log(`✅ Detalles recibidos:`, data);
+      setOperationDetails(prev => ({ ...prev, [operationId]: data }));
+    } catch (error) {
+      console.error(`❌ Error al cargar detalles de la operación ${operationId}:`, error);
+    } finally {
+      setLoadingDetails(prev => ({ ...prev, [operationId]: false }));
+    }
+  };
+
+  // ============================================================
+  // TOGGLE EXPAND
+  // ============================================================
+  const toggleExpand = async (lineId: string, operationId: string) => {
+    const isExpanded = expandedLines.has(lineId);
+
+    if (!isExpanded) {
+      await fetchOperationDetails(operationId);
+    }
+
+    setExpandedLines(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(lineId)) {
+        newSet.delete(lineId);
+      } else {
+        newSet.add(lineId);
+      }
+      return newSet;
+    });
+  };
+
   if (isLoading) {
-    return (
-      <section className="p-4 space-y-4">
-        <p className="text-sm text-gray-500">Cargando datos...</p>
-      </section>
-    );
+    return <p style={{ color: '#c0c6d0' }}>Cargando…</p>;
   }
 
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
-    <section className="p-6 space-y-6 text-gray-200" style={{ color: '#111827' }}>
-      {/* Encabezado con controles */}
-      <div className="flex items-center justify-between">
+    <div style={{ width: '100%', maxWidth: 1400, margin: '0 auto', padding: '0 20px' }}>
+      {/* HEADER */}
+      <section style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-200">Cajas</h1>
-          <p className="text-sm text-gray-400 mt-1">Panel de análisis de flujo de efectivo</p>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#e6e9ef' }}>Cajas</h1>
+          <p style={{ margin: '4px 0 0', color: '#8b93a3', fontSize: 13 }}>Panel de análisis de flujo de efectivo</p>
         </div>
-        <div className="flex gap-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-200 uppercase">Desde</label>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#8b93a3', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Desde</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium"
+              style={{ padding: '8px 12px', fontSize: 13, fontWeight: 500, background: '#1e2128', border: '1px solid #2c303a', borderRadius: 8, color: '#e6e9ef' }}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-200 uppercase">Hasta</label>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#8b93a3', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>Hasta</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium"
+              style={{ padding: '8px 12px', fontSize: 13, fontWeight: 500, background: '#1e2128', border: '1px solid #2c303a', borderRadius: 8, color: '#e6e9ef' }}
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Encabezado de período */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between">
+      {/* BARRA DE PERÍODO */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e2128', borderRadius: 12, padding: '16px 20px', marginBottom: 24 }}>
         <div>
-          <p className="text-sm text-gray-600 font-semibold uppercase">Período: {formattedDateFrom} — {formattedDateTo}</p>
-          <p className="text-xs text-gray-500 mt-1">{aggregated.dateCount} {aggregated.dateCount === 1 ? 'día' : 'días'}</p>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#c1c7d0', textTransform: 'uppercase' }}>
+            Período: {formattedDateFrom} — {formattedDateTo}
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: '#8b93a3' }}>
+            {aggregated.dateCount} {aggregated.dateCount === 1 ? 'día' : 'días'}
+          </p>
         </div>
-        {ledgers && ledgers.length > 0 && selectedCurrency && (aggregated.byCurrency[selectedCurrency] as any)?.entries > 0 && (
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 transition-colors font-semibold text-sm"
-          >
-            <Download size={18} />
-            Exportar a Sheets
+        {ledgers && ledgers.length > 0 && selectedCurrency && aggregated.byCurrency[selectedCurrency]?.entries > 0 && (
+          <button type="button" onClick={handleExportCSV} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0b90b', color: '#1e2128', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, cursor: 'pointer' }}>
+            <Download size={16} /> Exportar a Sheets
           </button>
         )}
       </div>
 
-      {/* Selector de monedas */}
+      {/* BOTONERA DE MONEDAS */}
       {currencies.length > 0 && (
-        <>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {currencies.map(curr => {
-              const data = (aggregated.byCurrency[curr] as any);
-              const symbol = CURRENCY_SYMBOLS[curr];
-              const isSelected = selectedCurrency === curr;
-              const borderColor = CURRENCY_COLORS[curr].border;
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+          {currencies.map(curr => {
+            const data = aggregated.byCurrency[curr];
+            const symbol = CURRENCY_SYMBOLS[curr];
+            const isSelected = selectedCurrency === curr;
+            const colors = CURRENCY_COLORS[curr];
+            const balance = data.balanceNeto;
+            const sign = balance > 0 ? '+' : '';
+            const color = balance > 0 ? colors.text : '#ff8a7a';
 
-              return (
+            return (
+              <button
+                key={curr}
+                type="button"
+                onClick={() => setSelectedCurrency(curr)}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 8,
+                  background: isSelected ? '#2c303a' : 'transparent',
+                  border: isSelected ? `2px solid ${colors.border}` : '2px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{ fontWeight: 700, fontSize: 16, color }}>
+                  {sign}{symbol} {Math.abs(balance).toLocaleString('es-AR')}
+                </span>
+                <span style={{ fontSize: 12, color: '#8b93a3' }}>{curr} • {data.entries} asientos</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* RESUMEN PRINCIPAL */}
+      {selectedCurrency && aggregated.byCurrency[selectedCurrency] && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, background: '#1e2128', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+          {(() => {
+            const data = aggregated.byCurrency[selectedCurrency];
+            const balance = data.balanceNeto;
+            const sign = balance > 0 ? '+' : '';
+            const color = balance > 0 ? CURRENCY_COLORS[selectedCurrency].text : '#ff8a7a';
+            return (
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#8b93a3', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 8px' }}>
+                  Balance Neto
+                </p>
+                <p style={{ fontSize: 38, fontWeight: 700, margin: 0, color }}>
+                  {sign}{CURRENCY_SYMBOLS[selectedCurrency]} {Math.abs(balance).toLocaleString('es-AR')}
+                </p>
+                <p style={{ fontSize: 12, color: '#8b93a3', margin: '8px 0 0' }}>Flujo neto del período</p>
+              </div>
+            );
+          })()}
+
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16, position: 'relative' }}>
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#8b93a3', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 4px' }}>
+                  Promedio Diario
+                </p>
                 <button
-                  key={curr}
-                  onClick={() => setSelectedCurrency(curr)}
-                  className={`flex-shrink-0 rounded-lg px-4 py-3 transition-all font-medium text-sm ${
-                    isSelected
-                      ? 'bg-white border-2 shadow-lg'
-                      : 'bg-white border border-gray-200 hover:border-gray-300'
-                  }`}
-                  style={{
-                    borderColor: isSelected ? borderColor : undefined,
-                  }}
+                  type="button"
+                  onClick={() => setTooltipOpen(tooltipOpen === 'promedio' ? null : 'promedio')}
+                  style={{ background: 'none', border: 'none', color: '#8b93a3', cursor: 'pointer', fontSize: 14, padding: 0 }}
                 >
-                  <div className="font-bold text-base">{symbol} {data.saldo.toLocaleString('es-AR')}</div>
-                  <div className="text-xs text-gray-500">{curr} • {data.entries} asientos</div>
+                  ⓘ
                 </button>
+              </div>
+              <p style={{ fontSize: 22, fontWeight: 700, color: '#e6e9ef', margin: 0 }}>
+                {(() => {
+                  const data = aggregated.byCurrency[selectedCurrency];
+                  const prom = Math.round(data.sumaFlujoDiario / data.dateCount);
+                  const sign = prom > 0 ? '+' : '';
+                  return `${sign}${CURRENCY_SYMBOLS[selectedCurrency]} ${Math.abs(prom).toLocaleString('es-AR')}`;
+                })()}
+              </p>
+              {tooltipOpen === 'promedio' && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  left: 0,
+                  background: '#2c303a',
+                  border: '1px solid #3a3f4a',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  color: '#e6e9ef',
+                  fontSize: 13,
+                  maxWidth: 320,
+                  zIndex: 1000,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  whiteSpace: 'pre-line',
+                }}>
+                  {getPromedioTooltip().split('\n').map((line, i) => (
+                    <p key={i} style={{ margin: i === 0 ? 0 : '8px 0 0', color: i === 0 ? '#e6e9ef' : '#c1c7d0' }}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#8b93a3', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 4px' }}>
+                  Ratio E/S
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setTooltipOpen(tooltipOpen === 'ratio' ? null : 'ratio')}
+                  style={{ background: 'none', border: 'none', color: '#8b93a3', cursor: 'pointer', fontSize: 14, padding: 0 }}
+                >
+                  ⓘ
+                </button>
+              </div>
+              <p style={{ fontSize: 22, fontWeight: 700, color: '#e6e9ef', margin: 0 }}>
+                {(aggregated.byCurrency[selectedCurrency].entradas / Math.max(aggregated.byCurrency[selectedCurrency].salidas, 1)).toFixed(2)}x
+              </p>
+              {tooltipOpen === 'ratio' && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  left: 0,
+                  background: '#2c303a',
+                  border: '1px solid #3a3f4a',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  color: '#e6e9ef',
+                  fontSize: 13,
+                  maxWidth: 320,
+                  zIndex: 1000,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  whiteSpace: 'pre-line',
+                }}>
+                  {getRatioTooltip().split('\n').map((line, i) => (
+                    <p key={i} style={{ margin: i === 0 ? 0 : '8px 0 0', color: i === 0 ? '#e6e9ef' : '#c1c7d0' }}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ borderRadius: 8, background: 'rgba(74, 222, 128, 0.08)', border: '1px solid rgba(74, 222, 128, 0.3)', padding: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#4ADE80', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 4px' }}>
+                Entradas
+              </p>
+              <p style={{ fontSize: 24, fontWeight: 700, color: '#4ADE80', margin: 0 }}>
+                +{CURRENCY_SYMBOLS[selectedCurrency]} {aggregated.byCurrency[selectedCurrency].entradas.toLocaleString('es-AR')}
+              </p>
+              <p style={{ fontSize: 11, color: '#8bd9a5', margin: '4px 0 0' }}>Dinero recibido (Entregas)</p>
+            </div>
+            <div style={{ borderRadius: 8, background: 'rgba(255, 138, 122, 0.08)', border: '1px solid rgba(255, 138, 122, 0.3)', padding: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#ff8a7a', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 4px' }}>
+                Salidas
+              </p>
+              <p style={{ fontSize: 24, fontWeight: 700, color: '#ff8a7a', margin: 0 }}>
+                -{CURRENCY_SYMBOLS[selectedCurrency]} {aggregated.byCurrency[selectedCurrency].salidas.toLocaleString('es-AR')}
+              </p>
+              <p style={{ fontSize: 11, color: '#d9a89e', margin: '4px 0 0' }}>Dinero entregado (Retiros)</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GRÁFICO DIARIO */}
+      {selectedCurrency && dataByDate.length > 0 && (
+        <div style={{ background: '#1e2128', borderRadius: 12, padding: '16px 20px', marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#e6e9ef', margin: '0 0 16px' }}>Flujo de Efectivo Diario</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {dataByDate.map((day, idx) => {
+              const entradasPercent = (day.entradas / maxDailyValue) * 100;
+              const salidasPercent = (day.salidas / maxDailyValue) * 100;
+              return (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 52, textAlign: 'right', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#c1c7d0' }}>{day.date}</span>
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 3, height: 20 }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <div
+                        style={{
+                          height: 12,
+                          width: `${Math.max(entradasPercent, 0.5)}%`,
+                          minWidth: day.entradas > 0 ? 4 : 0,
+                          background: 'linear-gradient(90deg, #10B981, #4ADE80)',
+                          borderRadius: 2,
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                      <span style={{ fontSize: 10, color: '#4ADE80', fontWeight: 600, marginLeft: 2 }}>
+                        {day.entradas > 0 ? `${CURRENCY_SYMBOLS[selectedCurrency]}${(day.entradas/1000).toFixed(1)}k` : ''}
+                      </span>
+                    </div>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <div
+                        style={{
+                          height: 12,
+                          width: `${Math.max(salidasPercent, 0.5)}%`,
+                          minWidth: day.salidas > 0 ? 4 : 0,
+                          background: 'linear-gradient(90deg, #EF4444, #ff8a7a)',
+                          borderRadius: 2,
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                      <span style={{ fontSize: 10, color: '#ff8a7a', fontWeight: 600, marginLeft: 2 }}>
+                        {day.salidas > 0 ? `${CURRENCY_SYMBOLS[selectedCurrency]}${(day.salidas/1000).toFixed(1)}k` : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
-
-          {/* HERO SECTION - Balance grande estilo Binance */}
-          {selectedCurrency && (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-              <div className="grid grid-cols-3 gap-8">
-                {/* Columna 1: Balance */}
-                <div>
-                  <p className="text-sm text-gray-600 font-medium uppercase tracking-wide mb-2">Balance Total</p>
-                  <p className="text-4xl font-bold" style={{ color: CURRENCY_COLORS[selectedCurrency].text }}>
-                    {CURRENCY_SYMBOLS[selectedCurrency]}{' '}
-                    {((aggregated.byCurrency[selectedCurrency] as any)?.saldo || 0).toLocaleString('es-AR')}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">Período: {aggregated.dateCount} días</p>
-                </div>
-
-                {/* Columna 2: Promedio y Ratio */}
-                <div className="flex flex-col justify-center">
-                  <div className="mb-6">
-                    <p className="text-sm text-gray-600 font-medium uppercase tracking-wide mb-1">Promedio Diario</p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {CURRENCY_SYMBOLS[selectedCurrency]}{' '}
-                      {Math.round(((aggregated.byCurrency[selectedCurrency] as any)?.saldo || 0) / aggregated.dateCount).toLocaleString('es-AR')}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Tu saldo promedio cada día</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium uppercase tracking-wide mb-1">Ratio E/S</p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {((aggregated.byCurrency[selectedCurrency] as any)?.entradas || 0 > 0
-                        ? (((aggregated.byCurrency[selectedCurrency] as any)?.entradas || 0) / (Math.max((aggregated.byCurrency[selectedCurrency] as any)?.salidas || 1, 1))).toFixed(2)
-                        : '0')}
-                      x
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Por cada peso que sale, entra...</p>
-                  </div>
-                </div>
-
-                {/* Columna 3: Entradas y Salidas */}
-                <div className="space-y-4">
-                  <div className="rounded-lg bg-green-50 border border-green-200 p-4">
-                    <p className="text-xs text-green-700 font-semibold uppercase tracking-wide mb-1">ENTRADAS</p>
-                    <p className="text-2xl font-bold text-green-700">
-                      +{CURRENCY_SYMBOLS[selectedCurrency]}{' '}
-                      {((aggregated.byCurrency[selectedCurrency] as any)?.entradas || 0).toLocaleString('es-AR')}
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">Dinero recibido</p>
-                  </div>
-                  <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-                    <p className="text-xs text-red-700 font-semibold uppercase tracking-wide mb-1">SALIDAS</p>
-                    <p className="text-2xl font-bold text-red-700">
-                      -{CURRENCY_SYMBOLS[selectedCurrency]}{' '}
-                      {((aggregated.byCurrency[selectedCurrency] as any)?.salidas || 0).toLocaleString('es-AR')}
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">Dinero entregado</p>
-                  </div>
-                </div>
-              </div>
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: '#4ADE80' }} />
+              <span style={{ fontSize: 11, color: '#c1c7d0' }}>Entradas</span>
             </div>
-          )}
-
-          {/* GRÁFICO: Entradas vs Salidas por día */}
-          {selectedCurrency && dataByDate.length > 0 && (
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-white mb-6">Flujo de Efectivo Diario</h3>
-              <div className="space-y-4">
-                {dataByDate.map((day, idx) => (
-                  <div key={idx} className="flex items-end gap-4">
-                    <div className="w-16 text-right">
-                      <p className="text-xs font-semibold text-gray-300">{day.date}</p>
-                    </div>
-                    <div className="flex-1 flex items-end gap-2 h-16">
-                      {/* Barra Entradas (Verde) */}
-                      <div className="flex-1 flex flex-col items-center">
-                        <div
-                          className="w-full bg-gradient-to-t from-green-500 to-green-400 rounded-t-lg transition-all hover:shadow-lg"
-                          style={{
-                            height: `${(day.entradas / maxDailyValue) * 100}%`,
-                            minHeight: day.entradas > 0 ? '4px' : '0px',
-                          }}
-                          title={`Entradas: ${CURRENCY_SYMBOLS[selectedCurrency]}${day.entradas.toLocaleString('es-AR')}`}
-                        />
-                        <p className="text-xs text-green-300 font-semibold mt-2">
-                          +{day.entradas > 0 ? CURRENCY_SYMBOLS[selectedCurrency] + (day.entradas / 1000).toFixed(1) + 'k' : '0'}
-                        </p>
-                      </div>
-                      {/* Barra Salidas (Rojo) */}
-                      <div className="flex-1 flex flex-col items-center">
-                        <div
-                          className="w-full bg-gradient-to-t from-red-500 to-red-400 rounded-t-lg transition-all hover:shadow-lg"
-                          style={{
-                            height: `${(day.salidas / maxDailyValue) * 100}%`,
-                            minHeight: day.salidas > 0 ? '4px' : '0px',
-                          }}
-                          title={`Salidas: ${CURRENCY_SYMBOLS[selectedCurrency]}${day.salidas.toLocaleString('es-AR')}`}
-                        />
-                        <p className="text-xs text-red-300 font-semibold mt-2">
-                          -{day.salidas > 0 ? CURRENCY_SYMBOLS[selectedCurrency] + (day.salidas / 1000).toFixed(1) + 'k' : '0'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 pt-4 border-t border-gray-500 flex gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                  <span className="text-sm text-gray-300">Entradas (Entregas)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <span className="text-sm text-gray-300">Salidas (Retiros)</span>
-                </div>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: '#ff8a7a' }} />
+              <span style={{ fontSize: 11, color: '#c1c7d0' }}>Salidas</span>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          {/* Detalle de asientos */}
-          {ledgers && ledgers.length > 0 && selectedCurrency && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Detalle de Asientos</h3>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {ledgers.map(ledger => {
-                  const currencyGroup = ledger.byCurrency.find(g => g.currency === selectedCurrency);
-                  if (!currencyGroup || currencyGroup.lines.length === 0) return null;
+      {/* ============================================================ */}
+      {/* DETALLE DE ASIENTOS CON EXPANSIÓN Y CARGA DE DATOS */}
+      {/* ============================================================ */}
+      {ledgers && ledgers.length > 0 && selectedCurrency && aggregated.byCurrency[selectedCurrency] && (
+        <div style={{ background: '#1e2128', borderRadius: 12, padding: 24 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: '#e6e9ef', margin: '0 0 24px' }}>Detalle de Asientos</h3>
+          <div style={{ maxHeight: 480, overflowY: 'auto' }}>
+            {ledgers.map(ledger => {
+              const groups = ledger.byCurrency as CurrencyGroup[];
+              const currencyGroup = groups.find((g: CurrencyGroup) => g.currency === selectedCurrency);
+              if (!currencyGroup || currencyGroup.lines.length === 0) return null;
 
-                  const [y, m, d] = ledger.date.split('-').map(Number);
-                  const dateObj = new Date(y, m - 1, d);
-                  const dateStr = dateObj.toLocaleDateString('es-AR', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                  });
+              const [y, m, d] = ledger.date.split('-').map(Number);
+              const dateObj = new Date(y, m - 1, d);
+              const dateStr = dateObj.toLocaleDateString('es-AR', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+              });
 
-                  return (
-                    <div key={ledger.date} className="rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                      <p className="text-sm font-bold text-gray-900 mb-3">{dateStr}</p>
-                      <div className="space-y-2">
-                        {currencyGroup.lines.map((line, idx) => (
-                          <div key={idx} className="flex justify-between items-center text-sm py-2 px-2 hover:bg-gray-50 rounded transition-colors">
-                            <div className="flex items-center gap-2 flex-1">
+              return (
+                <div key={ledger.date} style={{ background: '#2c303a', borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#e6e9ef', margin: '0 0 12px' }}>{dateStr}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {currencyGroup.lines.map((line: Line, idx: number) => {
+                      const isEntrada = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
+                      const lineId = `${ledger.date}-${line.operationId}-${idx}`;
+                      const isExpanded = expandedLines.has(lineId);
+                      const opDetails = operationDetails[line.operationId];
+                      const isLoadingDetails = loadingDetails[line.operationId];
+
+                      return (
+                        <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {/* FILA PRINCIPAL */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: 13,
+                              padding: '8px 12px',
+                              borderRadius: 6,
+                              background: 'rgba(255,255,255,0.03)',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => toggleExpand(lineId, line.operationId)}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
                               <div
-                                className="w-2 h-2 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: line.concepto === 'Entrega' ? '#10B981' : '#EF4444' }}
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  flexShrink: 0,
+                                  backgroundColor: isEntrada ? '#4ADE80' : '#ff8a7a',
+                                }}
                               />
                               <div>
-                                <p className="font-medium text-gray-800">#{line.operationId.slice(-4).toUpperCase()}</p>
-                                <p className="text-xs text-gray-500">{line.concepto}</p>
+                                <p style={{ fontWeight: 600, color: '#e6e9ef', margin: 0 }}>#{line.operationId.slice(-3).toUpperCase()}</p>
+                                <p style={{ fontSize: 12, color: '#8b93a3', margin: 0 }}>{line.concepto}</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-mono font-semibold text-gray-900">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <p style={{ fontFamily: 'monospace', fontWeight: 600, color: '#e6e9ef', margin: 0 }}>
+                                {isEntrada ? '+' : '-'}
                                 {CURRENCY_SYMBOLS[selectedCurrency]} {Number(line.valorFinal).toLocaleString('es-AR')}
                               </p>
+                              <button
+                                type="button"
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#8b93a3',
+                                  cursor: 'pointer',
+                                  padding: '4px 8px',
+                                  borderRadius: 4,
+                                  fontSize: 12,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleExpand(lineId, line.operationId);
+                                }}
+                              >
+                                {isExpanded ? 'Ver menos' : 'Ver más'}
+                                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </button>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </>
+
+                          {/* DETALLE EXPANDIDO (con carga dinámica) */}
+                          {isExpanded && (
+                            <div
+                              style={{
+                                marginLeft: 32,
+                                padding: '12px 16px',
+                                background: 'rgba(255,255,255,0.05)',
+                                borderRadius: 6,
+                                borderLeft: '2px solid #3a3f4a',
+                                fontSize: 13,
+                                color: '#c1c7d0',
+                              }}
+                            >
+                              {isLoadingDetails ? (
+                                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                                  <span>Cargando detalles...</span>
+                                </div>
+                              ) : opDetails ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px' }}>
+                                  <div><strong>Tipo:</strong> {opDetails.tipo}</div>
+                                  <div>
+                                    <strong>Monto:</strong> {CURRENCY_SYMBOLS[opDetails.moneda]} {Number(opDetails.monto).toLocaleString('es-AR')}
+                                  </div>
+                                  <div><strong>Moneda:</strong> {opDetails.moneda}</div>
+                                  <div>
+                                    <strong>Modalidad:</strong> {opDetails.modalidad === 'domicilio' ? 'Calle' : opDetails.modalidad}
+                                  </div>
+                                  {opDetails.direccion && (
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                      <strong>Dirección:</strong> {opDetails.direccion}
+                                      <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opDetails.direccion)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: '#3b82f6', marginLeft: 8, textDecoration: 'underline', fontSize: 12 }}
+                                      >
+                                        Ver en Google Maps
+                                      </a>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <strong>Fecha / Hora:</strong> {new Date(opDetails.createdAt).toLocaleString('es-AR')}
+                                  </div>
+                                  <div><strong>Contacto:</strong> {opDetails.contacto}</div>
+                                  <div><strong>Teléfono:</strong> {opDetails.telefono || 'No disponible'}</div>
+                                  <div><strong>Cadete:</strong> {opDetails.cadete?.nombre || 'Sin asignar'}</div>
+                                  <div><strong>Estado:</strong> {opDetails.status}</div>
+                                </div>
+                              ) : (
+                                <div style={{ textAlign: 'center', padding: '20px 0', color: '#8b93a3' }}>
+                                  No se pudieron cargar los detalles
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {ledgers && ledgers.length === 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-          <p className="text-lg text-gray-600 font-medium">No hay datos para el período seleccionado</p>
-          <p className="text-sm text-gray-500 mt-2">Intenta con otro período o crea nuevas operaciones</p>
+        <div style={{ background: '#1e2128', borderRadius: 12, padding: '40px 20px', textAlign: 'center' }}>
+          <p style={{ margin: 0, color: '#c0c6d0', fontSize: 15, fontWeight: 500 }}>
+            No hay datos para el período seleccionado
+          </p>
+          <p style={{ margin: '8px 0 0', color: '#8b93a3', fontSize: 13 }}>
+            Intenta con otro período o crea nuevas operaciones
+          </p>
         </div>
       )}
-    </section>
+    </div>
   );
 }

@@ -349,15 +349,15 @@ export async function getCashInStreet() {
   });
 }
 
+// ================================================================
+// FUNCIÓN CORREGIDA: getDailyAccountingLedger
+// ================================================================
 export async function getDailyAccountingLedger(date: string) {
   const start = new Date(`${date}T00:00:00-03:00`);
   const end = new Date(`${date}T23:59:59.999-03:00`);
 
+  // Ahora traemos TODAS las columnas necesarias y las relaciones con cadete e incidents
   const rows = await db.query.operations.findMany({
-    // El libro diario debe reflejar la actividad del día. Esto incluye:
-    // 1. Operaciones CREADAS en el día (aunque sigan pendientes).
-    // 2. Operaciones CERRADAS en el día (que pudieron ser creadas antes).
-    // Esto asegura que tanto las nuevas entradas como los cierres de caja se vean.
     where: or(
       and(gte(operations.createdAt, start), lte(operations.createdAt, end)),
       and(
@@ -374,6 +374,26 @@ export async function getDailyAccountingLedger(date: string) {
       moneda2: true,
       monto2: true,
       createdAt: true,
+      // AÑADIR CAMPOS FALTANTES
+      status: true,
+      contacto: true,
+      telefono: true,
+      cadeteId: true,
+    },
+    with: {
+      cadete: {
+        columns: {
+          nombre: true,
+          celular: true,
+        },
+      },
+      incidents: {
+        columns: {
+          descripcion: true,
+        },
+        where: (incidents, { eq }) => eq(incidents.isResolved, false),
+        limit: 1,
+      },
     },
   });
 
@@ -399,6 +419,13 @@ export async function getDailyAccountingLedger(date: string) {
       moneda2: row.moneda2 ?? undefined,
       monto2: row.monto2 ?? undefined,
       createdAt: row.createdAt.toISOString(),
+      // NUEVOS CAMPOS PARA PASAR AL ACCOUNTING LEDGER
+      status: row.status,
+      contacto: row.contacto,
+      telefono: row.telefono,
+      cadeteNombre: row.cadete?.nombre ?? null,
+      cadeteCelular: row.cadete?.celular ?? null,
+      alerta: row.incidents?.length > 0 ? row.incidents[0].descripcion : null,
     })),
     correctionsByOperationId,
     date,

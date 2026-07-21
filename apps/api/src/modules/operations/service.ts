@@ -7,6 +7,7 @@ import * as repo from './repository.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { broadcast, emitToUser } from '../../realtime/socket.js';
+import * as repository from './repository.js';
 
 export async function listOperations(filters: {
   status?: OperationStatus | OperationStatus[];
@@ -21,7 +22,9 @@ export async function getOperation(id: string) {
   if (!op) throw new Error('Operación no encontrada');
   return op;
 }
-
+export async function findOperationById(id: string) {
+  return repository.findOperationById(id);
+}
 export async function createOperation(
   data: {
     tipo: 'entrega' | 'retiro' | 'entrega_retiro';
