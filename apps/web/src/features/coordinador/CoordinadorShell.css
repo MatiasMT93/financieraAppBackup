@@ -670,7 +670,7 @@
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   margin: 0 20px 14px;
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 22px;
