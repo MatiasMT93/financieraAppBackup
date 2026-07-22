@@ -23,7 +23,6 @@ const tabs = [
   { path: 'cadetes', label: 'Cadetes', Icon: UsersIcon },
   { path: 'caja', label: 'Caja', Icon: MoneyIcon },
   { path: 'historial', label: 'Historial', Icon: HistoryIcon },
-  { path: 'caja', label: 'Caja', Icon: MoneyIcon },
   { path: 'alertas', label: 'Alertas', Icon: AlertIcon },
 ];
 

@@ -505,6 +505,7 @@
   display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid rgba(31, 217, 199, 0.4);
   border-radius: 10px; color: #1fd9c7;
 }
+
 .coordinator-shell .coord-history-icon svg { width: 18px; height: 18px; }
 .coordinator-shell .coord-history-icon--lg { width: 56px; height: 56px; }
 .coordinator-shell .coord-history-icon--lg svg { width: 26px; height: 26px; }
@@ -670,7 +671,7 @@
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   margin: 0 20px 14px;
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 22px;
@@ -686,7 +687,7 @@
   justify-content: center;
   gap: 5px;
   border: 0;
-  color: #b6bcc8;
+  color: #ccd3e0;
   cursor: pointer;
   font-size: 11px;
   text-decoration: none;
