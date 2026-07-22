@@ -97,6 +97,14 @@
   font: inherit;
 }
 
+.coordinator-shell .coord-cash-card {
+  background: linear-gradient(135deg, #0a1f2e, #06202b);
+  border: 1.5px solid #d4a843;   /* dorado más sólido, o #f5c542 */
+  border-radius: 20px;
+  padding: 18px 20px;
+  color: #eef2f7;
+  box-shadow: 0 4px 20px rgba(212, 168, 67, 0.15); /* sombra dorada sutil */
+}
 .coordinator-shell .coord-back-button svg,
 .coordinator-shell .coord-delete-button svg {
   width: 20px;
