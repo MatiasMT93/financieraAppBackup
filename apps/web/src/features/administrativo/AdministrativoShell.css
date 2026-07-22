@@ -474,19 +474,12 @@
 
 .admin-shell .admin-bottom-nav {
   display: grid;
-<<<<<<< HEAD
-  grid-template-columns: repeat(4, 1fr);      /* ← 4 columnas iguales */
-  gap: 4px;                                   /* ← separación entre botones */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
   margin: 0 16px 12px;
   padding: 6px 8px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
-=======
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 0 20px 8px;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
->>>>>>> 832266192728406c14528fabd2d927c271f144b0
   background: linear-gradient(180deg, rgba(7, 16, 28, 0.96), rgba(5, 13, 23, 0.96));
   box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   flex-shrink: 0;
@@ -501,7 +494,6 @@
   content: ''; position: absolute; left: 50%; bottom: 7px; width: 32px; height: 2px; transform: translateX(-50%);
   border-radius: 999px; background: #1fe0d2; box-shadow: 0 0 12px rgba(18, 216, 204, 0.24);
 }
-
 @media (max-width: 1320px) {
   /* Apiladas (una debajo de otra) ya no compiten por una altura compartida:
    * cada una toma su alto natural y la página entera scrollea si hace

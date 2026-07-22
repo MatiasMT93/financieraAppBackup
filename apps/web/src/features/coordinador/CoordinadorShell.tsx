@@ -19,11 +19,12 @@ import './CoordinadorShell.css';
 const tabs = [
   { path: 'ops', label: 'Operaciones', Icon: OpsIcon },
   { path: 'mapa', label: 'Mapa', Icon: MapIcon },
+  { path: 'usuarios', label: 'Usuarios', Icon: UserCogIcon },
   { path: 'cadetes', label: 'Cadetes', Icon: UsersIcon },
+  { path: 'caja', label: 'Caja', Icon: MoneyIcon },
   { path: 'historial', label: 'Historial', Icon: HistoryIcon },
   { path: 'caja', label: 'Caja', Icon: MoneyIcon },
   { path: 'alertas', label: 'Alertas', Icon: AlertIcon },
-  { path: 'usuarios', label: 'Usuarios', Icon: UserCogIcon },
 ];
 
 export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
