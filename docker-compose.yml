@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -21,8 +19,8 @@ services:
 
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: apps/api/Dockerfile
     container_name: cambioapp-api
     restart: unless-stopped
     depends_on:
@@ -38,13 +36,12 @@ services:
     ports:
       - '${API_PORT:-4000}:4000'
     volumes:
-      - ./apps/api:/app
-      - /app/node_modules
+      - ./apps/api:/app/apps/api
 
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: apps/web/Dockerfile
     container_name: cambioapp-web
     restart: unless-stopped
     depends_on:
@@ -54,8 +51,7 @@ services:
     ports:
       - '${WEB_PORT:-5173}:5173'
     volumes:
-      - ./apps/web:/app
-      - /app/node_modules
+      - ./apps/web:/app/apps/web
 
 volumes:
   postgres_data:

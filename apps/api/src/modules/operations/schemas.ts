@@ -11,7 +11,7 @@ import { z } from 'zod';
 const operationFields = z.object({
   tipo: z.enum(['entrega', 'retiro', 'entrega_retiro']),
   moneda: z.enum(['ARS', 'USD', 'EUR', 'BRL', 'USDT']),
-  monto: z.number().positive(),
+  monto: z.number().positive().optional(),
   moneda2: z.enum(['ARS', 'USD', 'EUR', 'BRL', 'USDT']).optional(),
   monto2: z.number().positive().optional(),
   modalidad: z.enum(['domicilio', 'ventanilla', 'deposito']).default('domicilio'),
@@ -23,8 +23,11 @@ const operationFields = z.object({
   clientId: z.string().uuid().optional(),
 });
 
-function requiresSecondAmount(data: { tipo?: string; monto2?: number; moneda2?: string }) {
-  return data.tipo !== 'entrega_retiro' || (data.monto2 !== undefined && data.moneda2 !== undefined);
+function requiresAtLeastOneAmount(data: { tipo?: string; monto?: number; monto2?: number }) {
+  if (data.tipo === 'entrega_retiro') {
+    return (data.monto !== undefined && data.monto > 0) || (data.monto2 !== undefined && data.monto2 > 0);
+  }
+  return (data.monto !== undefined && data.monto > 0) || (data.monto2 !== undefined && data.monto2 > 0);
 }
 
 function requiresDireccionForDomicilio(data: { modalidad?: string; direccion?: string }) {
@@ -36,9 +39,9 @@ function requiresBancoForDeposito(data: { modalidad?: string; banco?: string }) 
 }
 
 export const createOperationSchema = operationFields
-  .refine(requiresSecondAmount, {
-    message: 'monto2 y moneda2 son obligatorios cuando tipo es entrega_retiro',
-    path: ['monto2'],
+  .refine(requiresAtLeastOneAmount, {
+    message: 'Debe completar al menos un monto de entrega o retiro',
+    path: ['monto'],
   })
   .refine(requiresDireccionForDomicilio, {
     message: 'La dirección es obligatoria para entregas a domicilio o depósito',
@@ -55,9 +58,9 @@ export const createOperationSchema = operationFields
 export const updateOperationSchema = operationFields
   .omit({ modalidad: true })
   .partial()
-  .refine(requiresSecondAmount, {
-    message: 'monto2 y moneda2 son obligatorios cuando tipo es entrega_retiro',
-    path: ['monto2'],
+  .refine(requiresAtLeastOneAmount, {
+    message: 'Debe completar al menos un monto de entrega o retiro',
+    path: ['monto'],
   });
 
 export const transitionSchema = z.object({

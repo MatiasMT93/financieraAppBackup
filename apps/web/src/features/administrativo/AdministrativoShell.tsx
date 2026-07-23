@@ -5,10 +5,11 @@ import { useAuthStore } from '../../shared/store/auth-store.ts';
 import { apiPost } from '../../shared/api/client.ts';
 import { PullToRefresh } from '../../shared/components/PullToRefresh.tsx';
 import { BrandMark } from '../../shared/components/BrandMark.tsx';
-import { BackIcon, ClipboardIcon, PlusIcon, UsersIcon } from './components/AdminIcons.tsx';
+import { BackIcon, ClipboardIcon, PlusIcon, UsersIcon, BankIcon } from './components/AdminIcons.tsx';
 import OpsAdminTab from './tabs/OpsAdminTab.tsx';
 import NuevaOpTab from './tabs/NuevaOpTab.tsx';
 import ClientesTab from './tabs/ClientesTab.tsx';
+import CajasTab from './tabs/CajasTab.tsx';
 import './AdministrativoShell.css';
 
 export default function AdministrativoShell({ onBack }: { onBack?: () => void }) {
@@ -54,6 +55,7 @@ export default function AdministrativoShell({ onBack }: { onBack?: () => void })
           <Route path="ops" element={<OpsAdminTab />} />
           <Route path="nueva" element={<NuevaOpTab />} />
           <Route path="clientes" element={<ClientesTab />} />
+          <Route path="cajas" element={<CajasTab />} />
         </Routes>
       </PullToRefresh>
 
@@ -65,6 +67,10 @@ export default function AdministrativoShell({ onBack }: { onBack?: () => void })
         <NavLink to="clientes" className={({ isActive }) => (isActive ? 'is-active' : '')}>
           <UsersIcon />
           <span>Clientes</span>
+        </NavLink>
+        <NavLink to="cajas" className={({ isActive }) => (isActive ? 'is-active' : '')}>
+          <BankIcon />
+          <span>Cajas</span>
         </NavLink>
         <NavLink to="nueva" className={({ isActive }) => (isActive ? 'is-active' : '')}>
           <PlusIcon />

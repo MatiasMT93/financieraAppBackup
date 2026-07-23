@@ -1,6 +1,6 @@
 import { db } from '../../db/connection.js';
 import { operations, operationStatusHistory, amountCorrections } from '../../db/schema.js';
-import { eq, and, gte, lte, sql, inArray, ne } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, inArray, ne, or } from 'drizzle-orm';
 import type { OperationStatus } from '@cambioapp/shared-types';
 
 // Mismo set que usa recomputeCadeteStatus para decidir si un cadete está
@@ -76,7 +76,7 @@ export async function listOperations(filters: {
 export async function createOperation(data: {
   tipo: 'entrega' | 'retiro' | 'entrega_retiro';
   moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
-  monto: number;
+  monto?: number;
   moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
   monto2?: number;
   modalidad: 'domicilio' | 'ventanilla' | 'deposito';
@@ -88,11 +88,13 @@ export async function createOperation(data: {
   clientId?: string;
   administrativoId: string;
 }) {
+  const effectiveMonto = data.monto ?? (data.monto2 !== undefined ? data.monto2 : undefined);
+
   const [op] = await db
     .insert(operations)
     .values({
       ...data,
-      monto: String(data.monto),
+      monto: effectiveMonto !== undefined ? String(effectiveMonto) : '0',
       monto2: data.monto2 !== undefined ? String(data.monto2) : undefined,
       // Ventanilla se resuelve en el momento en el mostrador: no hay cadete
       // que despachar, así que arranca directamente cerrada en vez de
@@ -106,9 +108,9 @@ export async function createOperation(data: {
 export async function updateOperation(id: string, data: Partial<{
   tipo: 'entrega' | 'retiro' | 'entrega_retiro';
   moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
-  monto: number;
-  moneda2: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
-  monto2: number;
+  monto?: number;
+  moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
+  monto2?: number;
   direccion: string;
   banco: string;
   contacto: string;
@@ -119,6 +121,9 @@ export async function updateOperation(id: string, data: Partial<{
   const values: Record<string, unknown> = { ...data, updatedAt: new Date() };
   if (data.monto !== undefined) values.monto = String(data.monto);
   if (data.monto2 !== undefined) values.monto2 = String(data.monto2);
+  if (data.monto === undefined && !('monto' in data)) {
+    values.monto = null;
+  }
   // Si vuelve a un tipo simple, limpiamos el segundo monto para no dejar
   // datos viejos huérfanos en la operación.
   if (data.tipo && data.tipo !== 'entrega_retiro') {
@@ -342,4 +347,87 @@ export async function getCashInStreet() {
   return db.query.operations.findMany({
     where: sql`${operations.status} IN ('asignada', 'en_camino', 'en_destino', 'volviendo')`,
   });
+}
+
+// ================================================================
+// FUNCIÓN CORREGIDA: getDailyAccountingLedger
+// ================================================================
+export async function getDailyAccountingLedger(date: string) {
+  const start = new Date(`${date}T00:00:00-03:00`);
+  const end = new Date(`${date}T23:59:59.999-03:00`);
+
+  // Ahora traemos TODAS las columnas necesarias y las relaciones con cadete e incidents
+  const rows = await db.query.operations.findMany({
+    where: or(
+      and(gte(operations.createdAt, start), lte(operations.createdAt, end)),
+      and(
+        eq(operations.status, 'cerrada'),
+        gte(operations.updatedAt, start),
+        lte(operations.updatedAt, end),
+      ),
+    ),
+    columns: {
+      id: true,
+      tipo: true,
+      moneda: true,
+      monto: true,
+      moneda2: true,
+      monto2: true,
+      createdAt: true,
+      // AÑADIR CAMPOS FALTANTES
+      status: true,
+      contacto: true,
+      telefono: true,
+      cadeteId: true,
+    },
+    with: {
+      cadete: {
+        columns: {
+          nombre: true,
+          celular: true,
+        },
+      },
+      incidents: {
+        columns: {
+          descripcion: true,
+        },
+        where: (incidents, { eq }) => eq(incidents.isResolved, false),
+        limit: 1,
+      },
+    },
+  });
+
+  const operationIds = rows.map((op) => op.id);
+  const corrections = operationIds.length > 0
+    ? await db.select().from(amountCorrections).where(inArray(amountCorrections.operationId, operationIds))
+    : [];
+
+  const correctionsByOperationId = corrections.reduce<Record<string, Array<{ montoNuevo?: string | null }>>>((acc, correction) => {
+    const list = acc[correction.operationId] ?? [];
+    list.push({ montoNuevo: correction.montoNuevo });
+    acc[correction.operationId] = list;
+    return acc;
+  }, {});
+
+  const { buildAccountingLedger } = await import('./accounting.js');
+  return buildAccountingLedger(
+    rows.map((row) => ({
+      id: row.id,
+      tipo: row.tipo,
+      moneda: row.moneda,
+      monto: row.monto ?? 0,
+      moneda2: row.moneda2 ?? undefined,
+      monto2: row.monto2 ?? undefined,
+      createdAt: row.createdAt.toISOString(),
+      // NUEVOS CAMPOS PARA PASAR AL ACCOUNTING LEDGER
+      status: row.status,
+      contacto: row.contacto,
+      telefono: row.telefono,
+      cadeteNombre: row.cadete?.nombre ?? null,
+      cadeteCelular: row.cadete?.celular ?? null,
+      alerta: row.incidents?.length > 0 ? row.incidents[0].descripcion : null,
+    })),
+    correctionsByOperationId,
+    date,
+  );
 }

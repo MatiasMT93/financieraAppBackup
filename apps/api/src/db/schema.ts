@@ -191,6 +191,19 @@ export const refreshTokens = pgTable(
   }),
 );
 
+export const contacts = pgTable('contacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  address: varchar('address', { length: 512 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  // Índice para acelerar la búsqueda por dirección
+  addressIdx: index('contacts_address_idx').on(table.address),
+}));
+
 // ─── Relations (required by Drizzle query builder for `with` clauses) ────────
 
 export const usersRelations = relations(users, ({ many }) => ({

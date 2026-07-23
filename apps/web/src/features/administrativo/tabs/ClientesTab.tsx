@@ -145,7 +145,13 @@ export default function ClientesTab() {
       )}
 
       {showNewModal && (
-        <ClientFormModal onClose={() => setShowNewModal(false)} onSaved={() => setShowNewModal(false)} />
+        <ClientFormModal
+          onClose={() => setShowNewModal(false)}
+          onSaved={(client) => {
+            setShowNewModal(false);
+            navigate('../nueva', { state: { clientId: client.id } });
+          }}
+        />
       )}
       {editingClient && (
         <ClientFormModal
