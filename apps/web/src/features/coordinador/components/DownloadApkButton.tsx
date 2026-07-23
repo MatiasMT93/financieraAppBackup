@@ -3,15 +3,14 @@ import { Download, QrCode, Link, X, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { DownloadIcon } from './CoordIcons.tsx';
 
-const APK_URL =
-  'https://github.com/MatiasMT93/cambioapp-releases/releases/latest/download/CambioApp.apk';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.mtbit.cambioapp';
 
 export default function DownloadApkButton() {
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState(false);
 
   function copyLink() {
-    navigator.clipboard.writeText(APK_URL);
+    navigator.clipboard.writeText(PLAY_STORE_URL);
     setToast(true);
     setTimeout(() => setToast(false), 2500);
   }
@@ -23,7 +22,7 @@ export default function DownloadApkButton() {
           <DownloadIcon />
         </span>
         <div className="coord-download-banner__copy">
-          <h2>Descargar APK para cadete</h2>
+          <h2>Descargar app para cadete</h2>
           <p>Instalá la app de Plaza App en el dispositivo del cadete.</p>
         </div>
 
@@ -33,7 +32,7 @@ export default function DownloadApkButton() {
           className="coord-download-banner__button"
         >
           <Download size={18} />
-          Descargar APK
+          Descargar app
         </button>
       </div>
 
@@ -42,13 +41,13 @@ export default function DownloadApkButton() {
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
           <div className="card w-full max-w-xs text-center" style={{ color: '#111827' }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900">Descargar APK</h2>
+              <h2 className="font-semibold text-gray-900">Descargar app</h2>
               <button onClick={() => setShowModal(false)}>
                 <X size={20} className="text-gray-500" />
               </button>
             </div>
             <div className="flex justify-center mb-3">
-              <QRCodeSVG value={APK_URL} size={200} />
+              <QRCodeSVG value={PLAY_STORE_URL} size={200} />
             </div>
             <p className="text-xs text-gray-400 mb-5 flex items-center justify-center gap-1.5">
               <QrCode size={13} className="text-gray-400" />
