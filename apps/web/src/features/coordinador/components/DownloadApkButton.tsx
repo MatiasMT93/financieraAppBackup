@@ -69,15 +69,15 @@ export default function DownloadApkButton() {
         </div>
       )}
 
-      {/* Toast "Link copiado" */}
+      {/* Toast "Copiado al portapapeles" */}
       <div
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ${
+        className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] transition-all duration-300 ${
           toast ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
         }`}
       >
-        <div className="bg-gray-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg whitespace-nowrap flex items-center gap-2">
+        <div className="bg-slate-800 border border-teal-400/40 text-white text-sm px-4 py-2.5 rounded-full shadow-xl shadow-black/50 whitespace-nowrap flex items-center gap-2">
           <Check size={14} className="text-green-400" />
-          Link de descarga copiado
+          Copiado al portapapeles
         </div>
       </div>
     </>
