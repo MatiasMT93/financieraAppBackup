@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Download, QrCode, Link, X, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { DownloadIcon } from './CoordIcons.tsx';
 
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.mtbit.cambioapp';
 
@@ -19,7 +18,7 @@ export default function DownloadApkButton() {
     <>
       <div className="coord-download-banner">
         <span className="coord-download-banner__icon">
-          <DownloadIcon />
+          <img src="/cadete-app-icon.png" alt="" className="coord-download-banner__icon-img" />
         </span>
         <div className="coord-download-banner__copy">
           <h2>Descargar app para cadete</h2>

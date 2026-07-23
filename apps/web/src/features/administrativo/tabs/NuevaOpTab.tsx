@@ -122,12 +122,13 @@ export default function NuevaOpTab() {
   }, [prefillClientId, clients]);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      apiPost('/operations', {
+    mutationFn: async () => {
+      const parsedMonto = form.monto !== '' ? parseFloat(form.monto) : undefined;
+      const parsedMonto2 = isCombined && form.monto2 !== '' ? parseFloat(form.monto2) : undefined;
+
+      const payload: Record<string, unknown> = {
         tipo: form.tipo,
         moneda: form.moneda,
-        monto: parseFloat(form.monto),
-        ...(isCombined ? { moneda2: form.moneda2, monto2: parseFloat(form.monto2) } : {}),
         modalidad: form.modalidad,
         direccion: isVentanilla ? undefined : form.direccion,
         banco: isDeposito ? form.banco : undefined,
@@ -135,7 +136,16 @@ export default function NuevaOpTab() {
         telefono: form.telefono || undefined,
         notas: form.notas || undefined,
         clientId: form.clientId || undefined,
-      }),
+      };
+
+      if (parsedMonto !== undefined) payload.monto = parsedMonto;
+      if (isCombined) {
+        payload.moneda2 = form.moneda2;
+        if (parsedMonto2 !== undefined) payload.monto2 = parsedMonto2;
+      }
+
+      return apiPost('/operations', payload);
+    },
     onSuccess: () => {
       invalidateOperationsQueries(qc);
       navigate('../ops');
@@ -143,13 +153,44 @@ export default function NuevaOpTab() {
   });
 
   function set(field: keyof FormState, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      if (field === 'modalidad') {
+        const nextModalidad = value as Modalidad;
+        const nextDireccion = selectedClient
+          ? nextModalidad === 'deposito'
+            ? ''
+            : nextModalidad === 'ventanilla'
+              ? ''
+              : prev.direccion || selectedClient.direccion || ''
+          : nextModalidad === 'ventanilla'
+            ? ''
+            : prev.direccion;
+
+        return {
+          ...prev,
+          modalidad: nextModalidad,
+          direccion: nextDireccion,
+          banco: nextModalidad === 'deposito' ? prev.banco : '',
+        };
+      }
+
+      if (field === 'tipo' && value !== 'entrega_retiro') {
+        return {
+          ...prev,
+          tipo: value,
+          monto2: '',
+          moneda2: 'ARS',
+        };
+      }
+
+      return { ...prev, [field]: value };
+    });
   }
 
+  const hasMainAmount = form.monto !== '' && parseFloat(form.monto) > 0;
+  const hasSecondAmount = isCombined && form.monto2 !== '' && parseFloat(form.monto2) > 0;
   const isValid =
-    form.monto !== '' &&
-    parseFloat(form.monto) > 0 &&
-    (!isCombined || (form.monto2 !== '' && parseFloat(form.monto2) > 0)) &&
+    (hasMainAmount || hasSecondAmount) &&
     (isVentanilla || form.direccion.length >= 5) &&
     (!isDeposito || form.banco.trim().length >= 2) &&
     form.contacto.length >= 2;
@@ -217,7 +258,7 @@ export default function NuevaOpTab() {
             <>
               <div className="admin-form-grid admin-form-grid--two">
                 <label className="admin-field">
-                  <span>Monto de entrega</span>
+                  <span>Monto de entrega (opcional)</span>
                   <div className="admin-input-shell admin-input-shell--with-suffix">
                     <CurrencyIcon />
                     <input type="number" value={form.monto} onChange={(e) => set('monto', e.target.value)} placeholder="0" />
@@ -238,7 +279,7 @@ export default function NuevaOpTab() {
 
               <div className="admin-form-grid admin-form-grid--two">
                 <label className="admin-field">
-                  <span>Monto de retiro</span>
+                  <span>Monto de retiro (opcional)</span>
                   <div className="admin-input-shell admin-input-shell--with-suffix">
                     <CurrencyIcon />
                     <input type="number" value={form.monto2} onChange={(e) => set('monto2', e.target.value)} placeholder="0" />
@@ -450,6 +491,9 @@ export default function NuevaOpTab() {
             <div><span><UserIcon />Contacto</span><strong>{form.contacto || '—'}</strong></div>
             <div><span><PhoneIcon />Teléfono</span><strong>{form.telefono || '—'}</strong></div>
             <div><span><ClipboardIcon />Notas</span><strong>{form.notas || '—'}</strong></div>
+            {selectedClient && (
+              <div><span><UserIcon />Cliente</span><strong>{selectedClient.nombre}</strong></div>
+            )}
           </div>
         </aside>
       </section>

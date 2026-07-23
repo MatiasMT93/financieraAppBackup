@@ -6,7 +6,7 @@ import { useAuthStore } from '../../shared/store/auth-store.ts';
 import { PullToRefresh } from '../../shared/components/PullToRefresh.tsx';
 import { BrandMark } from '../../shared/components/BrandMark.tsx';
 import { WavePattern } from '../../shared/components/WavePattern.tsx';
-import type { OwnerSummary, CurrencySummary } from '@cambioapp/shared-types';
+import type { OwnerSummary } from '@cambioapp/shared-types';
 import './DuenoShell.css';
 
 type Period = 'today' | 'week' | 'month';
@@ -21,39 +21,24 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   ARS: '$', USD: 'U$', EUR: '€', BRL: 'R$', USDT: '₮',
 };
 
-const CURRENCY_NAMES: Record<string, string> = {
-  ARS: 'Pesos — ARS',
-  USD: 'Dolares — USD',
-  EUR: 'Euros — EUR',
-  BRL: 'Reales — BRL',
-  USDT: 'Tether — USDT',
-};
-
-function MapIcon() {
+function CoordinatorIcon() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path d="m7 12 11-5 12 5 11-5v29l-11 5-12-5-11 5V12Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-      <path d="M18 7v29M30 12v29" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M10 8h28v32H10z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M24 8v32" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M16 14h8M16 20h8M16 26h8M32 14h4M32 20h4M32 26h4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     </svg>
   );
 }
 
-function ClipboardIcon() {
+function AdministratorIcon() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <rect x="10" y="9" width="28" height="34" rx="4" stroke="currentColor" strokeWidth="2.2" />
-      <rect x="17" y="5" width="14" height="9" rx="3" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M17 23h14M17 31h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <circle cx="15" cy="23" r="1" fill="currentColor" />
-      <circle cx="15" cy="31" r="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="m11 6 10 10-10 10" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="12" y="10" width="24" height="28" rx="2" stroke="currentColor" strokeWidth="2" />
+      <rect x="17" y="6" width="14" height="8" rx="1" stroke="currentColor" strokeWidth="2" />
+      <path d="M18 20h12M18 28h12M18 36h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="25" cy="20" r="1.5" fill="currentColor" />
+      <circle cx="25" cy="28" r="1.5" fill="currentColor" />
     </svg>
   );
 }
@@ -67,57 +52,20 @@ function LogoutIcon() {
   );
 }
 
-function TrendIcon() {
+function AlertIcon() {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="1.7" />
-      <path d="m9 20 5-5 4 3 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M20 11h4v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2" />
+      <path d="M16 10v6M16 20v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-function CurrencyIcon() {
+function ChevronRightIcon() {
   return (
-    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path d="M30 14c-1.6-2-4-3-7-3-4.4 0-8 2.4-8 6s3.2 5.2 8 6c4.8.8 8 2.4 8 6s-3.6 7-8.5 7c-3.3 0-6.2-1.2-8.2-3.5M23 6v36" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M12 8l8 8-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  );
-}
-
-function ChevronDownIcon({ open }: { open: boolean }) {
-  return (
-    <svg className={open ? 'is-open' : ''} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="m8 12 8 8 8-8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CurrencyCard({ cs }: { cs: CurrencySummary }) {
-  const [expanded, setExpanded] = useState(cs.currency === 'USD');
-  const sym = CURRENCY_SYMBOLS[cs.currency] ?? cs.currency;
-
-  return (
-    <div className={`currency-card ${expanded ? 'is-open' : ''}`}>
-      <button
-        className="currency-card__summary"
-        type="button"
-        aria-expanded={expanded}
-        onClick={() => setExpanded((value) => !value)}
-      >
-        <span className="currency-icon"><CurrencyIcon /></span>
-        <span className="currency-copy">
-          <strong>{sym} {CURRENCY_NAMES[cs.currency] ?? cs.currency}</strong>
-          <small>Total movido: {sym} {Number(cs.totalMoved).toLocaleString('es-AR')} · {cs.totalOps} ops.</small>
-        </span>
-        <span className="currency-chevron"><ChevronDownIcon open={expanded} /></span>
-      </button>
-      <div className="currency-details" aria-hidden={!expanded}>
-        <div><span>Comprados</span><strong>{sym} {Number(cs.comprado).toLocaleString('es-AR')}</strong></div>
-        <div><span>Vendidos</span><strong>{sym} {Number(cs.vendido).toLocaleString('es-AR')}</strong></div>
-        <div><span>Total</span><strong>{sym} {Number(cs.totalMoved).toLocaleString('es-AR')}</strong></div>
-      </div>
-    </div>
   );
 }
 
@@ -141,10 +89,17 @@ export default function DuenoShell() {
       if (refreshToken) await apiPost('/auth/logout', { refreshToken });
     } finally {
       clearAuth();
+      navigate('/login', { replace: true });
     }
   }
 
   const periods: Period[] = ['today', 'week', 'month'];
+
+  // Datos de alertas (simulados, puedes reemplazar con datos reales del backend)
+  // Si el endpoint no los provee, usamos valores por defecto 0
+  const alertasActivas = 0;
+  const alertasResueltas = 0;
+  const hayIncidencias = alertasActivas > 0;
 
   return (
     <main className="dashboard-shell">
@@ -169,35 +124,40 @@ export default function DuenoShell() {
         <section aria-labelledby="role-heading">
           <div className="section-heading">
             <h1 id="role-heading">Cubrir un rol hoy</h1>
-            <span aria-hidden="true" />
           </div>
 
           <div className="role-grid">
-            <button className="role-card role-card--coordinator" type="button" onClick={() => navigate('/dueno/coord')}>
-              <WavePattern className="role-card__wave" />
-              <span className="role-icon"><MapIcon /></span>
-              <span className="role-copy">
+            <button 
+              className="role-card role-card--coordinator" 
+              type="button" 
+              onClick={() => navigate('/dueno/coord')}
+            >
+              <span className="role-icon"><CoordinatorIcon /></span>
+              <div>
                 <strong>Coordinador</strong>
-                <small>Asignar cadetes y seguir las entregas en tiempo real</small>
-              </span>
-              <span className="role-arrow"><ChevronRightIcon /></span>
+                <small>Asignar cadetes y seguir entregas</small>
+              </div>
+              <span className="role-arrow">→</span>
             </button>
 
-            <button className="role-card role-card--administrator" type="button" onClick={() => navigate('/dueno/admin')}>
-              <WavePattern className="role-card__wave" />
-              <span className="role-icon"><ClipboardIcon /></span>
-              <span className="role-copy">
+            <button 
+              className="role-card role-card--administrator" 
+              type="button" 
+              onClick={() => navigate('/dueno/admin')}
+            >
+              <span className="role-icon"><AdministratorIcon /></span>
+              <div>
                 <strong>Administrador</strong>
-                <small>Cargar y gestionar las operaciones del día</small>
-              </span>
-              <span className="role-arrow"><ChevronRightIcon /></span>
+                <small>Cargar y gestionar operaciones</small>
+              </div>
+              <span className="role-arrow">→</span>
             </button>
           </div>
         </section>
 
         <section className="summary-section" aria-labelledby="summary-heading">
           <div className="section-heading section-heading--compact">
-            <h2 id="summary-heading">Resumen</h2>
+            <h2 id="summary-heading">Resumen del Período</h2>
           </div>
 
           <div className="period-tabs" role="tablist" aria-label="Período del resumen">
@@ -218,35 +178,97 @@ export default function DuenoShell() {
           {isLoading ? (
             <div className="loading-state"><p>Cargando…</p></div>
           ) : (
-            <article className="operations-card">
-              <WavePattern className="operations-card__wave operations-card__wave--left" />
-              <WavePattern className="operations-card__wave operations-card__wave--right" />
-              <strong>{data?.totalOperations ?? 0}</strong>
-              <p>operaciones realizadas {PERIOD_LABELS[period].toLowerCase()}</p>
-            </article>
+            <>
+              <article className="operations-card">
+                <WavePattern className="operations-card__wave operations-card__wave--left" />
+                <WavePattern className="operations-card__wave operations-card__wave--right" />
+                <strong>{data?.totalOperations ?? 0}</strong>
+                <p>operaciones realizadas {PERIOD_LABELS[period].toLowerCase()}</p>
+              </article>
+
+              {/* CONTABILIDAD (balance, entradas, salidas) */}
+              {data?.accounting && Object.keys(data.accounting).length > 0 && (
+                <div className="accounting-grid">
+                  {Object.entries(data.accounting).map(([currency, acc]) => {
+                    const entradasReales = acc.salidas ?? 0;
+                    const salidasReales = acc.entradas ?? 0;
+                    const balanceNeto = entradasReales - salidasReales;
+                    const sym = CURRENCY_SYMBOLS[currency] ?? currency;
+                    const balanceColor = balanceNeto >= 0 ? '#10b981' : '#ef4444';
+                    const balanceSign = balanceNeto >= 0 ? '+' : '';
+
+                    return (
+                      <div key={currency} className="accounting-card">
+                        <small className="accounting-card-label">{currency}</small>
+                        <div className="accounting-card-item">
+                          <span>Balance Neto</span>
+                          <strong style={{ color: balanceColor }}>
+                            {balanceSign}{sym} {Math.abs(balanceNeto).toLocaleString('es-AR')}
+                          </strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', gap: '0.5rem' }}>
+                          <span style={{ color: '#ff8a7a' }}>↓ {sym} {salidasReales.toLocaleString('es-AR')}</span>
+                          <span style={{ color: '#4ADE80' }}>↑ {sym} {entradasReales.toLocaleString('es-AR')}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ============================================================ */}
+              {/* MINI PANEL DE ALERTAS (compacto, integrado) */}
+              {/* ============================================================ */}
+              {/* ============================================================ */}
+              {/* MINI PANEL DE ALERTAS (mejorado visualmente) */}
+              {/* ============================================================ */}
+              <div className="alertas-mini-card">
+                <div className="alertas-mini-header">
+                  <div className="alertas-mini-title">
+                    <AlertIcon />
+                    <h3>Alertas</h3>
+                  </div>
+                </div>
+                
+                <div className="alertas-mini-stats">
+                  <div className="stat-item active">
+                    <span className="stat-number">{alertasActivas}</span>
+                    <span className="stat-label">Activas</span>
+                  </div>
+                  <div className="stat-divider" />
+                  <div className="stat-item resolved">
+                    <span className="stat-number">{alertasResueltas}</span>
+                    <span className="stat-label">Resueltas</span>
+                  </div>
+                </div>
+
+                <div className={`alertas-mini-status ${hayIncidencias ? 'has-alerts' : 'all-clear'}`}>
+                  {hayIncidencias ? (
+                    <>
+                      <span className="status-icon"></span>
+                      <span>Hay incidencias activas que requieren atención</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="status-icon"></span>
+                      <span>Sin incidencias activas</span>
+                      <span className="status-sub">Todas las operaciones están en orden</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="alertas-mini-footer">
+                  <button
+                    className="alertas-mini-link"
+                    onClick={() => navigate('/dueno/coord/alertas')}
+                  >
+                    Ir a Coordinador <ChevronRightIcon />
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </section>
-
-        {!isLoading && data && (
-          <section className="money-section" aria-labelledby="money-heading">
-            <div className="section-heading section-heading--compact">
-              <h2 id="money-heading">Dinero movido por moneda</h2>
-            </div>
-
-            {data.byCurrency.filter((c) => c.totalOps > 0).length === 0 && (
-              <div className="empty-state">
-                <TrendIcon />
-                <p>Sin movimientos en este período</p>
-              </div>
-            )}
-
-            <div className="currency-list">
-              {data.byCurrency.map((cs) => (
-                <CurrencyCard key={cs.currency} cs={cs} />
-              ))}
-            </div>
-          </section>
-        )}
       </PullToRefresh>
     </main>
   );

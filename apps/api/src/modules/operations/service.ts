@@ -7,6 +7,7 @@ import * as repo from './repository.js';
 import type { AuthUser } from '../../middleware/auth.js';
 import { AppError } from '../../middleware/error-handler.js';
 import { broadcast, emitToUser } from '../../realtime/socket.js';
+import * as repository from './repository.js';
 
 export async function listOperations(filters: {
   status?: OperationStatus | OperationStatus[];
@@ -21,12 +22,14 @@ export async function getOperation(id: string) {
   if (!op) throw new Error('Operación no encontrada');
   return op;
 }
-
+export async function findOperationById(id: string) {
+  return repository.findOperationById(id);
+}
 export async function createOperation(
   data: {
     tipo: 'entrega' | 'retiro' | 'entrega_retiro';
     moneda: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
-    monto: number;
+    monto?: number;
     moneda2?: 'ARS' | 'USD' | 'EUR' | 'BRL' | 'USDT';
     monto2?: number;
     modalidad: 'domicilio' | 'ventanilla' | 'deposito';
@@ -41,6 +44,9 @@ export async function createOperation(
 ) {
   const op = await repo.createOperation({ ...data, administrativoId: user.id });
   const full = await repo.findOperationById(op.id);
+
+  // TODO: guardar contacto para futuras sugerencias de autocompletado
+
   broadcast('operation:created', { operation: full });
   return full;
 }

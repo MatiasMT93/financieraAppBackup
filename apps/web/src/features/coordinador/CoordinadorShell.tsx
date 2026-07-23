@@ -6,22 +6,24 @@ import { disconnectSocket } from '../../shared/api/socket.ts';
 import { useRealtimeSync } from '../../shared/hooks/use-socket.ts';
 import { PullToRefresh } from '../../shared/components/PullToRefresh.tsx';
 import { BrandMark } from '../../shared/components/BrandMark.tsx';
-import { BackIcon, OpsIcon, MapIcon, UsersIcon, HistoryIcon, AlertIcon, UserCogIcon } from './components/CoordIcons.tsx';
+import { BackIcon, OpsIcon, MapIcon, UsersIcon, HistoryIcon, AlertIcon, UserCogIcon, MoneyIcon } from './components/CoordIcons.tsx';
 import OpsTab from './tabs/OpsTab.tsx';
 import MapaTab from './tabs/MapaTab.tsx';
 import CadetesTab from './tabs/CadetesTab.tsx';
 import HistorialTab from './tabs/HistorialTab.tsx';
 import AlertasTab from './tabs/AlertasTab.tsx';
 import GestionCadetesTab from './tabs/GestionCadetesTab.tsx';
+import CajaTab from './tabs/CajaTab.tsx';
 import './CoordinadorShell.css';
 
 const tabs = [
   { path: 'ops', label: 'Operaciones', Icon: OpsIcon },
   { path: 'mapa', label: 'Mapa', Icon: MapIcon },
+  { path: 'usuarios', label: 'Usuarios', Icon: UserCogIcon },
   { path: 'cadetes', label: 'Cadetes', Icon: UsersIcon },
+  { path: 'caja', label: 'Caja', Icon: MoneyIcon },
   { path: 'historial', label: 'Historial', Icon: HistoryIcon },
   { path: 'alertas', label: 'Alertas', Icon: AlertIcon },
-  { path: 'usuarios', label: 'Usuarios', Icon: UserCogIcon },
 ];
 
 export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
@@ -84,6 +86,7 @@ export default function CoordinadorShell({ onBack }: { onBack?: () => void }) {
           <Route path="mapa" element={<MapaTab />} />
           <Route path="cadetes" element={<CadetesTab />} />
           <Route path="historial" element={<HistorialTab />} />
+          <Route path="caja" element={<CajaTab />} />
           <Route path="alertas" element={<AlertasTab />} />
           <Route path="usuarios" element={<GestionCadetesTab />} />
         </Routes>
