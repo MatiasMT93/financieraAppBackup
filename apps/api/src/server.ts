@@ -22,11 +22,8 @@ import clientsRoutes from './modules/clients/routes.js';
 const app = express();
 const httpServer = createServer(app);
 
-// Render (y la mayoría de los PaaS) ponen un proxy delante. Sin esto,
-// express-rate-limit ve a TODOS los usuarios con la IP del proxy y comparte
-// el cupo entre todos; con `trust proxy` toma la IP real del cliente desde
-// X-Forwarded-For. Usamos 1 (un solo hop) en vez de `true` para no caer en la
-// validación permisiva de express-rate-limit.
+// Render, Railway y la mayoría de los PaaS colocan un proxy delante.
+// Esto permite que Express reconozca correctamente la IP del cliente.
 app.set('trust proxy', 1);
 
 app.use(helmet());
@@ -42,10 +39,15 @@ app.use('/api/owner', ownerRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/clients', clientsRoutes);
 
-app.get('/health', (_req, res) => res.json({ ok: true, status: 'healthy' }));
+app.get('/health', (_req, res) => {
+  res.json({ ok: true, status: 'healthy' });
+});
 
 app.get('/api/version', (_req, res) => {
-  res.json({ versionCode: env.APP_VERSION_CODE, url: env.APP_DOWNLOAD_URL });
+  res.json({
+    versionCode: env.APP_VERSION_CODE,
+    url: env.APP_DOWNLOAD_URL,
+  });
 });
 
 app.use(errorHandler);
@@ -53,23 +55,72 @@ app.use(errorHandler);
 initializeSocket(httpServer);
 
 async function start() {
+  logger.info('Checking database connection');
+
   await checkDbConnection();
+
   logger.info('Database connection established');
 
-  await runMigrations();
-  logger.info('Database migrations up to date');
+  try {
+    logger.info('Running database migrations');
 
-  // Repara operaciones que quedaron en status 'incidencia' aunque la incidencia
-  // ya estaba resuelta (datos rotos por el bug previo al fix de resolveIncident).
+    await runMigrations();
+
+    logger.info('Database migrations up to date');
+  } catch (error) {
+    console.error('DATABASE_MIGRATION_ERROR:');
+    console.error(error);
+
+    if (error instanceof Error) {
+      logger.error(
+        {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          cause: error.cause,
+        },
+        'Database migration failed',
+      );
+    } else {
+      logger.error({ error }, 'Database migration failed');
+    }
+
+    throw error;
+  }
+
   const repaired = await repairZombieIncidents();
-  if (repaired > 0) logger.info(`Repaired ${repaired} zombie incident operations`);
 
-  httpServer.listen(env.PORT, () => {
-    logger.info(`CambioApp API running on port ${env.PORT} [${env.NODE_ENV}]`);
+  if (repaired > 0) {
+    logger.info(`Repaired ${repaired} zombie incident operations`);
+  }
+
+  httpServer.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(
+      `CambioApp API running on port ${env.PORT} [${env.NODE_ENV}]`,
+    );
   });
 }
 
-start().catch((err) => {
+start().catch((error: unknown) => {
+  console.error('STARTUP_ERROR_FULL:');
+  console.error(error);
+
+  if (error instanceof Error) {
+    logger.error(
+      {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause,
+      },
+      'Failed to start server',
+    );
+  } else {
+    logger.error({ error }, 'Failed to start server');
+  }
+
+  process.exit(1);
+});
   logger.error(err, 'Failed to start server');
   process.exit(1);
 });
