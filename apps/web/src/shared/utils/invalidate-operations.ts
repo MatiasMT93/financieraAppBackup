@@ -6,10 +6,13 @@ import type { QueryClient } from '@tanstack/react-query';
 // porque TanStack Query matchea por igualdad exacta de cada elemento de la
 // key, no por substring — así que un cambio nunca las refrescaba.
 export function invalidateOperationsQueries(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({
-    predicate: (query) => {
-      const key = query.queryKey[0];
-      return typeof key === 'string' && key.startsWith('operations');
-    },
-  });
+  return Promise.all([
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey[0];
+        return typeof key === 'string' && key.startsWith('operations');
+      },
+    }),
+    queryClient.invalidateQueries({ queryKey: ['owner-cajas-range'] }),
+  ]);
 }

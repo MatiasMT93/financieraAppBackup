@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import { authenticate, requireRoles } from '../../middleware/auth.js';
 import { z } from 'zod';
+import bcrypt from 'bcrypt';
+import { eq, ne } from 'drizzle-orm';
 import { getActiveOperationsForOwner, getCashInStreet, getDailyAccountingLedger } from '../operations/repository.js';
+import { db } from '../../db/connection.js';
+import { users } from '../../db/schema.js';
+import { BCRYPT_SALT_ROUNDS } from '@cambioapp/shared-constants';
+import { revokeAllUserRefreshTokens } from '../auth/repository.js';
 import type { Currency, OperationType } from '@cambioapp/shared-types';
 
 const periodSchema = z.object({
@@ -96,9 +102,15 @@ router.get('/summary', requireRoles('dueno', 'coordinador'), async (req, res) =>
           accounting[group.currency as string].balance += Number(group.saldoFinal);
           accounting[group.currency as string].dias++;
 
-          // Calcular entradas y salidas
+          // Calcular entradas y salidas (excluir canceladas)
           if (group.lines && Array.isArray(group.lines)) {
+            let balanceAjuste = 0;
             for (const line of group.lines) {
+              if (line.status === 'cancelada') {
+                // Restar del saldoFinal que ya incluía esta línea
+                balanceAjuste -= Number(line.valorFinal);
+                continue;
+              }
               const valor = Number(line.valorFinal);
               // Retiro = entra dinero a la caja. Entrega = sale dinero de la caja.
               if (line.concepto === 'Retiro' || line.concepto.toLowerCase().includes('retiro')) {
@@ -107,6 +119,7 @@ router.get('/summary', requireRoles('dueno', 'coordinador'), async (req, res) =>
                 accounting[group.currency as string].salidas += valor;
               }
             }
+            accounting[group.currency as string].balance += balanceAjuste;
           }
         }
       }
@@ -171,6 +184,41 @@ router.get('/cajas', requireRoles('dueno', 'coordinador', 'administrativo'), asy
   const { date } = accountingSchema.parse(req.query);
   const ledger = await getDailyAccountingLedger(date ?? new Date().toISOString().slice(0, 10));
   res.json({ ok: true, data: ledger });
+});
+
+router.get('/accounts', requireRoles('dueno'), async (_req, res) => {
+  const list = await db.query.users.findMany({
+    where: ne(users.role, 'dueno'),
+    columns: {
+      id: true,
+      usuario: true,
+      nombre: true,
+      apellido: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+    },
+    orderBy: (u, { asc }) => [asc(u.role), asc(u.nombre)],
+  });
+  res.json({ ok: true, data: list });
+});
+
+router.post('/accounts/:id/reset-password', requireRoles('dueno'), async (req, res) => {
+  const { password } = z.object({ password: z.string().min(1) }).parse(req.body);
+
+  const target = await db.query.users.findFirst({ where: eq(users.id, req.params.id) });
+  if (!target || target.role === 'dueno') {
+    res.status(404).json({ ok: false, error: 'Usuario no encontrado' });
+    return;
+  }
+
+  await db.update(users)
+    .set({ passwordHash: await bcrypt.hash(password, BCRYPT_SALT_ROUNDS), updatedAt: new Date() })
+    .where(eq(users.id, req.params.id));
+
+  await revokeAllUserRefreshTokens(req.params.id);
+
+  res.json({ ok: true });
 });
 
 export default router;

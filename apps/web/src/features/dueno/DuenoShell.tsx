@@ -52,6 +52,17 @@ function LogoutIcon() {
   );
 }
 
+function AccountsIcon() {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <circle cx="18" cy="16" r="6" stroke="currentColor" strokeWidth="2" />
+      <path d="M6 38c0-6.627 5.373-12 12-12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="34" cy="32" r="4" stroke="currentColor" strokeWidth="2" />
+      <path d="M34 28v-4M34 36v4M38 32h4M30 32h-4M37 29l2.828-2.828M28.172 37.828 31 35M37 35l2.828 2.828M28.172 26.172 31 29" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function AlertIcon() {
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -149,6 +160,19 @@ export default function DuenoShell() {
               <div>
                 <strong>Administrador</strong>
                 <small>Cargar y gestionar operaciones</small>
+              </div>
+              <span className="role-arrow">→</span>
+            </button>
+
+            <button
+              className="role-card role-card--accounts"
+              type="button"
+              onClick={() => navigate('/dueno/cuentas')}
+            >
+              <span className="role-icon"><AccountsIcon /></span>
+              <div>
+                <strong>Gestión de Cuentas</strong>
+                <small>Ver y restablecer contraseñas</small>
               </div>
               <span className="role-arrow">→</span>
             </button>

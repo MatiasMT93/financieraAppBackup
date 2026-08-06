@@ -365,6 +365,12 @@ export async function getDailyAccountingLedger(date: string) {
         gte(operations.updatedAt, start),
         lte(operations.updatedAt, end),
       ),
+      // Ops canceladas hoy (creadas otro día) para trazabilidad contable
+      and(
+        eq(operations.status, 'cancelada'),
+        gte(operations.updatedAt, start),
+        lte(operations.updatedAt, end),
+      ),
     ),
     columns: {
       id: true,

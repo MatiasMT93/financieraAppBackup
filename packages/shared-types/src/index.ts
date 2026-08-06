@@ -144,6 +144,7 @@ export interface AccountingEntry {
   concepto: string;
   valorInicial: number;
   valorFinal: number;
+  status: OperationStatus;
 }
 
 export interface AccountingLedger {

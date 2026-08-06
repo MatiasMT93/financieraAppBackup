@@ -21,6 +21,7 @@ type Line = {
   valorFinal: string | number;
   concepto: string;
   operationId: string;
+  status?: string;
 };
 
 type CurrencyGroup = {
@@ -120,6 +121,7 @@ export default function CajasTab() {
         let entradasDiarias = 0;
         let salidasDiarias = 0;
         group.lines.forEach((line: Line) => {
+          if (line.status === 'cancelada') return;
           const valor = Number(line.valorFinal);
           if (line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega')) {
             byCurrency[curr].entradas += valor;
@@ -236,6 +238,7 @@ export default function CajasTab() {
         const currencyData = groups.find((g: CurrencyGroup) => g.currency === selectedCurrency);
         if (currencyData) {
           currencyData.lines.forEach((line: Line) => {
+            if (line.status === 'cancelada') return;
             const valor = Number(line.valorFinal);
             if (line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega')) {
               entradas += valor;
@@ -639,6 +642,7 @@ export default function CajasTab() {
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#e6e9ef', margin: '0 0 12px' }}>{dateStr}</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {currencyGroup.lines.map((line: Line, idx: number) => {
+                      const isCancelled = line.status === 'cancelada';
                       const isEntrada = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
                       const lineId = `${ledger.date}-${line.operationId}-${idx}`;
                       const isExpanded = expandedLines.has(lineId);
@@ -656,7 +660,9 @@ export default function CajasTab() {
                               fontSize: 13,
                               padding: '8px 12px',
                               borderRadius: 6,
-                              background: 'rgba(255,255,255,0.03)',
+                              background: isCancelled ? 'rgba(255,77,77,0.05)' : 'rgba(255,255,255,0.03)',
+                              border: isCancelled ? '1px solid rgba(255,77,77,0.15)' : '1px solid transparent',
+                              opacity: isCancelled ? 0.65 : 1,
                               cursor: 'pointer',
                             }}
                             onClick={() => toggleExpand(lineId, line.operationId)}
@@ -672,12 +678,17 @@ export default function CajasTab() {
                                 }}
                               />
                               <div>
-                                <p style={{ fontWeight: 600, color: '#e6e9ef', margin: 0 }}>#{line.operationId.slice(-3).toUpperCase()}</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <p style={{ fontWeight: 600, color: isCancelled ? '#8b93a3' : '#e6e9ef', margin: 0, textDecoration: isCancelled ? 'line-through' : 'none' }}>#{line.operationId.slice(-3).toUpperCase()}</p>
+                                  {isCancelled && (
+                                    <span style={{ fontSize: 10, fontWeight: 700, color: '#ff6666', background: 'rgba(255,77,77,0.15)', padding: '1px 5px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cancelada</span>
+                                  )}
+                                </div>
                                 <p style={{ fontSize: 12, color: '#8b93a3', margin: 0 }}>{line.concepto}</p>
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <p style={{ fontFamily: 'monospace', fontWeight: 600, color: '#e6e9ef', margin: 0 }}>
+                              <p style={{ fontFamily: 'monospace', fontWeight: 600, color: isCancelled ? '#8b93a3' : '#e6e9ef', margin: 0, textDecoration: isCancelled ? 'line-through' : 'none' }}>
                                 {isEntrada ? '+' : '-'}
                                 {CURRENCY_SYMBOLS[selectedCurrency]} {Number(line.valorFinal).toLocaleString('es-AR')}
                               </p>

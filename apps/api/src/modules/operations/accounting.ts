@@ -1,4 +1,4 @@
-import type { Currency, OperationType } from '@cambioapp/shared-types';
+import type { Currency, OperationStatus, OperationType } from '@cambioapp/shared-types';
 
 export interface AccountingEntry {
   operationId: string;
@@ -9,6 +9,7 @@ export interface AccountingEntry {
   concepto: string;
   valorInicial: number;
   valorFinal: number;
+  status: OperationStatus;
 }
 
 export interface AccountingLedger {
@@ -30,6 +31,7 @@ interface OperationLike {
   moneda2?: Currency | null;
   monto2?: number | string | null;
   createdAt: string;
+  status?: OperationStatus;
 }
 
 interface CorrectionLike {
@@ -47,6 +49,8 @@ export function buildAccountingLedger(
     const initialMain = Number(op.monto);
     const finalMain = getFinalAmount(op.id, initialMain, correctionsByOperationId[op.id]);
 
+    const entryStatus: OperationStatus = (op.status as OperationStatus) ?? 'pendiente';
+
     if (op.tipo === 'entrega_retiro') {
       lines.push({
         operationId: op.id,
@@ -57,6 +61,7 @@ export function buildAccountingLedger(
         concepto: 'Entrega',
         valorInicial: initialMain,
         valorFinal: finalMain,
+        status: entryStatus,
       });
 
       const secondaryAmount = op.monto2 == null ? null : Number(op.monto2);
@@ -70,6 +75,7 @@ export function buildAccountingLedger(
           concepto: 'Retiro',
           valorInicial: secondaryAmount,
           valorFinal: secondaryAmount,
+          status: entryStatus,
         });
       }
       continue;
@@ -84,6 +90,7 @@ export function buildAccountingLedger(
       concepto: op.tipo === 'retiro' ? 'Retiro' : 'Entrega',
       valorInicial: initialMain,
       valorFinal: finalMain,
+      status: entryStatus,
     });
   }
 

@@ -4,6 +4,7 @@ import LoginPage from '../shared/pages/LoginPage.tsx';
 import CoordinadorShell from '../features/coordinador/CoordinadorShell.tsx';
 import AdministrativoShell from '../features/administrativo/AdministrativoShell.tsx';
 import DuenoShell from '../features/dueno/DuenoShell.tsx';
+import CuentasView from '../features/dueno/CuentasView.tsx';
 
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles: string[] }) {
   const { user } = useAuthStore();
@@ -62,6 +63,12 @@ export default function App() {
         <Route path="/dueno/admin/*" element={
           <ProtectedRoute roles={['dueno']}>
             <DuenoAdminMode />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dueno/cuentas" element={
+          <ProtectedRoute roles={['dueno']}>
+            <CuentasView />
           </ProtectedRoute>
         } />
 
