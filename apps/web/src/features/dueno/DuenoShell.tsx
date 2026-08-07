@@ -214,7 +214,6 @@ export default function DuenoShell() {
               {data?.accounting && Object.keys(data.accounting).length > 0 && (
                 <div className="accounting-grid">
                   {Object.entries(data.accounting)
-                  .filter(([, acc]) => (acc.entradas ?? 0) > 0 || (acc.salidas ?? 0) > 0)
                   .map(([currency, acc]) => {
                     // entradas = Retiro (entra dinero); salidas = Entrega (sale dinero)
                     const entradas = acc.entradas ?? 0;
