@@ -205,7 +205,7 @@ export default function CuentasView() {
   }, {});
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#13151a', color: '#e6e9ef' }}>
+    <div style={{ height: '100dvh', overflowY: 'auto', background: '#13151a', color: '#e6e9ef' }}>
       <header style={{
         display: 'flex',
         alignItems: 'center',

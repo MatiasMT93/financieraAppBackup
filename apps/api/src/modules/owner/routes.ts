@@ -64,26 +64,29 @@ router.get('/summary', requireRoles('dueno', 'coordinador'), async (req, res) =>
   }
 
   // Obtener datos de contabilidad
+  // Las fechas se calculan en timezone Buenos Aires para coincidir con getDailyAccountingLedger.
   const accounting: Record<string, any> = {};
   const now = new Date();
-  const startDate = new Date();
-  
-  if (period === 'today') {
-    startDate.setHours(0, 0, 0, 0);
-  } else if (period === 'week') {
-    startDate.setDate(now.getDate() - 7);
-    startDate.setHours(0, 0, 0, 0);
-  } else if (period === 'month') {
-    startDate.setDate(1);
-    startDate.setHours(0, 0, 0, 0);
-  }
+  const TZ = 'America/Argentina/Buenos_Aires';
+  const todayBUE = now.toLocaleDateString('sv-SE', { timeZone: TZ }); // YYYY-MM-DD en BUE
 
-  // Obtener ledgers para cada día en el rango
   const dates: string[] = [];
-  const current = new Date(startDate);
-  while (current <= now) {
-    dates.push(current.toISOString().slice(0, 10));
-    current.setDate(current.getDate() + 1);
+  if (period === 'today') {
+    dates.push(todayBUE);
+  } else {
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const startStr = period === 'week'
+      ? sevenDaysAgo.toLocaleDateString('sv-SE', { timeZone: TZ })
+      : `${todayBUE.slice(0, 7)}-01`; // primer día del mes en BUE
+
+    let cur = startStr;
+    while (cur <= todayBUE) {
+      dates.push(cur);
+      const next = new Date(`${cur}T12:00:00Z`); // mediodía UTC = misma fecha BUE siempre
+      next.setUTCDate(next.getUTCDate() + 1);
+      cur = next.toISOString().slice(0, 10);
+    }
   }
 
   for (const date of dates) {
