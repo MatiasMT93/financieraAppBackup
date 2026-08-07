@@ -121,6 +121,3 @@ start().catch((error: unknown) => {
 
   process.exit(1);
 });
-  logger.error(err, 'Failed to start server');
-  process.exit(1);
-});
