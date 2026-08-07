@@ -329,13 +329,21 @@ export async function saveAmountCorrection(data: {
 
 export async function getActiveOperationsForOwner(period: 'today' | 'week' | 'month') {
   const now = new Date();
-  const start = new Date();
+  const TZ = 'America/Argentina/Buenos_Aires';
+  let start: Date;
+
   if (period === 'today') {
-    start.setHours(0, 0, 0, 0);
+    // Medianoche BUE para evitar el desajuste UTC cuando es de noche en Argentina
+    const todayBUE = now.toLocaleDateString('sv-SE', { timeZone: TZ });
+    start = new Date(`${todayBUE}T00:00:00-03:00`);
   } else if (period === 'week') {
-    start.setDate(now.getDate() - 7);
+    start = new Date(now);
+    start.setDate(start.getDate() - 7);
+    start.setHours(0, 0, 0, 0);
   } else {
-    start.setMonth(now.getMonth() - 1);
+    start = new Date(now);
+    start.setMonth(start.getMonth() - 1);
+    start.setHours(0, 0, 0, 0);
   }
 
   return db.query.operations.findMany({

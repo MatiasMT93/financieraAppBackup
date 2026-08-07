@@ -213,10 +213,13 @@ export default function DuenoShell() {
               {/* CONTABILIDAD (balance, entradas, salidas) */}
               {data?.accounting && Object.keys(data.accounting).length > 0 && (
                 <div className="accounting-grid">
-                  {Object.entries(data.accounting).map(([currency, acc]) => {
-                    const entradasReales = acc.salidas ?? 0;
-                    const salidasReales = acc.entradas ?? 0;
-                    const balanceNeto = entradasReales - salidasReales;
+                  {Object.entries(data.accounting)
+                  .filter(([, acc]) => (acc.entradas ?? 0) > 0 || (acc.salidas ?? 0) > 0)
+                  .map(([currency, acc]) => {
+                    // entradas = Retiro (entra dinero); salidas = Entrega (sale dinero)
+                    const entradas = acc.entradas ?? 0;
+                    const salidas = acc.salidas ?? 0;
+                    const balanceNeto = entradas - salidas;
                     const sym = CURRENCY_SYMBOLS[currency] ?? currency;
                     const balanceColor = balanceNeto >= 0 ? '#10b981' : '#ef4444';
                     const balanceSign = balanceNeto >= 0 ? '+' : '';
@@ -231,8 +234,8 @@ export default function DuenoShell() {
                           </strong>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', gap: '0.5rem' }}>
-                          <span style={{ color: '#ff8a7a' }}>↓ {sym} {salidasReales.toLocaleString('es-AR')}</span>
-                          <span style={{ color: '#4ADE80' }}>↑ {sym} {entradasReales.toLocaleString('es-AR')}</span>
+                          <span style={{ color: '#ff8a7a' }}>↓ {sym} {salidas.toLocaleString('es-AR')}</span>
+                          <span style={{ color: '#4ADE80' }}>↑ {sym} {entradas.toLocaleString('es-AR')}</span>
                         </div>
                       </div>
                     );

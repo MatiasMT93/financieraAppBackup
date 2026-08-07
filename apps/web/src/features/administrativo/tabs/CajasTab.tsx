@@ -124,11 +124,11 @@ export default function CajasTab() {
           if (line.status === 'cancelada') return;
           const valor = Number(line.valorFinal);
           if (line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega')) {
-            byCurrency[curr].entradas += valor;
-            entradasDiarias += valor;
-          } else {
-            byCurrency[curr].salidas += valor;
+            byCurrency[curr].salidas += valor;   // Entrega = sale dinero de la financiera
             salidasDiarias += valor;
+          } else {
+            byCurrency[curr].entradas += valor;  // Retiro = entra dinero a la financiera
+            entradasDiarias += valor;
           }
         });
 
@@ -181,9 +181,9 @@ export default function CajasTab() {
       if (currencyData) {
         currencyData.lines.forEach((line: Line) => {
           const valor = Number(line.valorFinal);
-          const isEntrada = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
-          if (isEntrada) totalEntradas += valor;
-          else totalSalidas += valor;
+          const isEntrega = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
+          if (isEntrega) totalSalidas += valor;  // Entrega = salida
+          else totalEntradas += valor;           // Retiro = entrada
 
           detallRows.push([
             ledger.date,
@@ -241,9 +241,9 @@ export default function CajasTab() {
             if (line.status === 'cancelada') return;
             const valor = Number(line.valorFinal);
             if (line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega')) {
-              entradas += valor;
+              salidas += valor;  // Entrega = salida
             } else {
-              salidas += valor;
+              entradas += valor; // Retiro = entrada
             }
           });
         }
@@ -540,7 +540,7 @@ export default function CajasTab() {
               <p style={{ fontSize: 24, fontWeight: 700, color: '#4ADE80', margin: 0 }}>
                 +{CURRENCY_SYMBOLS[selectedCurrency]} {aggregated.byCurrency[selectedCurrency].entradas.toLocaleString('es-AR')}
               </p>
-              <p style={{ fontSize: 11, color: '#8bd9a5', margin: '4px 0 0' }}>Dinero recibido (Entregas)</p>
+              <p style={{ fontSize: 11, color: '#8bd9a5', margin: '4px 0 0' }}>Dinero recibido (Retiros)</p>
             </div>
             <div style={{ borderRadius: 8, background: 'rgba(255, 138, 122, 0.08)', border: '1px solid rgba(255, 138, 122, 0.3)', padding: 16 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#ff8a7a', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 4px' }}>
@@ -549,7 +549,7 @@ export default function CajasTab() {
               <p style={{ fontSize: 24, fontWeight: 700, color: '#ff8a7a', margin: 0 }}>
                 -{CURRENCY_SYMBOLS[selectedCurrency]} {aggregated.byCurrency[selectedCurrency].salidas.toLocaleString('es-AR')}
               </p>
-              <p style={{ fontSize: 11, color: '#d9a89e', margin: '4px 0 0' }}>Dinero entregado (Retiros)</p>
+              <p style={{ fontSize: 11, color: '#d9a89e', margin: '4px 0 0' }}>Dinero entregado (Entregas)</p>
             </div>
           </div>
         </div>
@@ -643,7 +643,7 @@ export default function CajasTab() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {currencyGroup.lines.map((line: Line, idx: number) => {
                       const isCancelled = line.status === 'cancelada';
-                      const isEntrada = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
+                      const isEntrega = line.concepto === 'Entrega' || line.concepto.toLowerCase().includes('entrega');
                       const lineId = `${ledger.date}-${line.operationId}-${idx}`;
                       const isExpanded = expandedLines.has(lineId);
                       const opDetails = operationDetails[line.operationId];
@@ -674,7 +674,7 @@ export default function CajasTab() {
                                   height: 8,
                                   borderRadius: '50%',
                                   flexShrink: 0,
-                                  backgroundColor: isEntrada ? '#4ADE80' : '#ff8a7a',
+                                  backgroundColor: isEntrega ? '#ff8a7a' : '#4ADE80',
                                 }}
                               />
                               <div>
@@ -689,7 +689,7 @@ export default function CajasTab() {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                               <p style={{ fontFamily: 'monospace', fontWeight: 600, color: isCancelled ? '#8b93a3' : '#e6e9ef', margin: 0, textDecoration: isCancelled ? 'line-through' : 'none' }}>
-                                {isEntrada ? '+' : '-'}
+                                {isEntrega ? '-' : '+'}
                                 {CURRENCY_SYMBOLS[selectedCurrency]} {Number(line.valorFinal).toLocaleString('es-AR')}
                               </p>
                               <button
